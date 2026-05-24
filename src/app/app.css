@@ -1,12 +1,16 @@
 :host {
   display: block;
-  color: #0f2942;
+  color: #1e2a24;
   --paper: #ffffff;
-  --ink-soft: #58708a;
-  --line: rgba(88, 166, 255, .18);
-  --shadow: 0 22px 55px rgba(62, 139, 224, .12);
-  --blue: #2d8cff;
-  --blue-deep: #1f61c4;
+  --ink-soft: #617064;
+  --line: rgba(93, 126, 103, .18);
+  --shadow: 0 22px 55px rgba(58, 86, 65, .12);
+  --move: #4f8f6b;
+  --move-deep: #2f6046;
+  --feel: #c96d55;
+  --feel-deep: #944637;
+  --seek: #7f6f4f;
+  --seek-deep: #544832;
   --brand-font: "Bodoni 72", Didot, "DM Serif Display", "Playfair Display", Georgia, serif;
 }
 
@@ -26,9 +30,9 @@ button {
   place-content: center;
   text-align: center;
   background:
-    radial-gradient(circle at 24% 20%, rgba(102, 184, 255, .34), transparent 30%),
-    radial-gradient(circle at 76% 28%, rgba(196, 226, 255, .56), transparent 28%),
-    linear-gradient(145deg, rgba(255,255,255,.96), rgba(244,250,255,.88) 48%, rgba(224,242,255,.78));
+    radial-gradient(circle at 24% 20%, rgba(79, 143, 107, .22), transparent 30%),
+    radial-gradient(circle at 76% 28%, rgba(201, 109, 85, .2), transparent 28%),
+    linear-gradient(145deg, rgba(255,255,255,.96), rgba(248,247,240,.9) 48%, rgba(235,241,232,.82));
   animation: leave 1.45s ease .25s forwards;
 }
 
@@ -43,15 +47,15 @@ button {
   width: .72rem;
   height: 2.4rem;
   border-radius: 999px;
-  background: #2d8cff;
+  background: var(--move);
 }
 
 .splash-mark span:nth-child(2) {
-  background: #8bc8ff;
+  background: var(--feel);
 }
 
 .splash-mark span:nth-child(3) {
-  background: #1f61c4;
+  background: var(--seek);
 }
 
 .splash h1, .hero h1 {
@@ -61,7 +65,7 @@ button {
 }
 
 .splash h1 {
-  color: #07111f;
+  color: #17201b;
   font-family: var(--brand-font);
   font-size: clamp(3.2rem, 14vw, 5.4rem);
   font-weight: 700;
@@ -69,19 +73,19 @@ button {
 
 .splash p {
   margin: .8rem 0 .4rem;
-  color: #385c7f;
+  color: #586955;
   font-weight: 700;
 }
 
 .splash small {
-  color: #6b82a0;
+  color: #728072;
 }
 
 .app-shell {
   width: min(100%, 1120px);
   min-height: 100vh;
   margin: 0 auto;
-  padding: 1rem 1rem 5.5rem;
+  padding: 1rem 1rem 7rem;
   transition: filter .3s ease;
 }
 
@@ -90,21 +94,31 @@ button {
 }
 
 .hero {
+  position: relative;
+  overflow: hidden;
   display: grid;
   gap: 1.25rem;
+  min-height: clamp(32rem, 78vh, 43rem);
+  align-content: end;
   padding: 1.35rem;
   border: 1px solid var(--line);
   border-radius: 1.55rem;
   background:
-    radial-gradient(circle at 12% 0%, rgba(141, 205, 255, .34), transparent 18rem),
-    linear-gradient(145deg, rgba(255,255,255,.72), rgba(235,247,255,.58));
+    linear-gradient(90deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.76) 34%, rgba(255,255,255,.22) 72%),
+    linear-gradient(0deg, rgba(25,34,28,.24), rgba(25,34,28,.02) 42%),
+    url("/within-hero-wellness.png") center / cover no-repeat;
   backdrop-filter: blur(18px);
   box-shadow: var(--shadow);
 }
 
+.hero > * {
+  position: relative;
+  z-index: 1;
+}
+
 .eyebrow {
   margin: 0 0 .42rem;
-  color: #2d8cff;
+  color: var(--accent, var(--move));
   font-size: .74rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -123,7 +137,7 @@ button {
 }
 
 .brand-hero strong {
-  color: #07111f;
+  color: #17201b;
   font-family: var(--brand-font);
   font-size: clamp(4.35rem, 20vw, 9.5rem);
   font-weight: 800;
@@ -146,7 +160,7 @@ button {
 }
 
 .search span {
-  color: #2d8cff;
+  color: var(--move);
   font-size: 1.4rem;
 }
 
@@ -154,30 +168,34 @@ button {
   width: 100%;
   border: 0;
   outline: 0;
-  color: #0f2942;
+  color: #1e2a24;
   background: transparent;
 }
 
 .tabs {
-  position: sticky;
-  top: .75rem;
-  z-index: 2;
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 4;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: .45rem;
-  margin: 1rem 0;
+  width: min(calc(100% - 2rem), 36rem);
+  margin: 0 auto;
   padding: .35rem;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(255,255,255,.62);
-  backdrop-filter: blur(14px);
+  background: rgba(255,255,255,.82);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 16px 38px rgba(58, 86, 65, .16);
 }
 
 .tabs button {
   border: 0;
   border-radius: 999px;
   padding: .82rem .5rem;
-  color: #58708a;
+  color: #617064;
   background: transparent;
   font-weight: 800;
 }
@@ -185,13 +203,28 @@ button {
 .tabs button.active {
   color: #fff;
   background: var(--accent);
-  box-shadow: 0 10px 24px rgba(62, 139, 224, .2);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
-.tone-move, .tone-feel, .tone-seek {
-  --accent: var(--blue);
-  --soft: rgba(45,140,255,.12);
-  --wash: rgba(231,246,255,.74);
+.tone-move {
+  --accent: var(--move);
+  --accent-deep: var(--move-deep);
+  --soft: rgba(79, 143, 107, .12);
+  --wash: rgba(235, 244, 234, .78);
+}
+
+.tone-feel {
+  --accent: var(--feel);
+  --accent-deep: var(--feel-deep);
+  --soft: rgba(201, 109, 85, .12);
+  --wash: rgba(252, 239, 233, .78);
+}
+
+.tone-seek {
+  --accent: var(--seek);
+  --accent-deep: var(--seek-deep);
+  --soft: rgba(127, 111, 79, .13);
+  --wash: rgba(244, 240, 230, .78);
 }
 
 .category-panel {
@@ -199,7 +232,7 @@ button {
   border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
   border-radius: 1.35rem;
   background:
-    radial-gradient(circle at 100% 0%, rgba(137, 204, 255, .24), transparent 13rem),
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 13rem),
     linear-gradient(135deg, var(--wash), rgba(255,255,255,.62));
   backdrop-filter: blur(14px);
 }
@@ -235,7 +268,7 @@ button {
 .event-card, .community-card, .event-detail {
   border: 1px solid var(--line);
   background: rgba(255,255,255,.72);
-  box-shadow: 0 16px 38px rgba(62, 139, 224, .11);
+  box-shadow: 0 16px 38px rgba(58, 86, 65, .11);
   backdrop-filter: blur(12px);
 }
 
@@ -247,7 +280,7 @@ button {
 .event-art, .detail-art {
   background:
     radial-gradient(circle at 20% 20%, rgba(255,255,255,.45), transparent 28%),
-    linear-gradient(135deg, rgba(45,140,255,.92), color-mix(in srgb, var(--blue-deep) 58%, #bfe3ff));
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 88%, #ffffff), color-mix(in srgb, var(--accent-deep) 72%, #f2f0e8));
   color: #fff;
 }
 
@@ -301,7 +334,7 @@ button {
 }
 
 .card-actions span {
-  color: #607a96;
+  color: #6a756b;
   font-size: .88rem;
 }
 
@@ -339,7 +372,7 @@ button {
 }
 
 .community-card strong {
-  color: #385c7f;
+  color: #586955;
 }
 
 .detail-backdrop {
@@ -348,7 +381,7 @@ button {
   z-index: 5;
   display: grid;
   align-items: end;
-  background: rgba(11, 48, 92, .26);
+  background: rgba(35, 45, 38, .34);
 }
 
 .event-detail {
@@ -366,7 +399,7 @@ button {
   height: 2.4rem;
   border: 0;
   border-radius: 50%;
-  color: #0f2942;
+  color: #1e2a24;
   background: rgba(255,255,255,.78);
   backdrop-filter: blur(10px);
   font-size: 1.6rem;
@@ -391,8 +424,8 @@ button {
 .detail-meta span {
   border-radius: 999px;
   padding: .45rem .7rem;
-  color: #385c7f;
-  background: rgba(232,247,255,.78);
+  color: #586955;
+  background: rgba(241,244,235,.82);
   font-size: .82rem;
   font-weight: 800;
 }
@@ -437,13 +470,14 @@ button {
 
 @media (min-width: 720px) {
   .app-shell {
-    padding: 2rem 2rem 5rem;
+    padding: 2rem 2rem 7rem;
   }
 
   .hero {
     grid-template-columns: 1fr minmax(290px, 410px);
     align-items: end;
     padding: 2rem;
+    background-position: center;
   }
 
   .event-list, .community-list {
