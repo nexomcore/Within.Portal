@@ -347,13 +347,14 @@ const communities: Community[] = [
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
-  styleUrl: './app.css',
+  styleUrls: ['./app.css'],
 })
 export class App implements OnInit {
   readonly pillars: Pillar[] = ['Move', 'Feel', 'Seek'];
   readonly pillarCopy = pillarCopy;
 
   readonly showSplash = signal(true);
+  readonly currentView = signal<'home' | 'events'>('home');
   readonly selectedPillar = signal<Pillar>('Move');
   readonly selectedEvent = signal<WithinEvent | null>(null);
   readonly joinedEventIds = signal<Set<number>>(new Set());
@@ -384,6 +385,16 @@ export class App implements OnInit {
   selectPillar(pillar: Pillar): void {
     this.selectedPillar.set(pillar);
     this.selectedEvent.set(null);
+  }
+
+  openPillarEvents(pillar: Pillar): void {
+    this.selectPillar(pillar);
+    this.currentView.set('events');
+  }
+
+  goHome(): void {
+    this.selectedEvent.set(null);
+    this.currentView.set('home');
   }
 
   updateSearch(event: Event): void {

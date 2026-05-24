@@ -1,130 +1,142 @@
 @if (showSplash()) {
   <section class="splash" aria-label="Within splash screen" (click)="dismissSplash()">
-    <div class="splash-mark">
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
     <h1>Within</h1>
-    <p>Move · Feel · Seek</p>
-    <small>Discover your next journey within.</small>
+    <p>Move &middot; Feel &middot; Seek</p>
   </section>
 }
 
-<main class="app-shell" [class.is-obscured]="showSplash()">
-  <section class="hero">
-    <div>
-      <h1 class="brand-hero">
-        <span>Discover</span>
-        <strong>Within</strong>
-      </h1>
-      <p class="hero-copy">
-        Events, circles, and journeys for movement, emotional wellbeing, and spiritual growth.
-      </p>
+@if (currentView() === 'home') {
+<main class="phone-home" [class.is-obscured]="showSplash()">
+  <section class="home-card" aria-label="Within home">
+    <header class="status-bar" aria-label="Status">
+      <span>9:41</span>
+      <div class="status-icons" aria-hidden="true">
+        <span class="signal"></span>
+        <span class="wifi"></span>
+        <span class="battery"></span>
+      </div>
+    </header>
+
+    <div class="top-actions" aria-hidden="true">
+      <button type="button" aria-label="Sound">
+        <span class="broadcast-icon"></span>
+      </button>
+      <button type="button" aria-label="Notifications">
+        <span class="bell-icon"></span>
+      </button>
     </div>
 
-    <label class="search">
-      <span aria-hidden="true">⌕</span>
+    <div class="profile-notch" aria-hidden="true">
+      <div class="profile-photo"></div>
+      <span class="profile-pulse"></span>
+    </div>
+
+    <section class="wave-panel meditation-panel">
+      <div>
+        <h1>Move</h1>
+        <p>energise the body</p>
+      </div>
+    </section>
+
+    <section class="wave-panel daydream-panel">
+      <div>
+        <h2>Feel</h2>
+        <p>listen within</p>
+      </div>
+    </section>
+
+    <section class="wave-panel sensation-panel">
+      <div>
+        <h2>Seek</h2>
+        <p>find deeper meaning</p>
+      </div>
+    </section>
+
+    <nav class="home-dock" aria-label="Wellbeing modes">
+      <button type="button" (click)="openPillarEvents('Move')">
+        <span class="dock-icon focus-icon" aria-hidden="true"></span>
+        <strong>Move</strong>
+      </button>
+      <button type="button" class="active" (click)="openPillarEvents('Feel')">
+        <span class="dock-icon relax-icon" aria-hidden="true"></span>
+        <strong>Feel</strong>
+      </button>
+      <button type="button" (click)="openPillarEvents('Seek')">
+        <span class="dock-icon sleep-icon" aria-hidden="true"></span>
+        <strong>Seek</strong>
+      </button>
+    </nav>
+  </section>
+</main>
+} @else {
+<main class="events-screen" [class.is-obscured]="showSplash()">
+  <section class="events-card" [class]="'events-card tone-' + selectedPillar().toLowerCase()">
+    <header class="events-top">
+      <button type="button" aria-label="Back to home" (click)="goHome()">Back</button>
+      <div>
+        <span>{{ selectedPillar() }}</span>
+        <h1>{{ selectedPillar() }} events</h1>
+      </div>
+    </header>
+
+    <label class="event-search">
+      <span>Search</span>
       <input
         type="search"
-        placeholder="Search events, trainers, retreats, or communities"
+        placeholder="Search {{ selectedPillar().toLowerCase() }} events"
         [value]="searchQuery()"
         (input)="updateSearch($event)"
       />
     </label>
-  </section>
 
-  <nav class="tabs" aria-label="Wellbeing pillars">
-    @for (pillar of pillars; track pillar) {
-      <button
-        type="button"
-        [class.active]="selectedPillar() === pillar"
-        [class]="'tone-' + pillar.toLowerCase()"
-        (click)="selectPillar(pillar)"
-      >
-        {{ pillar }}
+    <section class="event-page-list" aria-label="Category events">
+      @for (wellbeingEvent of filteredEvents(); track wellbeingEvent.id) {
+        <article class="event-page-card" tabindex="0" role="button" (click)="openEvent(wellbeingEvent)">
+          <div class="event-page-art">
+            <span>{{ wellbeingEvent.tag }}</span>
+          </div>
+          <div class="event-page-body">
+            <div>
+              <h2>{{ wellbeingEvent.title }}</h2>
+              <strong>{{ wellbeingEvent.price }}</strong>
+            </div>
+            <p>{{ wellbeingEvent.dateTime }} &middot; {{ wellbeingEvent.location }}</p>
+            <p>Hosted by {{ wellbeingEvent.host }}</p>
+            <footer>
+              <span>{{ joinedCount(wellbeingEvent) }} joined</span>
+              <button type="button" (click)="joinEvent(wellbeingEvent.id); $event.stopPropagation()">
+                {{ isJoined(wellbeingEvent.id) ? 'Joined' : 'Join Event' }}
+              </button>
+            </footer>
+          </div>
+        </article>
+      } @empty {
+        <p class="empty-events">No {{ selectedPillar().toLowerCase() }} events found.</p>
+      }
+    </section>
+
+    <nav class="home-dock events-dock" aria-label="Wellbeing modes">
+      <button type="button" [class.active]="selectedPillar() === 'Move'" (click)="openPillarEvents('Move')">
+        <span class="dock-icon focus-icon" aria-hidden="true"></span>
+        <strong>Move</strong>
       </button>
-    }
-  </nav>
-
-  <section class="category-panel" [class]="'category-panel tone-' + selectedPillar().toLowerCase()">
-    <p class="eyebrow">{{ pillarCopy[selectedPillar()].tone }}</p>
-    <h2>{{ selectedPillar() }}</h2>
-    <p>{{ pillarCopy[selectedPillar()].intro }}</p>
-  </section>
-
-  <section class="section-head">
-    <div>
-      <p class="eyebrow">Featured experiences</p>
-      <h2>{{ selectedPillar() }} events</h2>
-    </div>
-    <span>{{ filteredEvents().length }} available</span>
-  </section>
-
-  <section class="event-list" aria-label="Event list">
-    @for (wellbeingEvent of filteredEvents(); track wellbeingEvent.id) {
-      <article
-        class="event-card"
-        [class]="'event-card tone-' + wellbeingEvent.pillar.toLowerCase()"
-        tabindex="0"
-        role="button"
-        (click)="openEvent(wellbeingEvent)"
-        (keydown.enter)="openEvent(wellbeingEvent)"
-      >
-        <div class="event-art">
-          <span>{{ wellbeingEvent.tag }}</span>
-        </div>
-        <div class="event-body">
-          <div class="card-title-row">
-            <h3>{{ wellbeingEvent.title }}</h3>
-            <span class="price">{{ wellbeingEvent.price }}</span>
-          </div>
-          <p class="meta">{{ wellbeingEvent.pillar }} · {{ wellbeingEvent.dateTime }}</p>
-          <p>{{ wellbeingEvent.location }}</p>
-          <p>Hosted by {{ wellbeingEvent.host }}</p>
-          <div class="card-actions">
-            <span>{{ joinedCount(wellbeingEvent) }} joined</span>
-            <button type="button" (click)="joinEvent(wellbeingEvent.id); $event.stopPropagation()">
-              {{ isJoined(wellbeingEvent.id) ? 'Joined' : 'Join Event' }}
-            </button>
-          </div>
-        </div>
-      </article>
-    } @empty {
-      <p class="empty">No matching events yet. Try a broader search.</p>
-    }
-  </section>
-
-  <section class="section-head community-heading">
-    <div>
-      <p class="eyebrow">Community</p>
-      <h2>Related circles</h2>
-    </div>
-  </section>
-
-  <section class="community-list" aria-label="Community list">
-    @for (community of filteredCommunities(); track community.id) {
-      <article class="community-card" [class]="'community-card tone-' + community.pillar.toLowerCase()">
-        <div>
-          <span>{{ community.pillar }}</span>
-          <h3>{{ community.name }}</h3>
-          <p>{{ community.description }}</p>
-        </div>
-        <footer>
-          <strong>{{ community.members }} members</strong>
-          <button type="button">Join</button>
-        </footer>
-      </article>
-    } @empty {
-      <p class="empty">No matching communities yet.</p>
-    }
+      <button type="button" [class.active]="selectedPillar() === 'Feel'" (click)="openPillarEvents('Feel')">
+        <span class="dock-icon relax-icon" aria-hidden="true"></span>
+        <strong>Feel</strong>
+      </button>
+      <button type="button" [class.active]="selectedPillar() === 'Seek'" (click)="openPillarEvents('Seek')">
+        <span class="dock-icon sleep-icon" aria-hidden="true"></span>
+        <strong>Seek</strong>
+      </button>
+    </nav>
   </section>
 </main>
+}
 
 @if (selectedEvent(); as event) {
   <section class="detail-backdrop" aria-label="Event details">
     <article class="event-detail" [class]="'event-detail tone-' + event.pillar.toLowerCase()">
-      <button class="close-button" type="button" aria-label="Close event details" (click)="closeEvent()">×</button>
+      <button class="close-button" type="button" aria-label="Close event details" (click)="closeEvent()">x</button>
       <div class="detail-art">
         <span>{{ event.pillar }}</span>
         <h2>{{ event.title }}</h2>
@@ -140,22 +152,6 @@
         <p>{{ event.audience }}</p>
         <h3>What to bring</h3>
         <p>{{ event.bring }}</p>
-
-        <div class="attendees">
-          <div>
-            <h3>Community joining</h3>
-            <p>{{ joinedCount(event) }} people joined</p>
-          </div>
-          <div class="avatar-row" aria-label="Attendee preview">
-            @for (attendee of event.attendeePreview; track attendee.name) {
-              <span [title]="attendee.name">{{ attendee.initials }}</span>
-            }
-          </div>
-        </div>
-
-        <button class="join-wide" type="button" (click)="joinEvent(event.id)">
-          {{ isJoined(event.id) ? 'Joined' : 'Join Event' }}
-        </button>
       </div>
     </article>
   </section>
