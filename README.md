@@ -1,2 +1,2 @@
 # within
-Holistic WellBeing App
+Holistic Wellbeing App
