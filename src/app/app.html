@@ -1,158 +1,157 @@
-@if (showSplash()) {
-  <section class="splash" aria-label="Within splash screen" (click)="dismissSplash()">
-    <h1>Within</h1>
-    <p>Move &middot; Feel &middot; Seek</p>
-  </section>
-}
-
-@if (currentView() === 'home') {
-<main class="phone-home" [class.is-obscured]="showSplash()">
-  <section class="home-card" aria-label="Within home">
-    <header class="status-bar" aria-label="Status">
-      <span>9:41</span>
-      <div class="status-icons" aria-hidden="true">
-        <span class="signal"></span>
-        <span class="wifi"></span>
-        <span class="battery"></span>
-      </div>
-    </header>
-
-    <div class="top-actions" aria-hidden="true">
-      <button type="button" aria-label="Sound">
-        <span class="broadcast-icon"></span>
-      </button>
-      <button type="button" aria-label="Notifications">
-        <span class="bell-icon"></span>
-      </button>
-    </div>
-
-    <div class="profile-notch" aria-hidden="true">
-      <div class="profile-photo"></div>
-      <span class="profile-pulse"></span>
-    </div>
-
-    <section class="wave-panel meditation-panel">
-      <div>
-        <h1>Move</h1>
-        <p>energise the body</p>
-      </div>
-    </section>
-
-    <section class="wave-panel daydream-panel">
-      <div>
-        <h2>Feel</h2>
-        <p>listen within</p>
-      </div>
-    </section>
-
-    <section class="wave-panel sensation-panel">
-      <div>
-        <h2>Seek</h2>
-        <p>find deeper meaning</p>
-      </div>
-    </section>
-
-    <nav class="home-dock" aria-label="Wellbeing modes">
-      <button type="button" (click)="openPillarEvents('Move')">
-        <span class="dock-icon focus-icon" aria-hidden="true"></span>
-        <strong>Move</strong>
-      </button>
-      <button type="button" class="active" (click)="openPillarEvents('Feel')">
-        <span class="dock-icon relax-icon" aria-hidden="true"></span>
-        <strong>Feel</strong>
-      </button>
-      <button type="button" (click)="openPillarEvents('Seek')">
-        <span class="dock-icon sleep-icon" aria-hidden="true"></span>
-        <strong>Seek</strong>
-      </button>
+<main class="site-shell">
+  <header class="topbar" aria-label="Primary navigation">
+    <a class="brand" href="#home" aria-label="Within home">
+      <span class="brand-mark">W</span>
+      <span>Within</span>
+    </a>
+    <nav class="nav-links" aria-label="Landing page sections">
+      <a href="#discover">Wellbeing</a>
+      <a href="#features">Features</a>
+      <a href="#providers">Providers</a>
+      <a href="#waitlist">Waitlist</a>
     </nav>
-  </section>
-</main>
-} @else {
-<main class="events-screen" [class.is-obscured]="showSplash()">
-  <section class="events-card" [class]="'events-card tone-' + selectedPillar().toLowerCase()">
-    <header class="events-top">
-      <button type="button" aria-label="Back to home" (click)="goHome()">Back</button>
-      <div>
-        <span>{{ selectedPillar() }}</span>
-        <h1>{{ selectedPillar() }} events</h1>
+    <a class="nav-cta" href="#waitlist">Register interest</a>
+  </header>
+
+  <section id="home" class="hero-section">
+    <div class="hero-copy">
+      <h1>Your wellbeing, brought together.</h1>
+      <p class="hero-lede">
+        Within is a holistic wellbeing app in development, designed to help you discover trusted events, mindful practices, retreats, and community experiences across Move, Feel, and Seek.
+      </p>
+      <div class="hero-actions">
+        <a class="primary-action" href="#waitlist">Register interest</a>
+        <a class="secondary-action" href="#features">Explore features</a>
       </div>
-    </header>
+      <div class="launch-chip" aria-label="Launch status">
+        <span></span>
+        In development now - launching soon
+      </div>
+    </div>
 
-    <label class="event-search">
-      <span>Search</span>
-      <input
-        type="search"
-        placeholder="Search {{ selectedPillar().toLowerCase() }} events"
-        [value]="searchQuery()"
-        (input)="updateSearch($event)"
-      />
-    </label>
-
-    <section class="event-page-list" aria-label="Category events">
-      @for (wellbeingEvent of filteredEvents(); track wellbeingEvent.id) {
-        <article class="event-page-card" tabindex="0" role="button" (click)="openEvent(wellbeingEvent)">
-          <div class="event-page-art">
-            <span>{{ wellbeingEvent.tag }}</span>
-          </div>
-          <div class="event-page-body">
-            <div>
-              <h2>{{ wellbeingEvent.title }}</h2>
-              <strong>{{ wellbeingEvent.price }}</strong>
-            </div>
-            <p>{{ wellbeingEvent.dateTime }} &middot; {{ wellbeingEvent.location }}</p>
-            <p>Hosted by {{ wellbeingEvent.host }}</p>
-            <footer>
-              <span>{{ joinedCount(wellbeingEvent) }} joined</span>
-              <button type="button" (click)="joinEvent(wellbeingEvent.id); $event.stopPropagation()">
-                {{ isJoined(wellbeingEvent.id) ? 'Joined' : 'Join Event' }}
-              </button>
-            </footer>
+    <aside class="experience-panel" aria-label="Within app preview">
+      <div class="ambient-orbit orbit-one"></div>
+      <div class="ambient-orbit orbit-two"></div>
+      <div class="phone-frame">
+        <div class="phone-status"></div>
+        <div class="app-preview-header">
+          <span>Within</span>
+          <button type="button" aria-label="Open saved experiences">Saved</button>
+        </div>
+        <div class="quote-card">
+          <small>Today</small>
+          <p>Choose one experience that supports your body, mind, or inner growth.</p>
+        </div>
+        <div class="category-tabs" aria-label="Category preview">
+          <span class="active">Move</span>
+          <span>Feel</span>
+          <span>Seek</span>
+        </div>
+        <article class="preview-event">
+          <span class="event-badge">Launching soon</span>
+          <h2>Mindful Weekend Reset</h2>
+          <p>Verified host - retreat, movement, breathwork, and reflection.</p>
+          <ul class="preview-metrics" aria-label="Experience details">
+            <li>Retreats</li>
+            <li>Circles</li>
+            <li>Events</li>
+          </ul>
+          <div>
+            <strong>Save</strong>
+            <button type="button">Preview</button>
           </div>
         </article>
-      } @empty {
-        <p class="empty-events">No {{ selectedPillar().toLowerCase() }} events found.</p>
-      }
-    </section>
+      </div>
+    </aside>
+  </section>
 
-    <nav class="home-dock events-dock" aria-label="Wellbeing modes">
-      <button type="button" [class.active]="selectedPillar() === 'Move'" (click)="openPillarEvents('Move')">
-        <span class="dock-icon focus-icon" aria-hidden="true"></span>
-        <strong>Move</strong>
-      </button>
-      <button type="button" [class.active]="selectedPillar() === 'Feel'" (click)="openPillarEvents('Feel')">
-        <span class="dock-icon relax-icon" aria-hidden="true"></span>
-        <strong>Feel</strong>
-      </button>
-      <button type="button" [class.active]="selectedPillar() === 'Seek'" (click)="openPillarEvents('Seek')">
-        <span class="dock-icon sleep-icon" aria-hidden="true"></span>
-        <strong>Seek</strong>
-      </button>
-    </nav>
+  <section class="feature-rail" aria-label="Within highlights">
+    <span>Holistic discovery</span>
+    <span>Trusted providers</span>
+    <span>Retreats and events</span>
+    <span>Gentle motivation</span>
+  </section>
+
+  <section id="discover" class="section-band">
+    <div class="section-heading">
+      <h2>Wellbeing across body, mind, and meaning.</h2>
+      <p>
+        Within brings together physical wellbeing, emotional balance, spiritual exploration, and community connection without overwhelming you.
+      </p>
+    </div>
+
+    <div class="pillar-grid">
+      <article *ngFor="let pillar of pillars" class="pillar-card" [ngClass]="pillar.accent">
+        <span>{{ pillar.name }}</span>
+        <h3>{{ pillar.label }}</h3>
+        <p>{{ pillar.description }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="features" class="event-section" aria-labelledby="featured-events-title">
+    <div class="section-heading compact">
+      <h2 id="featured-events-title">A calmer way to find what supports you.</h2>
+      <p>Simple discovery, trusted hosts, saved experiences, and a gentle path toward consistent wellbeing.</p>
+    </div>
+
+    <div class="event-list">
+      <article *ngFor="let feature of features" class="event-row">
+        <span>{{ feature.category }}</span>
+        <div>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.detail }}</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="providers" class="provider-section">
+    <div>
+      <h2>Built for people and providers shaping modern wellbeing.</h2>
+      <p>
+        Practitioners, studios, coaches, retreat hosts, and community leaders can register interest as Within prepares for launch.
+      </p>
+    </div>
+    <ul class="mvp-list">
+      <li *ngFor="let point of providerPoints">{{ point }}</li>
+    </ul>
+  </section>
+
+  <section id="waitlist" class="waitlist-section" aria-labelledby="waitlist-title">
+    <div>
+      <h2 id="waitlist-title">Be first to know when Within launches.</h2>
+      <p>
+        The app is currently in development. Join the early list for launch updates, provider opportunities, and first access.
+      </p>
+    </div>
+
+    <form class="waitlist-form" (ngSubmit)="submitWaitlist()" *ngIf="!submitted(); else submittedMessage">
+      <label>
+        Name
+        <input name="name" type="text" [ngModel]="waitlistName()" (ngModelChange)="waitlistName.set($event)" autocomplete="name" placeholder="Your name" />
+      </label>
+      <label>
+        Email
+        <input name="email" type="email" required [ngModel]="waitlistEmail()" (ngModelChange)="waitlistEmail.set($event)" autocomplete="email" placeholder="you@example.com" />
+      </label>
+      <label>
+        I am an
+        <select name="role" [ngModel]="waitlistRole()" (ngModelChange)="waitlistRole.set($event)">
+          <option>Early user</option>
+          <option>Provider</option>
+          <option>Retreat host</option>
+          <option>Corporate partner</option>
+        </select>
+      </label>
+      <button type="submit">Register interest</button>
+    </form>
+
+    <ng-template #submittedMessage>
+      <div class="success-message" role="status">
+        <strong>Interest registered.</strong>
+        <p>Thanks{{ waitlistName() ? ', ' + waitlistName() : '' }}. We will keep you updated as Within gets closer to launch.</p>
+      </div>
+    </ng-template>
   </section>
 </main>
-}
-
-@if (selectedEvent(); as event) {
-  <section class="detail-backdrop" aria-label="Event details">
-    <article class="event-detail" [class]="'event-detail tone-' + event.pillar.toLowerCase()">
-      <button class="close-button" type="button" aria-label="Close event details" (click)="closeEvent()">x</button>
-      <div class="detail-art">
-        <span>{{ event.pillar }}</span>
-        <h2>{{ event.title }}</h2>
-      </div>
-      <div class="detail-content">
-        <div class="detail-meta">
-          <span>{{ event.dateTime }}</span>
-          <span>{{ event.location }}</span>
-          <span>Hosted by {{ event.host }}</span>
-        </div>
-        <p>{{ event.description }}</p>
-        <h3>Who this is for</h3>
-        <p>{{ event.audience }}</p>
-        <h3>What to bring</h3>
-        <p>{{ event.bring }}</p>
-      </div>
-    </article>
-  </section>
-}
