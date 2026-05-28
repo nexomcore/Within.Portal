@@ -1,9 +1,41 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, WritableSignal, signal } from '@angular/core';
+import { Component, HostListener, WritableSignal, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 type SurveyAudience = 'user' | 'provider';
-type PageMode = 'landing' | 'user-survey' | 'provider-survey' | 'conversation-guide';
+type PageMode = 'landing' | 'user-survey' | 'provider-survey' | 'conversation-guide' | 'admin';
+type AdminAudienceFilter = 'all' | 'user' | 'provider' | 'interest';
+
+interface AdminSubmission {
+  id: string;
+  audience: string;
+  name: string;
+  contact: string;
+  source: string;
+  answers: Record<string, unknown>;
+  createdUtc: string;
+}
+
+interface AdminStats {
+  totalSubmissions: number;
+  userSubmissions: number;
+  providerSubmissions: number;
+  totalUsers: number;
+  providerUsers: number;
+  adminUsers: number;
+  latestSubmissionUtc: string | null;
+}
+
+interface AdminUserRecord {
+  id: string;
+  displayName: string;
+  email: string;
+  role: 'User' | 'Provider' | 'Admin';
+  createdUtc: string;
+}
+
+const ADMIN_TOKEN_KEY = 'within.admin.accessToken';
+const API_BASE = 'http://localhost:5177/api';
 
 @Component({
   selector: 'app-root',
@@ -12,7 +44,7 @@ type PageMode = 'landing' | 'user-survey' | 'provider-survey' | 'conversation-gu
   styleUrl: './app.scss'
 })
 export class App {
-  protected readonly title = signal('Discover - Within');
+  protected readonly title = signal('Within');
   protected readonly pageMode = signal<PageMode>(this.getPageMode());
   protected readonly activeSurvey = signal<SurveyAudience>('user');
   protected readonly surveySubmitted = signal<SurveyAudience | null>(null);
@@ -23,13 +55,15 @@ export class App {
   protected readonly waitlistEmail = signal('');
   protected readonly waitlistRole = signal('Early user');
 
-  protected readonly userProfile = signal('I attend occasionally');
+  protected readonly userProfile = signal('I dabble — practice on and off');
   protected readonly userExperiences = signal<string[]>([]);
   protected readonly userDiscovery = signal<string[]>([]);
   protected readonly userProblems = signal<string[]>([]);
-  protected readonly userLastAttended = signal('Within the last month');
   protected readonly userPrimaryCategory = signal('A mix of all three');
-  protected readonly userWouldUse = signal('Maybe, depends on the events');
+  protected readonly userMoveBarrier = signal('Time and energy after work');
+  protected readonly userFeelBarrier = signal('I do not know where to start');
+  protected readonly userSeekBarrier = signal('I do not know what I believe');
+  protected readonly userWouldUse = signal('Maybe, depends on what is in it');
   protected readonly userFeatures = signal<string[]>([]);
   protected readonly userConversation = signal('Maybe');
   protected readonly userContact = signal('');
@@ -50,64 +84,113 @@ export class App {
   protected readonly providerLink = signal('');
   protected readonly providerBlocker = signal('');
 
-  protected readonly pillars = [
+  protected readonly userComments = signal<Record<string, string>>({});
+  protected readonly providerComments = signal<Record<string, string>>({});
+
+  protected readonly interestName = signal('');
+  protected readonly interestEmail = signal('');
+  protected readonly interestRole = signal('Curious — tell me more');
+  protected readonly interestNote = signal('');
+  protected readonly interestSubmitted = signal(false);
+
+  protected readonly adminEmail = signal('admin@within.local');
+  protected readonly adminPassword = signal('');
+  protected readonly adminMessage = signal('');
+  protected readonly adminAuthed = signal(!!localStorage.getItem(ADMIN_TOKEN_KEY));
+  protected readonly adminLoading = signal(false);
+  protected readonly adminSubmissions = signal<AdminSubmission[]>([]);
+  protected readonly adminStats = signal<AdminStats | null>(null);
+  protected readonly adminUsers = signal<AdminUserRecord[]>([]);
+  protected readonly adminFilter = signal<AdminAudienceFilter>('all');
+  protected readonly adminSelectedId = signal<string | null>(null);
+  protected readonly adminTab = signal<'submissions' | 'users'>('submissions');
+  protected readonly adminFilteredSubmissions = computed(() => {
+    const filter = this.adminFilter();
+    const list = this.adminSubmissions();
+    return filter === 'all' ? list : list.filter(item => item.audience === filter);
+  });
+  protected readonly adminSelectedSubmission = computed(() =>
+    this.adminSubmissions().find(item => item.id === this.adminSelectedId()) ?? null
+  );
+
+  protected readonly interestRoleOptions = [
+    'Curious — tell me more',
+    'I attend wellbeing experiences',
+    'I host or run sessions',
+    'I work in wellness / community',
+    'Just keep me posted',
+  ];
+
+  protected readonly pulses = [
     {
-      name: 'Move',
-      label: 'Body in motion',
-      description: 'Fitness, yoga, pilates, mobility, walking groups, and active experiences that support vitality.',
-      accent: 'move',
+      tag: 'Move',
+      headline: 'Your body. What gets in the way of moving the way you want to?',
     },
     {
-      name: 'Feel',
-      label: 'Presence and awareness',
-      description: 'Meditation, breathwork, reflection, emotional wellbeing, and gentle practices for stress relief.',
-      accent: 'feel',
+      tag: 'Feel',
+      headline: 'Your inner world. What actually helps you feel different — not just distracted?',
     },
     {
-      name: 'Seek',
-      label: 'Growth and meaning',
-      description: 'Retreats, mindfulness, purpose-led sessions, spiritual exploration, and personal growth.',
-      accent: 'seek',
+      tag: 'Seek',
+      headline: 'Your meaning. What does growth look like when no one is watching?',
     },
   ];
 
-  protected readonly features = [
+  protected readonly principles = [
     {
-      category: 'Discover',
-      title: 'Perth-first wellbeing discovery',
-      detail: 'Bring scattered classes, workshops, retreats, and community experiences into one calm place.',
+      tag: 'Move',
+      label: 'Body in motion.',
+      description: 'The daily rhythm of being well — energy, movement, sleep, the simple practices that hold a life together.',
     },
     {
-      category: 'Trust',
-      title: 'Clear host and event context',
-      detail: 'Prioritise verified providers, clear pricing, beginner-friendly signals, and practical details.',
+      tag: 'Feel',
+      label: 'Inner balance.',
+      description: 'Stress, mood, connection, reflection — the practices that quietly change how a day actually lands.',
     },
     {
-      category: 'Pilot',
-      title: 'Early access built from real demand',
-      detail: 'Separate attendee and provider surveys help shape the first useful version of Within.',
+      tag: 'Seek',
+      label: 'Meaning and growth.',
+      description: 'Purpose, presence, the deeper questions — and the patient work of becoming who you want to be.',
+    },
+  ];
+
+  protected readonly approach = [
+    {
+      category: 'Listen',
+      title: 'Two short surveys, one for each side.',
+      detail: 'For people growing in their own way, and for the people who help them. Two minutes each, no fluff.',
+    },
+    {
+      category: 'Shape',
+      title: 'A small first cut, on purpose.',
+      detail: 'Start with one city. Build something quiet and useful before adding anything else.',
+    },
+    {
+      category: 'Honour',
+      title: 'Shaped by the people who will use it.',
+      detail: 'Your barriers and your wishes go straight into the first version. Nothing here is final until it earns a place.',
     },
   ];
 
   protected readonly providerPoints = [
-    'Share events, workshops, circles, retreats, or programs',
-    'Reach people already looking for wellbeing experiences',
-    'Test listing intent before paid marketplace features',
-    'Join the early Perth provider pilot',
+    'Tell us how you currently meet the people you help — and where it falls down.',
+    'Share what is actually hard about guiding people on their growth journey.',
+    'Help shape a quieter place to be found by the right people.',
+    'Be the first to know when the early pilot opens.',
   ];
 
   protected readonly surveyStats = [
-    { value: '2-3 min', label: 'short survey' },
-    { value: 'Perth', label: 'first pilot' },
-    { value: 'Move / Feel / Seek', label: 'clear signal' },
+    { value: '3 areas', label: 'body · mind · meaning' },
+    { value: 'Perth', label: 'first city · early pilot' },
+    { value: 'Open', label: 'we read every response' },
   ];
 
   protected readonly userStepTitles = [
     'About you',
-    'Interests',
-    'Discovery',
-    'Barriers',
-    'Intent',
+    'Your three areas',
+    'What you have tried',
+    'Where you get stuck',
+    'What would help',
     'Contact',
   ];
 
@@ -121,25 +204,29 @@ export class App {
   ];
 
   protected readonly userProfileOptions = [
-    'I regularly attend wellbeing/fitness/spiritual events',
-    'I attend occasionally',
-    'I am interested but have not started yet',
-    'I am just curious',
-    'Not interested currently',
+    'I have a consistent daily practice',
+    'I dabble — practice on and off',
+    'I am just starting out',
+    'I am curious but have not started yet',
+    'I tried, lost momentum, and want to come back',
   ];
 
   protected readonly userExperienceOptions = [
-    'Yoga',
-    'Meditation',
-    'Fitness classes',
+    'Yoga / pilates / movement classes',
+    'Gym, strength, or cardio training',
+    'Walking, hiking, or outdoor sessions',
+    'Meditation or mindfulness',
     'Breathwork',
-    'Sound healing',
-    'Spiritual workshops',
+    'Journaling or reflective writing',
+    'Habit or routine tracking apps',
+    'Therapy or counselling',
+    'Coaching or mentoring',
+    'Workshops or short courses',
     'Retreats',
-    'Nature walks / outdoor wellbeing',
-    'Community meetups',
-    'Mental/emotional wellbeing sessions',
-    'Life coaching / mindset sessions',
+    'Sound, energy, or somatic work',
+    'Reading, podcasts, or online courses',
+    'Community circles or meetups',
+    'Religious or faith practice',
   ];
 
   protected readonly discoveryOptions = [
@@ -149,85 +236,116 @@ export class App {
     'Google search',
     'Eventbrite',
     'Friends / word of mouth',
-    'Local gyms or studios',
+    'Books, podcasts, or YouTube',
+    'Apps I already use',
+    'Local studios or gyms',
     'WhatsApp groups',
-    'I do not know where to find them',
+    'I do not really know where to look',
   ];
 
   protected readonly userProblemOptions = [
-    'Hard to find good events in one place',
-    'I do not know which providers to trust',
-    'Too much scattered information',
-    'Events are not beginner-friendly',
-    'Pricing is unclear',
-    'Booking process is annoying',
-    'I do not want to attend alone',
-    'I do not know what is right for me',
-    'Events are too expensive',
-  ];
-
-  protected readonly lastAttendedOptions = [
-    'Within the last week',
-    'Within the last month',
-    'Within the last 3 months',
-    'Within the last 6 months',
-    'More than 6 months ago',
-    'Never',
+    'I lose motivation when I am on my own',
+    'Tools feel scattered across apps and accounts',
+    'I cannot tell what is real and what is hype',
+    'I do not know where to start',
+    'I have no clear sense of progress',
+    'Too much content, too little practice',
+    'Hard to find people on the same path',
+    'I feel judged or out of place in these spaces',
+    'Pricing is opaque',
+    'It feels overwhelming to commit',
   ];
 
   protected readonly categoryOptions = [
-    'Move: fitness, yoga, physical wellbeing',
-    'Feel: emotional wellbeing, mindfulness, stress relief',
-    'Seek: spirituality, retreats, deeper growth',
+    'Move: my body, energy, movement',
+    'Feel: my mood, stress, inner balance',
+    'Seek: meaning, purpose, deeper growth',
     'A mix of all three',
   ];
 
   protected readonly wouldUseOptions = [
     'Yes, definitely',
-    'Maybe, depends on the events',
+    'Maybe, depends on what is in it',
     'Maybe, depends on price',
     'Not sure',
     'No',
   ];
 
   protected readonly userFeatureOptions = [
-    'Browse local events',
-    'Book and pay in one place',
-    'Save favourite events',
-    'Follow providers',
-    'See beginner-friendly events',
-    'Join with friends',
-    'Retreat discovery',
-    'Personal wellbeing dashboard',
-    'Reviews and ratings',
-    'Event reminders',
+    'A calmer place to find practices and people',
+    'Trusted teachers and guides in one place',
+    'Daily reflection or journaling prompts',
+    'A simple way to build small habits',
+    'See how I am doing across body, mind, and meaning',
+    'Beginner-friendly paths in each area',
+    'Small community circles',
+    'Local events and gatherings',
+    'Retreats and deeper experiences',
+    'Private notes only I can see',
+    'A weekly nudge that is not noise',
+    'Help finding what is right for me',
+  ];
+
+  protected readonly moveBarrierOptions = [
+    'Time and energy after work',
+    'Motivation when I am alone',
+    'I do not know where to start',
+    'I lose consistency',
+    'It starts to feel like a chore',
+    'Cost of classes or gyms',
+    'Injury, illness, or physical limits',
+    'Other',
+  ];
+
+  protected readonly feelBarrierOptions = [
+    'I do not know where to start',
+    'Stress spills into everything',
+    'I do not feel safe opening up',
+    'I do not get quiet time alone',
+    'Therapy feels too clinical or pricey',
+    'I cannot sit still long enough',
+    'I do not know what actually works for me',
+    'Other',
+  ];
+
+  protected readonly seekBarrierOptions = [
+    'I do not know what I believe',
+    'Spiritual spaces feel performative',
+    'I get curious but lose momentum',
+    'I do not know who to trust',
+    'I cannot find people on the same path',
+    'I feel I should already know',
+    'Too much content, not enough practice',
+    'Other',
   ];
 
   protected readonly providerTypeOptions = [
-    'Yoga teacher',
-    'Meditation teacher',
+    'Yoga or movement teacher',
+    'Meditation or mindfulness teacher',
     'Fitness trainer',
     'Breathwork facilitator',
-    'Sound healer',
-    'Life coach',
-    'Mindset coach',
-    'Wellness coach',
+    'Sound or somatic practitioner',
+    'Therapist or counsellor',
+    'Life or mindset coach',
+    'Wellness or habits coach',
     'Retreat organiser',
     'Spiritual practitioner',
-    'Community event organiser',
-    'Studio / business owner',
+    'Community circle host',
+    'Studio or business owner',
+    'Other guide / practitioner',
   ];
 
   protected readonly providerExperienceOptions = [
-    'Classes',
+    'Drop-in classes',
     'Workshops',
     '1:1 sessions',
     'Group sessions',
+    'Ongoing programs or courses',
+    'Coaching journeys',
     'Retreats',
     'Online sessions',
+    'Community circles or meetups',
     'Corporate wellbeing sessions',
-    'Community meetups',
-    'Courses/programs',
   ];
 
   protected readonly providerPromotionOptions = [
@@ -245,31 +363,30 @@ export class App {
   ];
 
   protected readonly providerChallengeOptions = [
-    'Getting discovered by new people',
-    'Filling events/classes',
-    'Managing bookings',
-    'Managing payments',
-    'Communicating with attendees',
-    'Building trust',
-    'Standing out from other providers',
-    'Retaining customers',
-    'Promoting retreats/workshops',
-    'Admin work',
+    'Getting discovered by the right people',
+    'Filling sessions or programs consistently',
+    'Building trust with someone before they commit',
+    'Keeping people engaged across a journey, not just one session',
+    'Managing bookings and payments',
+    'Communicating with people between sessions',
+    'Standing out from louder marketing',
+    'Helping people see their own progress',
+    'Admin work eating into the actual practice',
+    'Promoting retreats or longer programs',
   ];
 
   protected readonly providerValueOptions = [
-    'More bookings',
-    'Better discovery',
-    'Easy event creation',
-    'Payment collection',
-    'Provider profile page',
-    'Reviews and ratings',
-    'Verified provider badge',
-    'Marketing support',
-    'Analytics/dashboard',
-    'Repeat customer management',
-    'Retreat promotion',
-    'Corporate client leads',
+    'Reach people genuinely on a growth path',
+    'Be found by the right people, not everyone',
+    'Easy way to share what I offer',
+    'Help people see their progress with me',
+    'Support people between sessions',
+    'A trusted, verified guide profile',
+    'Reviews from people who actually showed up',
+    'Payment and booking handled simply',
+    'Promote retreats and longer programs',
+    'Corporate or community partnerships',
+    'A calmer place than social media to be found',
   ];
 
   protected readonly pricingOptions = [
@@ -281,9 +398,18 @@ export class App {
     'I would only use it if free',
   ];
 
+  constructor() {
+    if (this.pageMode() === 'admin' && this.adminAuthed()) {
+      void this.loadAdminData();
+    }
+  }
+
   @HostListener('window:popstate')
   protected onPopState(): void {
     this.pageMode.set(this.getPageMode());
+    if (this.pageMode() === 'admin' && this.adminAuthed() && !this.adminSubmissions().length) {
+      void this.loadAdminData();
+    }
   }
 
   protected navigate(path: string): void {
@@ -291,6 +417,13 @@ export class App {
     this.pageMode.set(this.getPageMode());
     this.activeSurvey.set(path.includes('provider') ? 'provider' : 'user');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  protected scrollToId(id: string): void {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   protected chooseSurvey(audience: SurveyAudience): void {
@@ -367,6 +500,22 @@ export class App {
     this.toggleSelection(this.providerValue, value, event);
   }
 
+  protected setUserComment(key: string, value: string): void {
+    this.userComments.set({ ...this.userComments(), [key]: value });
+  }
+
+  protected setProviderComment(key: string, value: string): void {
+    this.providerComments.set({ ...this.providerComments(), [key]: value });
+  }
+
+  protected userComment(key: string): string {
+    return this.userComments()[key] ?? '';
+  }
+
+  protected providerComment(key: string): string {
+    return this.providerComments()[key] ?? '';
+  }
+
   protected async submitUserSurvey(): Promise<void> {
     if (!this.waitlistName().trim() || !this.userContact().trim()) {
       return;
@@ -377,15 +526,18 @@ export class App {
       name: this.waitlistName().trim(),
       contact: this.userContact().trim(),
       profile: this.userProfile(),
-      experiences: this.userExperiences(),
-      discovery: this.userDiscovery(),
-      problems: this.userProblems(),
-      lastAttended: this.userLastAttended(),
       primaryCategory: this.userPrimaryCategory(),
+      moveBarrier: this.userMoveBarrier(),
+      feelBarrier: this.userFeelBarrier(),
+      seekBarrier: this.userSeekBarrier(),
+      tried: this.userExperiences(),
+      discovery: this.userDiscovery(),
+      stuckOn: this.userProblems(),
+      wouldHelp: this.userFeatures(),
       wouldUse: this.userWouldUse(),
-      features: this.userFeatures(),
       openToConversation: this.userConversation(),
       wish: this.userWish().trim(),
+      comments: this.userComments(),
     };
     await this.saveMarketFitSubmission(payload);
     this.waitlistEmail.set(this.userContact());
@@ -415,6 +567,7 @@ export class App {
       firstEventInterest: this.providerFirstEvent(),
       websiteOrSocial: this.providerLink().trim(),
       blocker: this.providerBlocker().trim(),
+      comments: this.providerComments(),
     };
     await this.saveMarketFitSubmission(payload);
     this.waitlistEmail.set(this.providerContact());
@@ -422,12 +575,228 @@ export class App {
     this.surveySubmitted.set('provider');
   }
 
+  protected async submitInterest(): Promise<void> {
+    const email = this.interestEmail().trim();
+    const name = this.interestName().trim();
+    if (!email || !name) {
+      return;
+    }
+
+    const payload = {
+      audience: 'interest',
+      name,
+      contact: email,
+      role: this.interestRole(),
+      note: this.interestNote().trim(),
+    };
+    await this.saveMarketFitSubmission(payload);
+    this.interestSubmitted.set(true);
+  }
+
   private getPageMode(): PageMode {
     const path = window.location.pathname;
     if (path === '/survey/user') return 'user-survey';
     if (path === '/survey/provider') return 'provider-survey';
     if (path === '/internal/conversation-guide') return 'conversation-guide';
+    if (path === '/admin' || path.startsWith('/admin/')) return 'admin';
     return 'landing';
+  }
+
+  protected showAdmin(): void {
+    this.navigate('/admin');
+    if (this.adminAuthed()) {
+      this.loadAdminData();
+    }
+  }
+
+  protected async adminLogin(): Promise<void> {
+    const email = this.adminEmail().trim();
+    const password = this.adminPassword();
+    if (!email || !password) {
+      this.adminMessage.set('Enter email and password.');
+      return;
+    }
+
+    this.adminLoading.set(true);
+    this.adminMessage.set('Signing in...');
+
+    try {
+      const response = await fetch(`${API_BASE}/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.status === 403) {
+        this.adminMessage.set('That account is not an admin.');
+        this.adminLoading.set(false);
+        return;
+      }
+
+      if (!response.ok) {
+        this.adminMessage.set('Login failed. Check the credentials and that the API is running.');
+        this.adminLoading.set(false);
+        return;
+      }
+
+      const body = await response.json() as { accessToken: string; refreshToken: string; user: { displayName: string } };
+      localStorage.setItem(ADMIN_TOKEN_KEY, body.accessToken);
+      localStorage.setItem('within.admin.refreshToken', body.refreshToken);
+      this.adminAuthed.set(true);
+      this.adminPassword.set('');
+      this.adminMessage.set(`Signed in as ${body.user.displayName}.`);
+      this.adminLoading.set(false);
+      await this.loadAdminData();
+    } catch {
+      this.adminLoading.set(false);
+      this.adminMessage.set(`Could not reach the API. Is it running on ${API_BASE}?`);
+    }
+  }
+
+  protected adminLogout(): void {
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
+    localStorage.removeItem('within.admin.refreshToken');
+    this.adminAuthed.set(false);
+    this.adminSubmissions.set([]);
+    this.adminStats.set(null);
+    this.adminUsers.set([]);
+    this.adminSelectedId.set(null);
+    this.adminMessage.set('Signed out.');
+  }
+
+  protected async loadAdminData(): Promise<void> {
+    this.adminLoading.set(true);
+    this.adminMessage.set('');
+
+    const [submissions, stats, users] = await Promise.all([
+      this.adminFetch<AdminSubmission[]>('/admin/submissions'),
+      this.adminFetch<AdminStats>('/admin/stats'),
+      this.adminFetch<AdminUserRecord[]>('/admin/users'),
+    ]);
+
+    this.adminLoading.set(false);
+
+    if (submissions === null || stats === null || users === null) {
+      return;
+    }
+
+    this.adminSubmissions.set(submissions);
+    this.adminStats.set(stats);
+    this.adminUsers.set(users);
+    if (!this.adminSelectedId() && submissions.length) {
+      this.adminSelectedId.set(submissions[0].id);
+    }
+  }
+
+  protected setAdminFilter(filter: AdminAudienceFilter): void {
+    this.adminFilter.set(filter);
+    const filtered = this.adminFilteredSubmissions();
+    if (filtered.length && !filtered.some(item => item.id === this.adminSelectedId())) {
+      this.adminSelectedId.set(filtered[0].id);
+    }
+  }
+
+  protected setAdminTab(tab: 'submissions' | 'users'): void {
+    this.adminTab.set(tab);
+  }
+
+  protected selectSubmission(id: string): void {
+    this.adminSelectedId.set(id);
+  }
+
+  protected async deleteSubmission(id: string): Promise<void> {
+    if (!confirm('Delete this submission? This cannot be undone.')) {
+      return;
+    }
+
+    const ok = await this.adminFetch<void>(`/admin/submissions/${id}`, 'DELETE');
+    if (ok === null) {
+      return;
+    }
+
+    const remaining = this.adminSubmissions().filter(item => item.id !== id);
+    this.adminSubmissions.set(remaining);
+    if (this.adminSelectedId() === id) {
+      this.adminSelectedId.set(remaining[0]?.id ?? null);
+    }
+
+    const stats = await this.adminFetch<AdminStats>('/admin/stats');
+    if (stats) {
+      this.adminStats.set(stats);
+    }
+  }
+
+  protected answerEntries(submission: AdminSubmission | null): { key: string; value: string }[] {
+    if (!submission) return [];
+    return Object.entries(submission.answers)
+      .filter(([key]) => key !== 'audience' && key !== 'name' && key !== 'contact' && key !== 'source' && key !== 'createdUtc')
+      .map(([key, value]) => ({
+        key: this.formatKey(key),
+        value: this.formatValue(value),
+      }));
+  }
+
+  protected formatAudience(audience: string): string {
+    if (audience === 'provider') return 'Provider';
+    if (audience === 'interest') return 'Interest';
+    return 'User';
+  }
+
+  private formatKey(key: string): string {
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, char => char.toUpperCase())
+      .trim();
+  }
+
+  private formatValue(value: unknown): string {
+    if (Array.isArray(value)) {
+      return value.length ? value.join(', ') : '-';
+    }
+    if (value && typeof value === 'object') {
+      const entries = Object.entries(value as Record<string, unknown>).filter(([, v]) => v !== null && v !== undefined && v !== '');
+      if (!entries.length) return '-';
+      return entries.map(([k, v]) => `${this.formatKey(k)}: ${this.formatValue(v)}`).join(' — ');
+    }
+    if (value === null || value === undefined || value === '') {
+      return '-';
+    }
+    return String(value);
+  }
+
+  private async adminFetch<T>(path: string, method: 'GET' | 'DELETE' = 'GET'): Promise<T | null> {
+    const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+    if (!token) {
+      this.adminAuthed.set(false);
+      return null;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}${path}`, {
+        method,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        this.adminLogout();
+        this.adminMessage.set('Session expired. Please sign in again.');
+        return null;
+      }
+
+      if (!response.ok) {
+        this.adminMessage.set(`Request failed (${response.status}).`);
+        return null;
+      }
+
+      if (response.status === 204 || method === 'DELETE') {
+        return undefined as T;
+      }
+
+      return await response.json() as T;
+    } catch {
+      this.adminMessage.set(`Could not reach the API. Is it running on ${API_BASE}?`);
+      return null;
+    }
   }
 
   private toggleSelection(selection: WritableSignal<string[]>, value: string, event: Event, maxSelections?: number): void {
@@ -455,7 +824,7 @@ export class App {
     };
 
     try {
-      const response = await fetch('https://localhost:7071/api/market-fit/submissions', {
+      const response = await fetch(`${API_BASE}/market-fit/submissions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
