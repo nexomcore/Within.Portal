@@ -120,38 +120,230 @@
 
   <section id="waitlist" class="waitlist-section" aria-labelledby="waitlist-title">
     <div>
-      <h2 id="waitlist-title">Be first to know when Within launches.</h2>
+      <h2 id="waitlist-title">Help shape Perth's wellbeing discovery app.</h2>
       <p>
-        The app is currently in development. Join the early list for launch updates, provider opportunities, and first access.
+        Choose the path that matches you. Each survey focuses on real behaviour, current pain points, and whether Within should prioritise attendee discovery or provider listings first.
       </p>
+      <div class="survey-switch" aria-label="Choose survey type">
+        <button type="button" [class.active]="activeSurvey() === 'user'" (click)="chooseSurvey('user')">
+          I want to join wellbeing events
+        </button>
+        <button type="button" [class.active]="activeSurvey() === 'provider'" (click)="chooseSurvey('provider')">
+          I am a provider / host / coach
+        </button>
+      </div>
     </div>
 
-    <form class="waitlist-form" (ngSubmit)="submitWaitlist()" *ngIf="!submitted(); else submittedMessage">
+    <form class="waitlist-form survey-form" (ngSubmit)="submitUserSurvey()" *ngIf="activeSurvey() === 'user' && surveySubmitted() !== 'user'">
+      <div class="form-intro">
+        <span>End-user survey</span>
+        <p>For people who may attend classes, retreats, community events, or guided wellbeing experiences.</p>
+      </div>
+
+      <label>
+        Which best describes you?
+        <select name="userProfile" [ngModel]="userProfile()" (ngModelChange)="userProfile.set($event)">
+          <option *ngFor="let option of userProfileOptions">{{ option }}</option>
+        </select>
+      </label>
+
+      <fieldset>
+        <legend>What experiences are you most interested in?</legend>
+        <label *ngFor="let option of userExperienceOptions" class="check-option">
+          <input type="checkbox" [checked]="userExperiences().includes(option)" (change)="toggleUserExperience(option, $event)" />
+          <span>{{ option }}</span>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>How do you currently discover these experiences?</legend>
+        <label *ngFor="let option of discoveryOptions" class="check-option">
+          <input type="checkbox" [checked]="userDiscovery().includes(option)" (change)="toggleUserDiscovery(option, $event)" />
+          <span>{{ option }}</span>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>What is frustrating? Select up to 3.</legend>
+        <label *ngFor="let option of userProblemOptions" class="check-option">
+          <input type="checkbox" [checked]="userProblems().includes(option)" (change)="toggleUserProblem(option, $event)" />
+          <span>{{ option }}</span>
+        </label>
+      </fieldset>
+
+      <label>
+        When did you last attend one?
+        <select name="userLastAttended" [ngModel]="userLastAttended()" (ngModelChange)="userLastAttended.set($event)">
+          <option *ngFor="let option of lastAttendedOptions">{{ option }}</option>
+        </select>
+      </label>
+
+      <label>
+        Which category interests you most?
+        <select name="userPrimaryCategory" [ngModel]="userPrimaryCategory()" (ngModelChange)="userPrimaryCategory.set($event)">
+          <option *ngFor="let option of categoryOptions">{{ option }}</option>
+        </select>
+      </label>
+
+      <label>
+        Would you use an app or website to discover and join local wellbeing events in Perth?
+        <select name="userWouldUse" [ngModel]="userWouldUse()" (ngModelChange)="userWouldUse.set($event)">
+          <option *ngFor="let option of wouldUseOptions">{{ option }}</option>
+        </select>
+      </label>
+
+      <fieldset>
+        <legend>Which features would be most useful? Select up to 5.</legend>
+        <label *ngFor="let option of userFeatureOptions" class="check-option">
+          <input type="checkbox" [checked]="userFeatures().includes(option)" (change)="toggleUserFeature(option, $event)" />
+          <span>{{ option }}</span>
+        </label>
+      </fieldset>
+
+      <label>
+        Are you open to a 15-minute conversation?
+        <select name="userConversation" [ngModel]="userConversation()" (ngModelChange)="userConversation.set($event)">
+          <option>Yes</option>
+          <option>Maybe</option>
+          <option>No</option>
+        </select>
+      </label>
+
       <label>
         Name
         <input name="name" type="text" [ngModel]="waitlistName()" (ngModelChange)="waitlistName.set($event)" autocomplete="name" placeholder="Your name" />
       </label>
       <label>
-        Email
-        <input name="email" type="email" required [ngModel]="waitlistEmail()" (ngModelChange)="waitlistEmail.set($event)" autocomplete="email" placeholder="you@example.com" />
+        Email or phone
+        <input name="userContact" type="text" required [ngModel]="userContact()" (ngModelChange)="userContact.set($event)" autocomplete="email" placeholder="you@example.com" />
       </label>
       <label>
-        I am an
-        <select name="role" [ngModel]="waitlistRole()" (ngModelChange)="waitlistRole.set($event)">
-          <option>Early user</option>
-          <option>Provider</option>
-          <option>Retreat host</option>
-          <option>Corporate partner</option>
-        </select>
+        Anything else you wish existed in a wellbeing app?
+        <textarea name="userWish" [ngModel]="userWish()" (ngModelChange)="userWish.set($event)" rows="4" placeholder="Optional"></textarea>
       </label>
-      <button type="submit">Register interest</button>
+      <button type="submit">Join early access</button>
     </form>
 
-    <ng-template #submittedMessage>
-      <div class="success-message" role="status">
-        <strong>Interest registered.</strong>
-        <p>Thanks{{ waitlistName() ? ', ' + waitlistName() : '' }}. We will keep you updated as Within gets closer to launch.</p>
+    <form class="waitlist-form survey-form" (ngSubmit)="submitProviderSurvey()" *ngIf="activeSurvey() === 'provider' && surveySubmitted() !== 'provider'">
+      <div class="form-intro">
+        <span>Provider survey</span>
+        <p>For facilitators, trainers, teachers, retreat hosts, studios, coaches, and community organisers.</p>
       </div>
-    </ng-template>
+
+      <label>
+        Which best describes you?
+        <select name="providerType" [ngModel]="providerType()" (ngModelChange)="providerType.set($event)">
+          <option *ngFor="let option of providerTypeOptions">{{ option }}</option>
+        </select>
+      </label>
+
+      <fieldset>
+        <legend>What do you currently offer?</legend>
+        <label *ngFor="let option of providerExperienceOptions" class="check-option">
+          <input type="checkbox" [checked]="providerExperiences().includes(option)" (change)="toggleProviderExperience(option, $event)" />
+          <span>{{ option }}</span>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>How do you promote today?</legend>
+        <label *ngFor="let option of providerPromotionOptions" class="check-option">
+          <input type="checkbox" [checked]="providerPromotion().includes(option)" (change)="toggleProviderPromotion(option, $event)" />
+          <span>{{ option }}</span>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>What is your biggest challenge? Select up to 3.</legend>
+        <label *ngFor="let option of providerChallengeOptions" class="check-option">
+          <input type="checkbox" [checked]="providerChallenges().includes(option)" (change)="toggleProviderChallenge(option, $event)" />
+          <span>{{ option }}</span>
+        </label>
+      </fieldset>
+
+      <label>
+        Do you currently use booking or event tools?
+        <select name="providerBookingTools" [ngModel]="providerBookingTools()" (ngModelChange)="providerBookingTools.set($event)">
+          <option>Yes</option>
+          <option>No</option>
+          <option>Sometimes</option>
+        </select>
+      </label>
+
+      <label>
+        Would you list your events or services on a wellbeing-focused discovery platform?
+        <select name="providerWouldList" [ngModel]="providerWouldList()" (ngModelChange)="providerWouldList.set($event)">
+          <option>Yes, definitely</option>
+          <option>Maybe, if it brings new customers</option>
+          <option>Maybe, depending on price</option>
+          <option>Not sure</option>
+          <option>No</option>
+        </select>
+      </label>
+
+      <fieldset>
+        <legend>What would make it valuable enough to use?</legend>
+        <label *ngFor="let option of providerValueOptions" class="check-option">
+          <input type="checkbox" [checked]="providerValue().includes(option)" (change)="toggleProviderValue(option, $event)" />
+          <span>{{ option }}</span>
+        </label>
+      </fieldset>
+
+      <label>
+        Preferred pricing model
+        <select name="providerPricing" [ngModel]="providerPricing()" (ngModelChange)="providerPricing.set($event)">
+          <option *ngFor="let option of pricingOptions">{{ option }}</option>
+        </select>
+      </label>
+
+      <div class="inline-fields">
+        <label>
+          Join early Perth pilot?
+          <select name="providerPilot" [ngModel]="providerPilot()" (ngModelChange)="providerPilot.set($event)">
+            <option>Yes</option>
+            <option>Maybe</option>
+            <option>No</option>
+          </select>
+        </label>
+        <label>
+          List first event free?
+          <select name="providerFirstEvent" [ngModel]="providerFirstEvent()" (ngModelChange)="providerFirstEvent.set($event)">
+            <option>Yes</option>
+            <option>Maybe</option>
+            <option>No</option>
+          </select>
+        </label>
+      </div>
+
+      <label>
+        Name
+        <input name="providerName" type="text" required [ngModel]="waitlistName()" (ngModelChange)="waitlistName.set($event)" autocomplete="name" placeholder="Your name" />
+      </label>
+      <label>
+        Business/provider name
+        <input name="providerBusinessName" type="text" [ngModel]="providerBusinessName()" (ngModelChange)="providerBusinessName.set($event)" placeholder="Studio, practice, or brand name" />
+      </label>
+      <label>
+        Email or phone
+        <input name="providerContact" type="text" required [ngModel]="providerContact()" (ngModelChange)="providerContact.set($event)" autocomplete="email" placeholder="you@example.com" />
+      </label>
+      <label>
+        Website or social link
+        <input name="providerLink" type="text" [ngModel]="providerLink()" (ngModelChange)="providerLink.set($event)" placeholder="Optional" />
+      </label>
+      <label>
+        What would stop you from using a platform like this?
+        <textarea name="providerBlocker" [ngModel]="providerBlocker()" (ngModelChange)="providerBlocker.set($event)" rows="4" placeholder="Optional"></textarea>
+      </label>
+      <button type="submit">Register provider interest</button>
+    </form>
+
+    <div class="success-message" role="status" *ngIf="surveySubmitted()">
+      <strong>Interest registered.</strong>
+      <p>Thanks{{ waitlistName() ? ', ' + waitlistName() : '' }}. Your answers are saved for this local landing-page test.</p>
+      <button type="button" (click)="chooseSurvey(surveySubmitted() === 'provider' ? 'user' : 'provider')">
+        Complete the other survey
+      </button>
+    </div>
   </section>
 </main>

@@ -570,7 +570,8 @@ h3 {
   padding: 26px;
 }
 
-.waitlist-form label {
+.waitlist-form label,
+.waitlist-form fieldset {
   color: var(--ink);
   display: grid;
   font-size: 0.9rem;
@@ -579,14 +580,125 @@ h3 {
 }
 
 .waitlist-form input,
-.waitlist-form select {
+.waitlist-form select,
+.waitlist-form textarea {
   background: var(--blue-050);
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 24px;
   color: var(--ink);
   font: inherit;
   min-height: 52px;
   padding: 0 16px;
+}
+
+.waitlist-form input,
+.waitlist-form select {
+  border-radius: 999px;
+}
+
+.waitlist-form textarea {
+  line-height: 1.45;
+  padding-block: 14px;
+  resize: vertical;
+}
+
+.survey-switch {
+  display: grid;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.survey-switch button {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  color: var(--blue-700);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 850;
+  min-height: 52px;
+  padding: 12px 18px;
+  text-align: left;
+}
+
+.survey-switch button.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #ffffff;
+}
+
+.survey-form {
+  max-height: 76vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.form-intro {
+  background: var(--blue-050);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 18px;
+}
+
+.form-intro span {
+  color: var(--blue-700);
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 900;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.form-intro p {
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+.waitlist-form fieldset {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 16px;
+}
+
+.waitlist-form legend {
+  color: var(--ink);
+  font-weight: 900;
+  padding: 0 8px;
+}
+
+.check-option {
+  align-items: flex-start;
+  background: var(--blue-050);
+  border: 1px solid rgba(216, 235, 251, 0.86);
+  border-radius: 18px;
+  display: flex !important;
+  flex-direction: row;
+  gap: 10px !important;
+  padding: 11px 12px;
+}
+
+.check-option input {
+  accent-color: var(--blue);
+  flex: 0 0 auto;
+  height: 18px;
+  margin-top: 2px;
+  min-height: 0;
+  padding: 0;
+  width: 18px;
+}
+
+.check-option span {
+  color: var(--ink);
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.inline-fields {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .success-message {
@@ -595,6 +707,18 @@ h3 {
 
 .success-message p {
   margin-bottom: 0;
+}
+
+.success-message button {
+  background: var(--ink);
+  border: 0;
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 850;
+  margin-top: 18px;
+  min-height: 48px;
+  padding: 12px 18px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -699,5 +823,13 @@ h3 {
 
   .event-row span {
     flex: 0 0 auto;
+  }
+
+  .survey-form {
+    max-height: none;
+  }
+
+  .inline-fields {
+    grid-template-columns: 1fr;
   }
 }
