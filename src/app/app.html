@@ -364,4 +364,290 @@
       </ng-template>
     </section>
   </main>
+
+  <main class="guide-shell" *ngSwitchCase="'conversation-guide'">
+    <header class="survey-topbar">
+      <a class="brand" href="/" (click)="$event.preventDefault(); navigate('/')">
+        <img src="/within-logo.png" alt="" />
+        <span>Within</span>
+      </a>
+      <span class="internal-label">Internal guide</span>
+    </header>
+
+    <section class="guide-hero">
+      <div>
+        <span>1:1 Conversation Guide</span>
+        <h1>Listen for pain, behaviour, and emotional triggers.</h1>
+        <p>
+          Use this internal guide after survey responses. Start with the person's real behaviour, then introduce Within later through the concept reaction section.
+        </p>
+      </div>
+      <aside>
+        <strong>Facilitator rule</strong>
+        <p>Avoid selling too early. Ask for stories, recent behaviour, blockers, and commitment signals.</p>
+      </aside>
+    </section>
+
+    <section class="guide-layout">
+      <aside class="guide-toc" aria-label="Guide sections">
+        <a href="#end-user-guide">End-user guide</a>
+        <a href="#provider-guide">Provider guide</a>
+      </aside>
+
+      <div class="guide-content">
+        <article id="end-user-guide" class="guide-panel user-guide">
+          <div class="guide-panel-heading">
+            <span>End-user 1:1</span>
+            <h2>Understand how people discover and join wellbeing experiences.</h2>
+            <p>
+              This is not a survey. Listen for behaviour, motivation, trust signals, and what would make someone act.
+            </p>
+          </div>
+
+          <section class="guide-block opening-block">
+            <h3>Opening</h3>
+            <p>
+              "Thanks for taking the time. I'm exploring how people discover and join wellbeing experiences like yoga, meditation, retreats, fitness, emotional wellbeing sessions, and community events. There are no right or wrong answers - I'm mainly trying to understand your real experience."
+            </p>
+          </section>
+
+          <section class="guide-block">
+            <h3>Section A: Current behaviour</h3>
+            <ol>
+              <li>Tell me about the last wellbeing, fitness, mindfulness, spiritual, or community event you attended.</li>
+              <li>How did you find it?</li>
+              <li>What made you decide to go?</li>
+              <li>Did you go alone or with someone?</li>
+              <li>How was the booking or registration process?</li>
+              <li>What did you like about the experience?</li>
+              <li>What could have been better?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block">
+            <h3>Section B: Discovery problem</h3>
+            <ol>
+              <li>When you want to find something like yoga, meditation, breathwork, fitness, retreats, or community events, where do you usually look?</li>
+              <li>What is frustrating about finding these experiences?</li>
+              <li>Do you feel there are enough good options near you?</li>
+              <li>Do you ever feel unsure whether an event or provider is trustworthy?</li>
+              <li>What information do you need before deciding to attend?</li>
+              <li>Have you ever wanted to attend something but didn't go? Why?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block">
+            <h3>Section C: Motivation</h3>
+            <ol>
+              <li>What usually makes you interested in wellbeing experiences?</li>
+              <li>Are you more interested in fitness, stress relief, emotional wellbeing, spirituality, social connection, or personal growth?</li>
+              <li>What would make you attend more often?</li>
+              <li>What would make you feel comfortable attending alone?</li>
+              <li>What kind of experience would make you say, "I need this in my life"?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block concept-block">
+            <h3>Section D: Concept reaction</h3>
+            <p>Now show the landing page or mockup.</p>
+            <ol>
+              <li>What do you think this app is for?</li>
+              <li>What part is immediately clear?</li>
+              <li>What part is confusing?</li>
+              <li>Which category makes most sense to you: Move, Feel, or Seek?</li>
+              <li>Would you browse events on this?</li>
+              <li>Would you create an account?</li>
+              <li>Would you join a waitlist?</li>
+              <li>What would make you trust this app?</li>
+              <li>What would stop you from using it?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block">
+            <h3>Section E: Feature priority</h3>
+            <ol>
+              <li>Which feature would matter most to you?</li>
+              <li>Local event discovery</li>
+              <li>Booking and payment</li>
+              <li>Reviews</li>
+              <li>Verified providers</li>
+              <li>Retreat discovery</li>
+              <li>Saving favourite events</li>
+              <li>Community feed</li>
+              <li>Personal wellbeing dashboard</li>
+              <li>Daily motivation</li>
+              <li>Joining with friends</li>
+              <li>Which feature sounds unnecessary for version one?</li>
+              <li>What would make this app better than Instagram, Facebook, Meetup, or Eventbrite?</li>
+              <li>Would you prefer app, website, or both?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block">
+            <h3>Section F: Pricing and commitment</h3>
+            <ol>
+              <li>Would you pay through the app to book an event?</li>
+              <li>Would a small platform fee bother you if the event was valuable?</li>
+              <li>Would you pay for premium features later, such as personalised recommendations, guided journeys, or wellbeing tracking?</li>
+              <li>Would you invite a friend to use this?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block closing-block">
+            <h3>Closing</h3>
+            <ol>
+              <li>What is one thing we absolutely must get right?</li>
+              <li>What is one thing we should avoid?</li>
+              <li>Do you know anyone else who might be interested in this?</li>
+              <li>Can I contact you again when we launch the pilot?</li>
+            </ol>
+          </section>
+        </article>
+
+        <article id="provider-guide" class="guide-panel provider-guide">
+          <div class="guide-panel-heading">
+            <span>Provider 1:1</span>
+            <h2>Test whether this solves a real provider business pain.</h2>
+            <p>
+              Focus on discovery, bookings, trust, payments, repeat customers, admin, and marketing.
+            </p>
+          </div>
+
+          <section class="guide-block opening-block">
+            <h3>Opening</h3>
+            <p>
+              "Thanks for chatting with me. We're exploring a wellbeing discovery platform for Perth where providers can list events, workshops, retreats, and services. I'm not here to sell you anything today - I mainly want to understand how you currently promote and manage your offerings."
+            </p>
+          </section>
+
+          <section class="guide-block">
+            <h3>Section A: Provider background</h3>
+            <ol>
+              <li>Tell me about what you offer.</li>
+              <li>Who is your typical customer?</li>
+              <li>Do you mostly run classes, workshops, retreats, 1:1 sessions, or programs?</li>
+              <li>Are you full-time or part-time in this business?</li>
+              <li>How long have you been offering these services?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block">
+            <h3>Section B: Current promotion</h3>
+            <ol>
+              <li>How do people usually discover you?</li>
+              <li>Which channels work best for you right now?</li>
+              <li>Which channels are disappointing?</li>
+              <li>Do you use Instagram, Facebook, Meetup, Eventbrite, Google, email lists, or your own website?</li>
+              <li>How much time do you spend promoting each event?</li>
+              <li>Do you ever pay for ads?</li>
+              <li>How far in advance do you usually promote an event?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block">
+            <h3>Section C: Current pain points</h3>
+            <ol>
+              <li>What is the hardest part of filling an event or class?</li>
+              <li>Is discovery a problem for you?</li>
+              <li>Is trust a problem for new customers?</li>
+              <li>Is booking/payment/admin a problem?</li>
+              <li>Do people drop off before completing a booking?</li>
+              <li>Do you struggle more with new customers or repeat customers?</li>
+              <li>What do you wish was easier?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block">
+            <h3>Section D: Event and booking process</h3>
+            <ol>
+              <li>How do people currently book with you?</li>
+              <li>How do they pay?</li>
+              <li>Do you use any booking system?</li>
+              <li>Do you have cancellation or refund rules?</li>
+              <li>Do you manually message attendees?</li>
+              <li>Do you collect waivers, forms, or health details?</li>
+              <li>What information do customers usually ask before booking?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block concept-block">
+            <h3>Section E: Concept reaction</h3>
+            <p>Now show the landing page or mockup.</p>
+            <ol>
+              <li>What do you think this platform does?</li>
+              <li>Is the value clear to you as a provider?</li>
+              <li>Would you list an event here?</li>
+              <li>What would you need before trusting the platform?</li>
+              <li>What would make this better than Facebook, Instagram, Eventbrite, Meetup, or your current booking tool?</li>
+              <li>What feels missing?</li>
+              <li>What feels unnecessary?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block">
+            <h3>Section F: Provider features</h3>
+            <ol>
+              <li>Which features would matter most to you?</li>
+              <li>Provider profile</li>
+              <li>Event listing</li>
+              <li>Booking management</li>
+              <li>Payment collection</li>
+              <li>Reviews</li>
+              <li>Verified provider badge</li>
+              <li>Event reminders</li>
+              <li>Customer messaging</li>
+              <li>Refund/cancellation tools</li>
+              <li>Analytics/dashboard</li>
+              <li>Repeat customer list</li>
+              <li>Marketing support</li>
+              <li>Social sharing</li>
+              <li>Retreat listings</li>
+              <li>Corporate wellbeing leads</li>
+              <li>Which feature would you need on day one?</li>
+              <li>Which feature can wait?</li>
+              <li>Would you want to manage this from mobile, desktop, or both?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block">
+            <h3>Section G: Pricing and business model</h3>
+            <ol>
+              <li>Which pricing model would you prefer?</li>
+              <li>Commission per booking</li>
+              <li>Monthly subscription</li>
+              <li>Free listing + paid promotion</li>
+              <li>Freemium model</li>
+              <li>One-off event listing fee</li>
+              <li>What would feel fair?</li>
+              <li>What would feel too expensive?</li>
+              <li>Would you be comfortable with a commission if the platform brought you new bookings?</li>
+              <li>Would you pay monthly if the platform helped you get consistent leads?</li>
+              <li>Would you use it if your first event listing was free?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block">
+            <h3>Section H: Early pilot</h3>
+            <ol>
+              <li>Would you be interested in joining a Perth pilot?</li>
+              <li>Do you have an upcoming event we could list?</li>
+              <li>Would you be open to giving feedback during the pilot?</li>
+              <li>What would make you recommend this to another provider?</li>
+              <li>What would make you leave the platform?</li>
+            </ol>
+          </section>
+
+          <section class="guide-block closing-block">
+            <h3>Closing</h3>
+            <ol>
+              <li>What is the biggest problem we should solve for providers first?</li>
+              <li>What would make this a no-brainer for you?</li>
+              <li>Can I follow up when we start onboarding early providers?</li>
+              <li>Is there anyone else you think we should speak with?</li>
+            </ol>
+          </section>
+        </article>
+      </div>
+    </section>
+  </main>
 </ng-container>

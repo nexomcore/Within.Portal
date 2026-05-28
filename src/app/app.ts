@@ -3,7 +3,7 @@ import { Component, HostListener, WritableSignal, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 type SurveyAudience = 'user' | 'provider';
-type PageMode = 'landing' | 'user-survey' | 'provider-survey';
+type PageMode = 'landing' | 'user-survey' | 'provider-survey' | 'conversation-guide';
 
 @Component({
   selector: 'app-root',
@@ -367,6 +367,7 @@ export class App {
     const path = window.location.pathname;
     if (path === '/survey/user') return 'user-survey';
     if (path === '/survey/provider') return 'provider-survey';
+    if (path === '/internal/conversation-guide') return 'conversation-guide';
     return 'landing';
   }
 
