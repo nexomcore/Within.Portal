@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, WritableSignal, signal } from '@angular/core';
+import { Component, HostListener, WritableSignal, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 type SurveyAudience = 'user' | 'provider';
+type PageMode = 'landing' | 'user-survey' | 'provider-survey';
 
 @Component({
   selector: 'app-root',
@@ -12,11 +13,12 @@ type SurveyAudience = 'user' | 'provider';
 })
 export class App {
   protected readonly title = signal('Within');
+  protected readonly pageMode = signal<PageMode>(this.getPageMode());
+  protected readonly activeSurvey = signal<SurveyAudience>('user');
+  protected readonly surveySubmitted = signal<SurveyAudience | null>(null);
   protected readonly waitlistName = signal('');
   protected readonly waitlistEmail = signal('');
   protected readonly waitlistRole = signal('Early user');
-  protected readonly activeSurvey = signal<SurveyAudience>('user');
-  protected readonly surveySubmitted = signal<SurveyAudience | null>(null);
 
   protected readonly userProfile = signal('I attend occasionally');
   protected readonly userExperiences = signal<string[]>([]);
@@ -48,20 +50,20 @@ export class App {
   protected readonly pillars = [
     {
       name: 'Move',
-      label: 'Move your body',
-      description: 'Find fitness, yoga, pilates, mobility, walking groups, and active experiences that support everyday physical wellbeing.',
+      label: 'Body in motion',
+      description: 'Fitness, yoga, pilates, mobility, walking groups, and active experiences that support vitality.',
       accent: 'move',
     },
     {
       name: 'Feel',
-      label: 'Support your mind',
-      description: 'Explore meditation, breathwork, reflection, social connection, and emotional wellbeing experiences in one calm place.',
+      label: 'Presence and awareness',
+      description: 'Meditation, breathwork, reflection, emotional wellbeing, and gentle practices for stress relief.',
       accent: 'feel',
     },
     {
       name: 'Seek',
-      label: 'Go deeper',
-      description: 'Discover retreats, mindfulness, purpose-led sessions, spiritual exploration, and practices for personal growth.',
+      label: 'Growth and meaning',
+      description: 'Retreats, mindfulness, purpose-led sessions, spiritual exploration, and personal growth.',
       accent: 'seek',
     },
   ];
@@ -69,26 +71,32 @@ export class App {
   protected readonly features = [
     {
       category: 'Discover',
-      title: 'Wellbeing events and retreats',
-      detail: 'Browse curated experiences across movement, emotional wellbeing, mindfulness, and personal growth.',
+      title: 'Perth-first wellbeing discovery',
+      detail: 'Bring scattered classes, workshops, retreats, and community experiences into one calm place.',
     },
     {
-      category: 'Connect',
-      title: 'Trusted hosts and community circles',
-      detail: 'Meet verified practitioners, local providers, retreat hosts, and groups aligned with your interests.',
+      category: 'Trust',
+      title: 'Clear host and event context',
+      detail: 'Prioritise verified providers, clear pricing, beginner-friendly signals, and practical details.',
     },
     {
-      category: 'Grow',
-      title: 'Save, join, and build your path',
-      detail: 'Keep track of experiences you care about and return to practices that help you feel more balanced.',
+      category: 'Pilot',
+      title: 'Early access built from real demand',
+      detail: 'Separate attendee and provider surveys help shape the first useful version of Within.',
     },
   ];
 
   protected readonly providerPoints = [
-    'Share your wellbeing events, workshops, circles, or retreats',
-    'Reach people looking for holistic wellbeing experiences',
-    'Build trust with a verified provider presence',
-    'Register interest now while the platform is in development',
+    'Share events, workshops, circles, retreats, or programs',
+    'Reach people already looking for wellbeing experiences',
+    'Test listing intent before paid marketplace features',
+    'Join the early Perth provider pilot',
+  ];
+
+  protected readonly surveyStats = [
+    { value: '2-3 min', label: 'short survey' },
+    { value: 'Perth', label: 'first pilot' },
+    { value: 'Move / Feel / Seek', label: 'clear signal' },
   ];
 
   protected readonly userProfileOptions = [
@@ -252,9 +260,22 @@ export class App {
     'I would only use it if free',
   ];
 
+  @HostListener('window:popstate')
+  protected onPopState(): void {
+    this.pageMode.set(this.getPageMode());
+  }
+
+  protected navigate(path: string): void {
+    history.pushState(null, '', path);
+    this.pageMode.set(this.getPageMode());
+    this.activeSurvey.set(path.includes('provider') ? 'provider' : 'user');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   protected chooseSurvey(audience: SurveyAudience): void {
     this.activeSurvey.set(audience);
     this.surveySubmitted.set(null);
+    this.navigate(audience === 'provider' ? '/survey/provider' : '/survey/user');
   }
 
   protected toggleUserExperience(value: string, event: Event): void {
@@ -340,6 +361,13 @@ export class App {
     this.waitlistEmail.set(this.providerContact());
     this.waitlistRole.set('Provider');
     this.surveySubmitted.set('provider');
+  }
+
+  private getPageMode(): PageMode {
+    const path = window.location.pathname;
+    if (path === '/survey/user') return 'user-survey';
+    if (path === '/survey/provider') return 'provider-survey';
+    return 'landing';
   }
 
   private toggleSelection(selection: WritableSignal<string[]>, value: string, event: Event, maxSelections?: number): void {
