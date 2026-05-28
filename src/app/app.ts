@@ -34,6 +34,12 @@ interface AdminUserRecord {
   createdUtc: string;
 }
 
+interface AdminAnswerEntry {
+  key: string;
+  value: string;
+  comment: string;
+}
+
 const ADMIN_TOKEN_KEY = 'within.admin.accessToken';
 const API_BASE = (() => {
   const host = typeof window !== 'undefined' ? window.location.hostname : '';
@@ -57,34 +63,38 @@ export class App {
   protected readonly userStep = signal(0);
   protected readonly providerStep = signal(0);
   protected readonly submissionMessage = signal('');
+  protected readonly userValidationMessage = signal('');
+  protected readonly providerValidationMessage = signal('');
+  protected readonly interestValidationMessage = signal('');
+  protected readonly invalidField = signal('');
   protected readonly waitlistName = signal('');
   protected readonly waitlistEmail = signal('');
   protected readonly waitlistRole = signal('Early user');
 
-  protected readonly userProfile = signal('I dabble — practice on and off');
+  protected readonly userProfile = signal('');
   protected readonly userExperiences = signal<string[]>([]);
   protected readonly userDiscovery = signal<string[]>([]);
   protected readonly userProblems = signal<string[]>([]);
-  protected readonly userPrimaryCategory = signal('A mix of all three');
-  protected readonly userMoveBarrier = signal('Time and energy after work');
-  protected readonly userFeelBarrier = signal('I do not know where to start');
-  protected readonly userSeekBarrier = signal('I do not know what I believe');
-  protected readonly userWouldUse = signal('Maybe, depends on what is in it');
+  protected readonly userPrimaryCategory = signal('');
+  protected readonly userMoveBarrier = signal('');
+  protected readonly userFeelBarrier = signal('');
+  protected readonly userSeekBarrier = signal('');
+  protected readonly userWouldUse = signal('');
   protected readonly userFeatures = signal<string[]>([]);
-  protected readonly userConversation = signal('Maybe');
+  protected readonly userConversation = signal('');
   protected readonly userContact = signal('');
   protected readonly userWish = signal('');
 
-  protected readonly providerType = signal('Yoga teacher');
+  protected readonly providerType = signal('');
   protected readonly providerExperiences = signal<string[]>([]);
   protected readonly providerPromotion = signal<string[]>([]);
   protected readonly providerChallenges = signal<string[]>([]);
-  protected readonly providerBookingTools = signal('Sometimes');
-  protected readonly providerWouldList = signal('Maybe, if it brings new customers');
+  protected readonly providerBookingTools = signal('');
+  protected readonly providerWouldList = signal('');
   protected readonly providerValue = signal<string[]>([]);
-  protected readonly providerPricing = signal('Free basic plan + paid premium features');
-  protected readonly providerPilot = signal('Maybe');
-  protected readonly providerFirstEvent = signal('Maybe');
+  protected readonly providerPricing = signal('');
+  protected readonly providerPilot = signal('');
+  protected readonly providerFirstEvent = signal('');
   protected readonly providerBusinessName = signal('');
   protected readonly providerContact = signal('');
   protected readonly providerLink = signal('');
@@ -95,7 +105,7 @@ export class App {
 
   protected readonly interestName = signal('');
   protected readonly interestEmail = signal('');
-  protected readonly interestRole = signal('Curious — tell me more');
+  protected readonly interestRole = signal('');
   protected readonly interestNote = signal('');
   protected readonly interestSubmitted = signal(false);
 
@@ -436,6 +446,9 @@ export class App {
     this.activeSurvey.set(audience);
     this.surveySubmitted.set(null);
     this.submissionMessage.set('');
+    this.userValidationMessage.set('');
+    this.providerValidationMessage.set('');
+    this.invalidField.set('');
     this.navigate(audience === 'provider' ? '/survey/provider' : '/survey/user');
   }
 
@@ -455,21 +468,35 @@ export class App {
   }
 
   protected nextUserStep(): void {
+    if (!this.validateUserStep()) {
+      return;
+    }
+
+    this.userValidationMessage.set('');
     this.userStep.set(Math.min(this.userStep() + 1, this.userStepTitles.length - 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   protected previousUserStep(): void {
+    this.userValidationMessage.set('');
+    this.invalidField.set('');
     this.userStep.set(Math.max(this.userStep() - 1, 0));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   protected nextProviderStep(): void {
+    if (!this.validateProviderStep()) {
+      return;
+    }
+
+    this.providerValidationMessage.set('');
     this.providerStep.set(Math.min(this.providerStep() + 1, this.providerStepTitles.length - 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   protected previousProviderStep(): void {
+    this.providerValidationMessage.set('');
+    this.invalidField.set('');
     this.providerStep.set(Math.max(this.providerStep() - 1, 0));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -522,8 +549,24 @@ export class App {
     return this.providerComments()[key] ?? '';
   }
 
+  protected fieldError(field: string): string {
+    if (this.invalidField() !== field) {
+      return '';
+    }
+
+    if (field === 'waitlistName' || field === 'providerName') {
+      return 'Enter your name.';
+    }
+
+    if (field === 'userContact' || field === 'providerContact') {
+      return 'Enter an email or phone number.';
+    }
+
+    return '';
+  }
+
   protected async submitUserSurvey(): Promise<void> {
-    if (!this.waitlistName().trim() || !this.userContact().trim()) {
+    if (!this.validateUserStep()) {
       return;
     }
 
@@ -552,7 +595,7 @@ export class App {
   }
 
   protected async submitProviderSurvey(): Promise<void> {
-    if (!this.waitlistName().trim() || !this.providerContact().trim()) {
+    if (!this.validateProviderStep()) {
       return;
     }
 
@@ -584,10 +627,12 @@ export class App {
   protected async submitInterest(): Promise<void> {
     const email = this.interestEmail().trim();
     const name = this.interestName().trim();
-    if (!email || !name) {
+    if (!email || !name || !this.interestRole()) {
+      this.interestValidationMessage.set('Add your name, email, and choose the option that best describes you.');
       return;
     }
 
+    this.interestValidationMessage.set('');
     const payload = {
       audience: 'interest',
       name,
@@ -732,13 +777,15 @@ export class App {
     }
   }
 
-  protected answerEntries(submission: AdminSubmission | null): { key: string; value: string }[] {
+  protected answerEntries(submission: AdminSubmission | null): AdminAnswerEntry[] {
     if (!submission) return [];
+    const comments = this.extractComments(submission.answers['comments']);
     return Object.entries(submission.answers)
-      .filter(([key]) => key !== 'audience' && key !== 'name' && key !== 'contact' && key !== 'source' && key !== 'createdUtc')
+      .filter(([key]) => !['audience', 'name', 'contact', 'source', 'createdUtc', 'comments'].includes(key))
       .map(([key, value]) => ({
         key: this.formatKey(key),
         value: this.formatValue(value),
+        comment: comments[key] ?? '',
       }));
   }
 
@@ -768,6 +815,18 @@ export class App {
       return '-';
     }
     return String(value);
+  }
+
+  private extractComments(value: unknown): Record<string, string> {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, comment]) => typeof comment === 'string' && comment.trim().length > 0)
+        .map(([key, comment]) => [key, (comment as string).trim()])
+    );
   }
 
   private async adminFetch<T>(path: string, method: 'GET' | 'DELETE' = 'GET'): Promise<T | null> {
@@ -821,6 +880,119 @@ export class App {
     selection.set(current.filter(item => item !== value));
   }
 
+  private validateUserStep(): boolean {
+    const message = this.getUserStepValidationMessage();
+    this.userValidationMessage.set(message);
+    if (message) {
+      this.focusInvalidField();
+    }
+    return !message;
+  }
+
+  private getUserStepValidationMessage(): string {
+    switch (this.userStep()) {
+      case 0:
+        return !this.userProfile() || !this.userPrimaryCategory()
+          ? 'Choose where you are right now and which area calls to you most.'
+          : '';
+      case 1:
+        return !this.userMoveBarrier() || !this.userFeelBarrier() || !this.userSeekBarrier()
+          ? 'Choose one barrier for Move, Feel, and Seek before continuing.'
+          : '';
+      case 2:
+        return this.userExperiences().length ? '' : 'Pick at least one thing you have tried so far.';
+      case 3:
+        return this.userProblems().length ? '' : 'Pick at least one place where you get stuck.';
+      case 4:
+        if (!this.userWouldUse()) {
+          return 'Choose whether you would use this kind of companion.';
+        }
+        return this.userFeatures().length ? '' : 'Pick at least one thing that would actually help.';
+      case 5:
+        if (!this.userDiscovery().length) {
+          return 'Pick at least one place where you usually look today.';
+        }
+        if (!this.userConversation()) {
+          return 'Choose whether you are open to a short conversation.';
+        }
+        if (!this.waitlistName().trim()) {
+          this.invalidField.set('waitlistName');
+          return 'Add your name before submitting.';
+        }
+        if (!this.userContact().trim()) {
+          this.invalidField.set('userContact');
+          return 'Add your email or phone before submitting.';
+        }
+        this.invalidField.set('');
+        return '';
+      default:
+        this.invalidField.set('');
+        return '';
+    }
+  }
+
+  private validateProviderStep(): boolean {
+    const message = this.getProviderStepValidationMessage();
+    this.providerValidationMessage.set(message);
+    if (message) {
+      this.focusInvalidField();
+    }
+    return !message;
+  }
+
+  private getProviderStepValidationMessage(): string {
+    switch (this.providerStep()) {
+      case 0:
+        return !this.providerType() || !this.providerBookingTools()
+          ? 'Choose what you do and whether you currently use booking or client tools.'
+          : '';
+      case 1:
+        return this.providerExperiences().length ? '' : 'Pick at least one thing you offer.';
+      case 2:
+        return this.providerPromotion().length ? '' : 'Pick at least one way people find you today.';
+      case 3:
+        return this.providerChallenges().length ? '' : 'Pick at least one current challenge.';
+      case 4:
+        if (!this.providerWouldList()) {
+          return 'Choose whether you would be open to this kind of platform.';
+        }
+        if (!this.providerValue().length) {
+          return 'Pick at least one thing that would make it valuable.';
+        }
+        return this.providerPricing() ? '' : 'Choose the pricing model that feels closest.';
+      case 5:
+        if (!this.providerPilot() || !this.providerFirstEvent()) {
+          return 'Choose your pilot interest and first-event interest.';
+        }
+        if (!this.waitlistName().trim()) {
+          this.invalidField.set('providerName');
+          return 'Add your name before submitting.';
+        }
+        if (!this.providerContact().trim()) {
+          this.invalidField.set('providerContact');
+          return 'Add your email or phone before submitting.';
+        }
+        this.invalidField.set('');
+        return '';
+      default:
+        this.invalidField.set('');
+        return '';
+    }
+  }
+
+  private focusInvalidField(): void {
+    const field = this.invalidField();
+    if (!field) {
+      return;
+    }
+
+    setTimeout(() => {
+      const control = document.querySelector<HTMLElement>(`[data-field="${field}"]`);
+      control?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      control?.focus();
+    });
+  }
+
   private async saveMarketFitSubmission(payload: Record<string, unknown>): Promise<void> {
     const key = 'within.marketFitSubmissions';
     const submission = {
@@ -846,10 +1018,10 @@ export class App {
         throw new Error(`API returned ${response.status}`);
       }
 
-      this.submissionMessage.set('Saved to the Within API.');
+      this.submissionMessage.set('Response submited successfully. Thank you!');
       return;
     } catch {
-      this.submissionMessage.set('Saved locally. Start the Within API to persist responses to the database.');
+      this.submissionMessage.set('Error in saving submission. Saving locally instead.');
     }
 
     const existing = JSON.parse(localStorage.getItem(key) ?? '[]') as Record<string, unknown>[];

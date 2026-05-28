@@ -1075,6 +1075,18 @@ h3 {
   transition: width 200ms ease;
 }
 
+.validation-message {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.34);
+  border-radius: 14px;
+  color: #9f3030;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.45;
+  margin: 0;
+  padding: 12px 14px;
+}
+
 .survey-form label,
 .survey-form fieldset {
   color: var(--ink);
@@ -1108,6 +1120,20 @@ h3 {
   border-color: var(--ink);
   box-shadow: 0 0 0 4px rgba(13, 27, 61, 0.06);
   outline: none;
+}
+
+.survey-form .input-error {
+  background: rgba(255, 107, 107, 0.06);
+  border-color: var(--coral);
+  box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
+}
+
+.field-error {
+  color: #9f3030;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-top: -2px;
 }
 
 .survey-form textarea {
@@ -1966,8 +1992,21 @@ h3 {
 
 .admin-answer-list dd {
   color: var(--ink);
+  display: grid;
+  gap: 8px;
   margin: 0;
   word-break: break-word;
+}
+
+.admin-answer-comment {
+  background: rgba(127, 211, 198, 0.12);
+  border-left: 3px solid var(--mint);
+  border-radius: 10px;
+  color: var(--ink-soft);
+  display: block;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  padding: 10px 12px;
 }
 
 .admin-users {

@@ -154,6 +154,7 @@
           <label>
             You are&hellip;
             <select name="interestRole" [ngModel]="interestRole()" (ngModelChange)="interestRole.set($event)">
+              <option value="" disabled>Choose one</option>
               <option *ngFor="let option of interestRoleOptions">{{ option }}</option>
             </select>
           </label>
@@ -163,6 +164,7 @@
           <input name="interestNote" type="text" [ngModel]="interestNote()" (ngModelChange)="interestNote.set($event)" placeholder="The thing I&rsquo;ve been waiting for is&hellip;" />
         </label>
         <button type="submit" class="primary-action">Keep me posted</button>
+        <p class="validation-message" *ngIf="interestValidationMessage()">{{ interestValidationMessage() }}</p>
         <p class="interest-fine">We don&rsquo;t share contact details. You can ask us to forget you any time.</p>
       </form>
 
@@ -214,11 +216,13 @@
           <strong>{{ currentStepTitle() }}</strong>
           <div><i [style.width.%]="((userStep() + 1) / userStepTitles.length) * 100"></i></div>
         </div>
+        <p class="validation-message" *ngIf="userValidationMessage()">{{ userValidationMessage() }}</p>
 
         <ng-container *ngIf="userStep() === 0">
           <label>
             Where are you on your wellbeing journey right now?
             <select name="userProfile" [ngModel]="userProfile()" (ngModelChange)="userProfile.set($event)">
+              <option value="" disabled>Choose one</option>
               <option *ngFor="let option of userProfileOptions">{{ option }}</option>
             </select>
           </label>
@@ -227,6 +231,7 @@
           <label>
             Which area calls to you most right now?
             <select name="userPrimaryCategory" [ngModel]="userPrimaryCategory()" (ngModelChange)="userPrimaryCategory.set($event)">
+              <option value="" disabled>Choose one</option>
               <option *ngFor="let option of categoryOptions">{{ option }}</option>
             </select>
           </label>
@@ -240,6 +245,7 @@
             <span class="area-eyebrow move-eyebrow">Move &mdash; your body</span>
             What gets in the way of moving the way you want to?
             <select name="userMoveBarrier" [ngModel]="userMoveBarrier()" (ngModelChange)="userMoveBarrier.set($event)">
+              <option value="" disabled>Choose one</option>
               <option *ngFor="let option of moveBarrierOptions">{{ option }}</option>
             </select>
           </label>
@@ -249,6 +255,7 @@
             <span class="area-eyebrow feel-eyebrow">Feel &mdash; your inner world</span>
             What gets in the way of actually feeling different?
             <select name="userFeelBarrier" [ngModel]="userFeelBarrier()" (ngModelChange)="userFeelBarrier.set($event)">
+              <option value="" disabled>Choose one</option>
               <option *ngFor="let option of feelBarrierOptions">{{ option }}</option>
             </select>
           </label>
@@ -258,6 +265,7 @@
             <span class="area-eyebrow seek-eyebrow">Seek &mdash; meaning and growth</span>
             What gets in the way of the quieter, deeper work?
             <select name="userSeekBarrier" [ngModel]="userSeekBarrier()" (ngModelChange)="userSeekBarrier.set($event)">
+              <option value="" disabled>Choose one</option>
               <option *ngFor="let option of seekBarrierOptions">{{ option }}</option>
             </select>
           </label>
@@ -290,6 +298,7 @@
           <label>
             Would you use a quiet companion across body, mind, and meaning?
             <select name="userWouldUse" [ngModel]="userWouldUse()" (ngModelChange)="userWouldUse.set($event)">
+              <option value="" disabled>Choose one</option>
               <option *ngFor="let option of wouldUseOptions">{{ option }}</option>
             </select>
           </label>
@@ -318,6 +327,7 @@
           <label>
             Open to a 15-minute conversation about your journey?
             <select name="userConversation" [ngModel]="userConversation()" (ngModelChange)="userConversation.set($event)">
+              <option value="" disabled>Choose one</option>
               <option>Yes</option>
               <option>Maybe</option>
               <option>No</option>
@@ -327,11 +337,13 @@
           <div class="inline-fields">
           <label>
             Name
-            <input name="name" type="text" required [ngModel]="waitlistName()" (ngModelChange)="waitlistName.set($event)" autocomplete="name" placeholder="Your name" />
+            <input data-field="waitlistName" name="name" type="text" required [class.input-error]="fieldError('waitlistName')" [ngModel]="waitlistName()" (ngModelChange)="waitlistName.set($event)" autocomplete="name" placeholder="Your name" />
+            <span class="field-error" *ngIf="fieldError('waitlistName')">{{ fieldError('waitlistName') }}</span>
           </label>
           <label>
             Email or phone
-            <input name="userContact" type="text" required [ngModel]="userContact()" (ngModelChange)="userContact.set($event)" autocomplete="email" placeholder="you@example.com" />
+            <input data-field="userContact" name="userContact" type="text" required [class.input-error]="fieldError('userContact')" [ngModel]="userContact()" (ngModelChange)="userContact.set($event)" autocomplete="email" placeholder="you@example.com" />
+            <span class="field-error" *ngIf="fieldError('userContact')">{{ fieldError('userContact') }}</span>
           </label>
           </div>
 
@@ -351,9 +363,7 @@
       <ng-template #userSubmitted>
         <div class="success-message">
           <strong>Thanks{{ waitlistName() ? ', ' + waitlistName() : '' }}.</strong>
-          <p>Your end-user survey answers are saved.</p>
           <p>{{ submissionMessage() }}</p>
-          <button type="button" (click)="chooseSurvey('provider')">Complete provider survey</button>
         </div>
       </ng-template>
     </section>
@@ -381,11 +391,13 @@
           <strong>{{ currentStepTitle() }}</strong>
           <div><i [style.width.%]="((providerStep() + 1) / providerStepTitles.length) * 100"></i></div>
         </div>
+        <p class="validation-message" *ngIf="providerValidationMessage()">{{ providerValidationMessage() }}</p>
 
         <ng-container *ngIf="providerStep() === 0">
           <label>
             How would you describe what you do?
             <select name="providerType" [ngModel]="providerType()" (ngModelChange)="providerType.set($event)">
+              <option value="" disabled>Choose one</option>
               <option *ngFor="let option of providerTypeOptions">{{ option }}</option>
             </select>
           </label>
@@ -394,6 +406,7 @@
           <label>
             Do you currently use any booking, scheduling, or client tools?
             <select name="providerBookingTools" [ngModel]="providerBookingTools()" (ngModelChange)="providerBookingTools.set($event)">
+              <option value="" disabled>Choose one</option>
               <option>Yes</option>
               <option>No</option>
               <option>Sometimes</option>
@@ -439,6 +452,7 @@
           <label>
             Would you be open to being part of a calmer, wellbeing-focused space to meet your people?
             <select name="providerWouldList" [ngModel]="providerWouldList()" (ngModelChange)="providerWouldList.set($event)">
+              <option value="" disabled>Choose one</option>
               <option>Yes, definitely</option>
               <option>Maybe, if it brings the right people</option>
               <option>Maybe, depending on price</option>
@@ -460,6 +474,7 @@
           <label>
             Preferred pricing model
             <select name="providerPricing" [ngModel]="providerPricing()" (ngModelChange)="providerPricing.set($event)">
+              <option value="" disabled>Choose one</option>
               <option *ngFor="let option of pricingOptions">{{ option }}</option>
             </select>
           </label>
@@ -471,6 +486,7 @@
           <label>
             Join early Perth pilot?
             <select name="providerPilot" [ngModel]="providerPilot()" (ngModelChange)="providerPilot.set($event)">
+              <option value="" disabled>Choose one</option>
               <option>Yes</option>
               <option>Maybe</option>
               <option>No</option>
@@ -479,6 +495,7 @@
           <label>
             List first event free?
             <select name="providerFirstEvent" [ngModel]="providerFirstEvent()" (ngModelChange)="providerFirstEvent.set($event)">
+              <option value="" disabled>Choose one</option>
               <option>Yes</option>
               <option>Maybe</option>
               <option>No</option>
@@ -490,11 +507,13 @@
           <div class="inline-fields">
           <label>
             Name
-            <input name="providerName" type="text" required [ngModel]="waitlistName()" (ngModelChange)="waitlistName.set($event)" autocomplete="name" placeholder="Your name" />
+            <input data-field="providerName" name="providerName" type="text" required [class.input-error]="fieldError('providerName')" [ngModel]="waitlistName()" (ngModelChange)="waitlistName.set($event)" autocomplete="name" placeholder="Your name" />
+            <span class="field-error" *ngIf="fieldError('providerName')">{{ fieldError('providerName') }}</span>
           </label>
           <label>
             Email or phone
-            <input name="providerContact" type="text" required [ngModel]="providerContact()" (ngModelChange)="providerContact.set($event)" autocomplete="email" placeholder="you@example.com" />
+            <input data-field="providerContact" name="providerContact" type="text" required [class.input-error]="fieldError('providerContact')" [ngModel]="providerContact()" (ngModelChange)="providerContact.set($event)" autocomplete="email" placeholder="you@example.com" />
+            <span class="field-error" *ngIf="fieldError('providerContact')">{{ fieldError('providerContact') }}</span>
           </label>
           </div>
 
@@ -522,9 +541,7 @@
       <ng-template #providerSubmitted>
         <div class="success-message">
           <strong>Thanks{{ waitlistName() ? ', ' + waitlistName() : '' }}.</strong>
-          <p>Your provider survey answers are saved.</p>
           <p>{{ submissionMessage() }}</p>
-          <button type="button" (click)="chooseSurvey('user')">Complete end-user survey</button>
         </div>
       </ng-template>
     </section>
@@ -629,7 +646,10 @@
           <dl class="admin-answer-list">
             <ng-container *ngFor="let entry of answerEntries(detail)">
               <dt>{{ entry.key }}</dt>
-              <dd>{{ entry.value }}</dd>
+              <dd>
+                <span>{{ entry.value }}</span>
+                <small *ngIf="entry.comment" class="admin-answer-comment">{{ entry.comment }}</small>
+              </dd>
             </ng-container>
           </dl>
         </article>
