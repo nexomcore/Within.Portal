@@ -16,6 +16,9 @@ export class App {
   protected readonly pageMode = signal<PageMode>(this.getPageMode());
   protected readonly activeSurvey = signal<SurveyAudience>('user');
   protected readonly surveySubmitted = signal<SurveyAudience | null>(null);
+  protected readonly userStep = signal(0);
+  protected readonly providerStep = signal(0);
+  protected readonly submissionMessage = signal('');
   protected readonly waitlistName = signal('');
   protected readonly waitlistEmail = signal('');
   protected readonly waitlistRole = signal('Early user');
@@ -97,6 +100,24 @@ export class App {
     { value: '2-3 min', label: 'short survey' },
     { value: 'Perth', label: 'first pilot' },
     { value: 'Move / Feel / Seek', label: 'clear signal' },
+  ];
+
+  protected readonly userStepTitles = [
+    'About you',
+    'Interests',
+    'Discovery',
+    'Barriers',
+    'Intent',
+    'Contact',
+  ];
+
+  protected readonly providerStepTitles = [
+    'Provider type',
+    'Offerings',
+    'Promotion',
+    'Challenges',
+    'Platform fit',
+    'Pilot contact',
   ];
 
   protected readonly userProfileOptions = [
@@ -275,7 +296,43 @@ export class App {
   protected chooseSurvey(audience: SurveyAudience): void {
     this.activeSurvey.set(audience);
     this.surveySubmitted.set(null);
+    this.submissionMessage.set('');
     this.navigate(audience === 'provider' ? '/survey/provider' : '/survey/user');
+  }
+
+  protected currentStep(): number {
+    return this.pageMode() === 'provider-survey' ? this.providerStep() : this.userStep();
+  }
+
+  protected totalSteps(): number {
+    return this.pageMode() === 'provider-survey' ? this.providerStepTitles.length : this.userStepTitles.length;
+  }
+
+  protected currentStepTitle(): string {
+    const step = this.currentStep();
+    return this.pageMode() === 'provider-survey'
+      ? this.providerStepTitles[step]
+      : this.userStepTitles[step];
+  }
+
+  protected nextUserStep(): void {
+    this.userStep.set(Math.min(this.userStep() + 1, this.userStepTitles.length - 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  protected previousUserStep(): void {
+    this.userStep.set(Math.max(this.userStep() - 1, 0));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  protected nextProviderStep(): void {
+    this.providerStep.set(Math.min(this.providerStep() + 1, this.providerStepTitles.length - 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  protected previousProviderStep(): void {
+    this.providerStep.set(Math.max(this.providerStep() - 1, 0));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   protected toggleUserExperience(value: string, event: Event): void {
@@ -310,12 +367,12 @@ export class App {
     this.toggleSelection(this.providerValue, value, event);
   }
 
-  protected submitUserSurvey(): void {
+  protected async submitUserSurvey(): Promise<void> {
     if (!this.waitlistName().trim() || !this.userContact().trim()) {
       return;
     }
 
-    this.saveMarketFitSubmission({
+    const payload = {
       audience: 'user',
       name: this.waitlistName().trim(),
       contact: this.userContact().trim(),
@@ -329,18 +386,19 @@ export class App {
       features: this.userFeatures(),
       openToConversation: this.userConversation(),
       wish: this.userWish().trim(),
-    });
+    };
+    await this.saveMarketFitSubmission(payload);
     this.waitlistEmail.set(this.userContact());
     this.waitlistRole.set('Early user');
     this.surveySubmitted.set('user');
   }
 
-  protected submitProviderSurvey(): void {
+  protected async submitProviderSurvey(): Promise<void> {
     if (!this.waitlistName().trim() || !this.providerContact().trim()) {
       return;
     }
 
-    this.saveMarketFitSubmission({
+    const payload = {
       audience: 'provider',
       name: this.waitlistName().trim(),
       contact: this.providerContact().trim(),
@@ -357,7 +415,8 @@ export class App {
       firstEventInterest: this.providerFirstEvent(),
       websiteOrSocial: this.providerLink().trim(),
       blocker: this.providerBlocker().trim(),
-    });
+    };
+    await this.saveMarketFitSubmission(payload);
     this.waitlistEmail.set(this.providerContact());
     this.waitlistRole.set('Provider');
     this.surveySubmitted.set('provider');
@@ -387,14 +446,39 @@ export class App {
     selection.set(current.filter(item => item !== value));
   }
 
-  private saveMarketFitSubmission(payload: Record<string, unknown>): void {
+  private async saveMarketFitSubmission(payload: Record<string, unknown>): Promise<void> {
     const key = 'within.marketFitSubmissions';
-    const existing = JSON.parse(localStorage.getItem(key) ?? '[]') as Record<string, unknown>[];
-    existing.push({
+    const submission = {
       ...payload,
       createdUtc: new Date().toISOString(),
       source: 'landing-page',
-    });
+    };
+
+    try {
+      const response = await fetch('https://localhost:7071/api/market-fit/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          audience: payload['audience'],
+          name: payload['name'],
+          contact: payload['contact'],
+          source: 'landing-page',
+          answers: payload,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
+      }
+
+      this.submissionMessage.set('Saved to the Within API.');
+      return;
+    } catch {
+      this.submissionMessage.set('Saved locally. Start the Within API to persist responses to the database.');
+    }
+
+    const existing = JSON.parse(localStorage.getItem(key) ?? '[]') as Record<string, unknown>[];
+    existing.push(submission);
     localStorage.setItem(key, JSON.stringify(existing));
   }
 }

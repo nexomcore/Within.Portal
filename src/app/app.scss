@@ -514,6 +514,42 @@ h3 {
   padding: 30px;
 }
 
+.wizard-progress {
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+}
+
+.wizard-progress span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 780;
+  text-transform: uppercase;
+}
+
+.wizard-progress strong {
+  color: var(--navy);
+  font-size: 1.22rem;
+}
+
+.wizard-progress div {
+  background: rgba(13, 27, 61, 0.1);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.wizard-progress i {
+  background: linear-gradient(90deg, var(--navy), var(--coral), var(--mint));
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  transition: width 180ms ease;
+}
+
 .survey-form label,
 .survey-form fieldset {
   color: var(--ink);
@@ -584,6 +620,26 @@ h3 {
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wizard-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.survey-form .secondary-button {
+  background: var(--white);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  color: var(--navy);
+}
+
+.survey-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
 }
 
 .success-message {
@@ -890,6 +946,10 @@ h3 {
 
   .inline-fields {
     grid-template-columns: 1fr;
+  }
+
+  .wizard-actions {
+    flex-direction: column-reverse;
   }
 
   .survey-form,
