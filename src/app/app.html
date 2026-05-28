@@ -16,26 +16,72 @@
 
     <section id="home" class="hero-section">
       <div class="hero-copy">
-        <h1>Find your balance in everyday wellbeing.</h1>
+        <h1>Discover - Within</h1>
         <p class="hero-lede">
-          Within is a Perth-first wellbeing discovery app for local events, retreats, classes, and communities across Move, Feel, and Seek.
+          A calm way to find local events, retreats, classes, and communities across Move, Feel, and Seek.
         </p>
         <div class="hero-actions">
           <a class="primary-action" href="/survey/user" (click)="$event.preventDefault(); chooseSurvey('user')">I want to join events</a>
           <a class="secondary-action" href="/survey/provider" (click)="$event.preventDefault(); chooseSurvey('provider')">I am a provider</a>
         </div>
+        <div class="hero-proof" aria-label="Pilot focus">
+          <span>Perth first</span>
+          <span>2-3 minute survey</span>
+          <span>Early provider pilot</span>
+        </div>
       </div>
 
-      <aside class="brand-stage" aria-label="Within brand preview">
-        <div class="logo-orbit">
+      <aside class="discover-board" aria-label="Within discovery preview">
+        <div class="board-header">
           <img src="/within-logo.png" alt="Within logo" />
+          <div>
+            <span>Within</span>
+            <strong>Move. Feel. Seek.</strong>
+          </div>
         </div>
-        <div class="brand-wordmark">
-          <span>Move</span>
-          <i></i>
-          <span class="feel">Feel</span>
-          <i class="feel-dot"></i>
-          <span class="seek">Seek</span>
+
+        <div class="board-lenses" aria-label="Discovery categories">
+          <span class="lens-chip move">Move</span>
+          <span class="lens-chip feel">Feel</span>
+          <span class="lens-chip seek">Seek</span>
+          <span class="lens-chip">Retreats</span>
+        </div>
+
+        <div class="board-grid">
+          <article class="board-feature">
+            <span>This week</span>
+            <strong>Wellbeing experiences near Perth</strong>
+            <p>Browse classes, circles, retreats, workshops, and outdoor sessions from trusted local hosts.</p>
+          </article>
+
+          <div class="board-list" aria-label="Example discovery cards">
+            <article>
+              <i class="move-dot"></i>
+              <div>
+                <strong>Outdoor movement</strong>
+                <span>Mobility, walking groups, yoga, fitness</span>
+              </div>
+            </article>
+            <article>
+              <i class="feel-dot"></i>
+              <div>
+                <strong>Stress relief</strong>
+                <span>Meditation, breathwork, sound, reflection</span>
+              </div>
+            </article>
+            <article>
+              <i class="seek-dot"></i>
+              <div>
+                <strong>Deeper growth</strong>
+                <span>Retreats, spirituality, mindset, purpose</span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="board-footer">
+          <span>Testing demand now</span>
+          <a href="/survey/user" (click)="$event.preventDefault(); chooseSurvey('user')">Start survey</a>
         </div>
       </aside>
     </section>

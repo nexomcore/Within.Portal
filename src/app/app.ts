@@ -12,7 +12,7 @@ type PageMode = 'landing' | 'user-survey' | 'provider-survey' | 'conversation-gu
   styleUrl: './app.scss'
 })
 export class App {
-  protected readonly title = signal('Within');
+  protected readonly title = signal('Discover - Within');
   protected readonly pageMode = signal<PageMode>(this.getPageMode());
   protected readonly activeSurvey = signal<SurveyAudience>('user');
   protected readonly surveySubmitted = signal<SurveyAudience | null>(null);
