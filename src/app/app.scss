@@ -967,6 +967,37 @@ h3 {
   overflow: visible;
 }
 
+.survey-choice-page {
+  display: grid;
+  gap: clamp(28px, 4vw, 48px);
+  margin: 0 auto;
+  max-width: 1120px;
+  padding: clamp(56px, 8vw, 108px) var(--shell-pad) clamp(72px, 9vw, 128px);
+}
+
+.survey-choice-heading {
+  max-width: 720px;
+}
+
+.survey-choice-heading h1 {
+  margin-bottom: 18px;
+}
+
+.survey-choice-heading p {
+  color: var(--muted);
+  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+  line-height: 1.65;
+  margin-bottom: 0;
+}
+
+.survey-choice-grid {
+  align-items: stretch;
+}
+
+.survey-choice-grid .role-card {
+  min-height: 300px;
+}
+
 .survey-page {
   display: grid;
   gap: clamp(28px, 4vw, 56px);

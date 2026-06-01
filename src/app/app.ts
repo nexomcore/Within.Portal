@@ -3,7 +3,7 @@ import { Component, HostListener, WritableSignal, computed, signal } from '@angu
 import { FormsModule } from '@angular/forms';
 
 type SurveyAudience = 'user' | 'provider';
-type PageMode = 'landing' | 'user-survey' | 'provider-survey' | 'conversation-guide' | 'admin';
+type PageMode = 'landing' | 'survey-choice' | 'user-survey' | 'provider-survey' | 'conversation-guide' | 'admin';
 type AdminAudienceFilter = 'all' | 'user' | 'provider' | 'interest';
 
 interface AdminSubmission {
@@ -56,6 +56,8 @@ const API_BASE = (() => {
   styleUrl: './app.scss'
 })
 export class App {
+  private surveyRedirectTimer: ReturnType<typeof setTimeout> | null = null;
+
   protected readonly title = signal('Within');
   protected readonly pageMode = signal<PageMode>(this.getPageMode());
   protected readonly activeSurvey = signal<SurveyAudience>('user');
@@ -429,6 +431,7 @@ export class App {
   }
 
   protected navigate(path: string): void {
+    this.clearSurveyRedirect();
     history.pushState(null, '', path);
     this.pageMode.set(this.getPageMode());
     this.activeSurvey.set(path.includes('provider') ? 'provider' : 'user');
@@ -588,10 +591,13 @@ export class App {
       wish: this.userWish().trim(),
       comments: this.userComments(),
     };
-    await this.saveMarketFitSubmission(payload);
+    const saved = await this.saveMarketFitSubmission(payload);
     this.waitlistEmail.set(this.userContact());
     this.waitlistRole.set('Early user');
     this.surveySubmitted.set('user');
+    if (saved) {
+      this.scheduleSurveyRedirect();
+    }
   }
 
   protected async submitProviderSurvey(): Promise<void> {
@@ -618,10 +624,13 @@ export class App {
       blocker: this.providerBlocker().trim(),
       comments: this.providerComments(),
     };
-    await this.saveMarketFitSubmission(payload);
+    const saved = await this.saveMarketFitSubmission(payload);
     this.waitlistEmail.set(this.providerContact());
     this.waitlistRole.set('Provider');
     this.surveySubmitted.set('provider');
+    if (saved) {
+      this.scheduleSurveyRedirect();
+    }
   }
 
   protected async submitInterest(): Promise<void> {
@@ -646,11 +655,29 @@ export class App {
 
   private getPageMode(): PageMode {
     const path = window.location.pathname;
+    if (path === '/survey') return 'survey-choice';
     if (path === '/survey/user') return 'user-survey';
     if (path === '/survey/provider') return 'provider-survey';
     if (path === '/internal/conversation-guide') return 'conversation-guide';
     if (path === '/admin' || path.startsWith('/admin/')) return 'admin';
     return 'landing';
+  }
+
+  private scheduleSurveyRedirect(): void {
+    this.clearSurveyRedirect();
+    this.surveyRedirectTimer = setTimeout(() => {
+      this.surveyRedirectTimer = null;
+      this.navigate('/');
+    }, 15000);
+  }
+
+  private clearSurveyRedirect(): void {
+    if (!this.surveyRedirectTimer) {
+      return;
+    }
+
+    clearTimeout(this.surveyRedirectTimer);
+    this.surveyRedirectTimer = null;
   }
 
   protected showAdmin(): void {
@@ -993,7 +1020,7 @@ export class App {
     });
   }
 
-  private async saveMarketFitSubmission(payload: Record<string, unknown>): Promise<void> {
+  private async saveMarketFitSubmission(payload: Record<string, unknown>): Promise<boolean> {
     const key = 'within.marketFitSubmissions';
     const submission = {
       ...payload,
@@ -1018,8 +1045,8 @@ export class App {
         throw new Error(`API returned ${response.status}`);
       }
 
-      this.submissionMessage.set('Response submited successfully. Thank you!');
-      return;
+      this.submissionMessage.set('Response submitted successfully. Thank you!');
+      return true;
     } catch {
       this.submissionMessage.set('Error in saving submission. Saving locally instead.');
     }
@@ -1027,5 +1054,6 @@ export class App {
     const existing = JSON.parse(localStorage.getItem(key) ?? '[]') as Record<string, unknown>[];
     existing.push(submission);
     localStorage.setItem(key, JSON.stringify(existing));
+    return false;
   }
 }

@@ -11,7 +11,7 @@
         <a href="#take-part" (click)="$event.preventDefault(); scrollToId('take-part')">Take part</a>
         <a href="#interest" (click)="$event.preventDefault(); scrollToId('interest')">Stay in touch</a>
       </nav>
-      <a class="nav-cta" href="/survey/user" (click)="$event.preventDefault(); chooseSurvey('user')">Start survey</a>
+      <a class="nav-cta" href="/survey" (click)="$event.preventDefault(); navigate('/survey')">Start survey</a>
     </header>
 
     <section id="home" class="hero-section">
@@ -22,7 +22,7 @@
           Within is a new platform for whole-life wellbeing &mdash; body, mind, and meaning. Before we build, we&rsquo;re listening to the people who&rsquo;ll use it, and the people who guide them.
         </p>
         <div class="hero-actions">
-          <a class="primary-action" href="/survey/user" (click)="$event.preventDefault(); chooseSurvey('user')">Take the 2-minute survey</a>
+          <a class="primary-action" href="/survey" (click)="$event.preventDefault(); navigate('/survey')">Take the 2-minute survey</a>
           <a class="secondary-action" href="/survey/provider" (click)="$event.preventDefault(); chooseSurvey('provider')">I guide others</a>
         </div>
         <div class="hero-proof" aria-label="Pilot focus">
@@ -56,7 +56,7 @@
             <span>Your two minutes</span>
             <strong>shapes the first version.</strong>
           </div>
-          <a href="/survey/user" (click)="$event.preventDefault(); chooseSurvey('user')">Start &rarr;</a>
+          <a href="/survey" (click)="$event.preventDefault(); navigate('/survey')">Start &rarr;</a>
         </footer>
       </aside>
     </section>
@@ -192,6 +192,38 @@
       </div>
       <span class="footer-note">&copy; {{ 2025 }} Within. All rights reserved.</span>
     </footer>
+  </main>
+
+  <main class="survey-shell survey-choice-shell" *ngSwitchCase="'survey-choice'">
+    <header class="survey-topbar">
+      <a class="brand" href="/" (click)="$event.preventDefault(); navigate('/')">
+        <img src="/within-logo.png" alt="" />
+        <span>Within</span>
+      </a>
+    </header>
+
+    <section class="survey-choice-page" aria-labelledby="survey-choice-title">
+      <div class="survey-choice-heading">
+        <span class="section-eyebrow">Start survey</span>
+        <h1 id="survey-choice-title">Which survey is right for you?</h1>
+        <p>Choose the path that best describes you. Each survey takes about two minutes.</p>
+      </div>
+
+      <div class="role-grid survey-choice-grid">
+        <a class="role-card user-card" href="/survey/user" (click)="$event.preventDefault(); chooseSurvey('user')">
+          <span class="role-eyebrow">For people growing</span>
+          <strong>I&rsquo;m a user.</strong>
+          <p>I want to share what gets in the way of my wellbeing across body, mind, and meaning.</p>
+          <span class="role-cta">Start user survey &rarr;</span>
+        </a>
+        <a class="role-card provider-card" href="/survey/provider" (click)="$event.preventDefault(); chooseSurvey('provider')">
+          <span class="role-eyebrow">For guides &amp; practitioners</span>
+          <strong>I&rsquo;m a provider.</strong>
+          <p>I host, teach, coach, guide, or support others and want to share what would help my work.</p>
+          <span class="role-cta">Start provider survey &rarr;</span>
+        </a>
+      </div>
+    </section>
   </main>
 
   <main class="survey-shell" *ngSwitchCase="'user-survey'">
