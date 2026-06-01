@@ -60,4 +60,4 @@ For more information on using the Angular CLI, including detailed command refere
 
 
 28th May
-New API Added 1
+New API Added 2
