@@ -1,0 +1,112 @@
+<main class="admin-shell">
+  <header class="survey-topbar">
+    <a class="brand" routerLink="/"><img src="/within-logo.png" alt="" /><span>Within</span></a>
+    <div class="admin-topbar-actions">
+      <button type="button" class="admin-tab" [class.active]="adminTab() === 'submissions'" (click)="setAdminTab('submissions')" *ngIf="adminAuthed()">Submissions</button>
+      <button type="button" class="admin-tab" [class.active]="adminTab() === 'providers'" (click)="setAdminTab('providers')" *ngIf="adminAuthed()">Providers</button>
+      <button type="button" class="admin-tab" [class.active]="adminTab() === 'users'" (click)="setAdminTab('users')" *ngIf="adminAuthed()">Users</button>
+      <button type="button" class="admin-signout" *ngIf="adminAuthed()" (click)="adminLogout()">Sign out</button>
+    </div>
+  </header>
+
+  <section class="admin-login-wrap" *ngIf="!adminAuthed()">
+    <aside class="admin-login-context">
+      <span class="section-eyebrow">Admin</span>
+      <h1>Sign in to view survey responses and provider applications.</h1>
+      <p>Only accounts with the Admin role can view submissions, provider applications, aggregate stats, and registered users.</p>
+    </aside>
+    <form class="admin-login-form" (ngSubmit)="adminLogin()">
+      <label>Admin email<input name="adminEmail" type="email" autocomplete="username" [ngModel]="adminEmail()" (ngModelChange)="adminEmail.set($event)" /></label>
+      <label>Password<input name="adminPassword" type="password" autocomplete="current-password" [ngModel]="adminPassword()" (ngModelChange)="adminPassword.set($event)" /></label>
+      <button type="submit" class="primary-action" [disabled]="adminLoading()">{{ adminLoading() ? 'Signing in...' : 'Sign in' }}</button>
+      <p class="admin-login-message" *ngIf="adminMessage()">{{ adminMessage() }}</p>
+    </form>
+  </section>
+
+  <section class="admin-dashboard" *ngIf="adminAuthed()">
+    <div class="admin-stats-row" *ngIf="adminStats() as stats">
+      <article class="admin-stat-card"><span>Total submissions</span><strong>{{ stats.totalSubmissions }}</strong></article>
+      <article class="admin-stat-card"><span>End-user surveys</span><strong>{{ stats.userSubmissions }}</strong></article>
+      <article class="admin-stat-card"><span>Provider surveys</span><strong>{{ stats.providerSubmissions }}</strong></article>
+      <article class="admin-stat-card"><span>Provider applications</span><strong>{{ providerApplications().length }}</strong></article>
+      <article class="admin-stat-card"><span>Registered accounts</span><strong>{{ stats.totalUsers }}</strong><small>{{ stats.providerUsers }} providers - {{ stats.adminUsers }} admin</small></article>
+    </div>
+
+    <p class="admin-message" *ngIf="adminMessage()">{{ adminMessage() }}</p>
+
+    <div class="admin-toolbar" *ngIf="adminTab() === 'submissions'">
+      <div class="admin-filter-group" role="group" aria-label="Audience filter">
+        <button type="button" [class.active]="adminFilter() === 'all'" (click)="setAdminFilter('all')">All</button>
+        <button type="button" [class.active]="adminFilter() === 'user'" (click)="setAdminFilter('user')">End users</button>
+        <button type="button" [class.active]="adminFilter() === 'provider'" (click)="setAdminFilter('provider')">Providers</button>
+        <button type="button" [class.active]="adminFilter() === 'interest'" (click)="setAdminFilter('interest')">Interest</button>
+      </div>
+      <button type="button" class="admin-refresh" (click)="loadAdminData()" [disabled]="adminLoading()">{{ adminLoading() ? 'Loading...' : 'Refresh' }}</button>
+    </div>
+
+    <div class="admin-grid" *ngIf="adminTab() === 'submissions'">
+      <aside class="admin-list" aria-label="Submissions list">
+        <p *ngIf="!adminFilteredSubmissions().length" class="admin-empty">No submissions yet for this filter.</p>
+        <button *ngFor="let submission of adminFilteredSubmissions()" type="button" class="admin-list-item" [class.active]="submission.id === adminSelectedId()" (click)="selectSubmission(submission.id)">
+          <span class="audience-tag" [attr.data-audience]="submission.audience">{{ formatAudience(submission.audience) }}</span>
+          <strong>{{ submission.name || '(no name)' }}</strong>
+          <span class="admin-contact">{{ submission.contact }}</span>
+          <span class="admin-created">{{ submission.createdUtc | date:'medium' }}</span>
+        </button>
+      </aside>
+      <article class="admin-detail" *ngIf="adminSelectedSubmission() as detail; else nothingSelected">
+        <header class="admin-detail-header">
+          <div><span class="audience-tag" [attr.data-audience]="detail.audience">{{ formatAudience(detail.audience) }}</span><h2>{{ detail.name || '(no name)' }}</h2><p class="admin-muted">{{ detail.contact }} - submitted {{ detail.createdUtc | date:'medium' }} - source: {{ detail.source }}</p></div>
+          <button type="button" class="admin-danger" (click)="deleteSubmission(detail.id)">Delete</button>
+        </header>
+        <dl class="admin-answer-list"><ng-container *ngFor="let entry of answerEntries(detail)"><dt>{{ entry.key }}</dt><dd><span>{{ entry.value }}</span><small *ngIf="entry.comment" class="admin-answer-comment">{{ entry.comment }}</small></dd></ng-container></dl>
+      </article>
+      <ng-template #nothingSelected><article class="admin-detail admin-empty-detail"><p>Select a submission to see the full answers.</p></article></ng-template>
+    </div>
+
+    <div class="admin-toolbar provider-admin-toolbar" *ngIf="adminTab() === 'providers'">
+      <div class="admin-filter-group" role="group" aria-label="Provider application filter">
+        <button type="button" *ngFor="let filter of providerStatusFilters" [class.active]="providerApplicationFilter() === filter.value" (click)="setProviderApplicationFilter(filter.value)">{{ filter.label }}</button>
+      </div>
+      <input class="admin-search" type="search" placeholder="Search providers" [ngModel]="providerApplicationSearch()" (ngModelChange)="providerApplicationSearch.set($event)" />
+      <button type="button" class="admin-refresh" (click)="loadAdminData()" [disabled]="adminLoading()">{{ adminLoading() ? 'Loading...' : 'Refresh' }}</button>
+    </div>
+
+    <div class="admin-grid provider-admin-grid" *ngIf="adminTab() === 'providers'">
+      <aside class="admin-list" aria-label="Provider applications list">
+        <p *ngIf="!filteredProviderApplications().length" class="admin-empty">No provider applications for this filter.</p>
+        <button *ngFor="let application of filteredProviderApplications()" type="button" class="admin-list-item provider-application-item" [class.active]="application.id === selectedProviderApplicationId()" (click)="selectProviderApplication(application.id)">
+          <span class="provider-status-pill" [attr.data-status]="application.status">{{ formatProviderStatus(application.status) }}</span>
+          <strong>{{ application.providerName }}</strong>
+          <span class="admin-contact">{{ application.contactEmail }}</span>
+          <span class="admin-created">{{ formatProviderCategory(application.providerCategory) }} - {{ application.location }}</span>
+        </button>
+      </aside>
+      <article class="admin-detail provider-application-detail" *ngIf="selectedProviderApplication() as application; else noProviderSelected">
+        <header class="admin-detail-header"><div><span class="provider-status-pill" [attr.data-status]="application.status">{{ formatProviderStatus(application.status) }}</span><h2>{{ application.providerName }}</h2><p class="admin-muted">{{ formatProviderCategory(application.providerCategory) }} - {{ application.primaryLens }} - submitted {{ application.submittedUtc | date:'medium' }}</p></div></header>
+        <section class="provider-review-panel">
+          <div class="provider-review-actions">
+            <button type="button" class="admin-refresh" (click)="updateProviderApplicationStatus('InReview')">Start review</button>
+            <button type="button" class="admin-refresh" (click)="updateProviderApplicationStatus('Approved')">Approve</button>
+            <button type="button" class="admin-refresh" (click)="updateProviderApplicationStatus('MoreInfoRequested')">Request info</button>
+            <button type="button" class="admin-danger" (click)="updateProviderApplicationStatus('Rejected')">Reject</button>
+          </div>
+          <label>Decision reason<textarea rows="3" [ngModel]="providerDecisionReason()" (ngModelChange)="providerDecisionReason.set($event)" placeholder="Required for more-info or rejected decisions"></textarea></label>
+          <p class="admin-muted" *ngIf="application.reviewDecisionReason">Latest reason: {{ application.reviewDecisionReason }}</p>
+        </section>
+        <section class="provider-trust-checklist" aria-label="Trust checklist"><article *ngFor="let item of trustChecklist(application)" [class.ok]="item.ok"><span>{{ item.ok ? 'Yes' : 'No' }}</span><strong>{{ item.label }}</strong></article></section>
+        <section class="provider-notes-panel"><label>Internal admin notes<textarea rows="4" [ngModel]="providerAdminNotesDraft()" (ngModelChange)="providerAdminNotesDraft.set($event)"></textarea></label><button type="button" class="admin-refresh" (click)="saveProviderAdminNotes()">Save notes</button></section>
+        <dl class="admin-answer-list"><ng-container *ngFor="let entry of providerApplicationEntries(application)"><dt>{{ entry.key }}</dt><dd>{{ entry.value }}</dd></ng-container></dl>
+      </article>
+      <ng-template #noProviderSelected><article class="admin-detail admin-empty-detail"><p>Select a provider application to review.</p></article></ng-template>
+    </div>
+
+    <div class="admin-users" *ngIf="adminTab() === 'users'">
+      <p *ngIf="!adminUsers().length" class="admin-empty">No registered accounts.</p>
+      <table *ngIf="adminUsers().length" class="admin-users-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th></tr></thead>
+        <tbody><tr *ngFor="let user of adminUsers()"><td>{{ user.displayName }}</td><td>{{ user.email }}</td><td><span class="admin-role-pill" [attr.data-role]="user.role">{{ user.role }}</span></td><td>{{ user.createdUtc | date:'medium' }}</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</main>

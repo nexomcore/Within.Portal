@@ -1,0 +1,100 @@
+<main class="survey-shell">
+  <header class="survey-topbar">
+    <a class="brand" routerLink="/"><img src="/within-logo.png" alt="" /><span>Within</span></a>
+    <a routerLink="/survey/provider">Provider survey</a>
+  </header>
+
+  <section class="survey-page">
+    <aside class="survey-context user-context">
+      <span>For people growing</span>
+      <h1>Where do you actually get stuck?</h1>
+      <p>Two minutes on your real journey across body, mind, and meaning.</p>
+    </aside>
+
+    <form class="survey-form" (ngSubmit)="submit()" *ngIf="!submitted(); else submittedMessage">
+      <div class="wizard-progress">
+        <span>Step {{ step() + 1 }} of {{ stepTitles.length }}</span>
+        <strong>{{ stepTitles[step()] }}</strong>
+        <div><i [style.width.%]="((step() + 1) / stepTitles.length) * 100"></i></div>
+      </div>
+      <p class="validation-message" *ngIf="validationMessage()">{{ validationMessage() }}</p>
+
+      <ng-container *ngIf="step() === 0">
+        <label>Where are you on your wellbeing journey right now?
+          <select name="profile" [ngModel]="profile()" (ngModelChange)="profile.set($event)">
+            <option value="" disabled>Choose one</option>
+            <option *ngFor="let option of userProfileOptions">{{ option }}</option>
+          </select>
+        </label>
+        <textarea class="comment-note" [ngModel]="comment('profile')" (ngModelChange)="setComment('profile', $event)" name="profileComment" rows="2" placeholder="If none quite fit, tell us in your own words"></textarea>
+        <label>Which area calls to you most right now?
+          <select name="primaryCategory" [ngModel]="primaryCategory()" (ngModelChange)="primaryCategory.set($event)">
+            <option value="" disabled>Choose one</option>
+            <option *ngFor="let option of categoryOptions">{{ option }}</option>
+          </select>
+        </label>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 1">
+        <label><span class="area-eyebrow move-eyebrow">Move</span>What gets in the way?
+          <select name="moveBarrier" [ngModel]="moveBarrier()" (ngModelChange)="moveBarrier.set($event)"><option value="" disabled>Choose one</option><option *ngFor="let option of moveBarrierOptions">{{ option }}</option></select>
+        </label>
+        <label><span class="area-eyebrow feel-eyebrow">Feel</span>What gets in the way?
+          <select name="feelBarrier" [ngModel]="feelBarrier()" (ngModelChange)="feelBarrier.set($event)"><option value="" disabled>Choose one</option><option *ngFor="let option of feelBarrierOptions">{{ option }}</option></select>
+        </label>
+        <label><span class="area-eyebrow seek-eyebrow">Seek</span>What gets in the way?
+          <select name="seekBarrier" [ngModel]="seekBarrier()" (ngModelChange)="seekBarrier.set($event)"><option value="" disabled>Choose one</option><option *ngFor="let option of seekBarrierOptions">{{ option }}</option></select>
+        </label>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 2">
+        <fieldset>
+          <legend>What have you tried so far?</legend>
+          <label *ngFor="let option of userExperienceOptions" class="check-option"><input type="checkbox" [checked]="experiences().includes(option)" (change)="toggle(experiences, option, $event)" /><span>{{ option }}</span></label>
+        </fieldset>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 3">
+        <fieldset>
+          <legend>Across the whole journey, where do you get stuck? Up to 3.</legend>
+          <label *ngFor="let option of userProblemOptions" class="check-option"><input type="checkbox" [checked]="problems().includes(option)" (change)="toggle(problems, option, $event, 3)" /><span>{{ option }}</span></label>
+        </fieldset>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 4">
+        <label>Would you use a quiet companion across body, mind, and meaning?
+          <select name="wouldUse" [ngModel]="wouldUse()" (ngModelChange)="wouldUse.set($event)"><option value="" disabled>Choose one</option><option *ngFor="let option of wouldUseOptions">{{ option }}</option></select>
+        </label>
+        <fieldset>
+          <legend>What would actually help? Up to 5.</legend>
+          <label *ngFor="let option of userFeatureOptions" class="check-option"><input type="checkbox" [checked]="features().includes(option)" (change)="toggle(features, option, $event, 5)" /><span>{{ option }}</span></label>
+        </fieldset>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 5">
+        <fieldset>
+          <legend>Where do you usually look for practices, teachers, or experiences?</legend>
+          <label *ngFor="let option of discoveryOptions" class="check-option"><input type="checkbox" [checked]="discovery().includes(option)" (change)="toggle(discovery, option, $event)" /><span>{{ option }}</span></label>
+        </fieldset>
+        <label>Open to a 15-minute conversation?
+          <select name="conversation" [ngModel]="conversation()" (ngModelChange)="conversation.set($event)"><option value="" disabled>Choose one</option><option>Yes</option><option>Maybe</option><option>No</option></select>
+        </label>
+        <div class="inline-fields">
+          <label>Name<input data-field="name" name="name" type="text" [class.input-error]="fieldError('name')" [ngModel]="name()" (ngModelChange)="name.set($event)" /><span class="field-error" *ngIf="fieldError('name')">{{ fieldError('name') }}</span></label>
+          <label>Email or phone<input data-field="contact" name="contact" type="text" [class.input-error]="fieldError('contact')" [ngModel]="contact()" (ngModelChange)="contact.set($event)" /><span class="field-error" *ngIf="fieldError('contact')">{{ fieldError('contact') }}</span></label>
+        </div>
+        <label>Anything you wish existed?<textarea name="wish" [ngModel]="wish()" (ngModelChange)="wish.set($event)" rows="4"></textarea></label>
+      </ng-container>
+
+      <div class="wizard-actions">
+        <button type="button" class="secondary-button" (click)="previous()" [disabled]="step() === 0">Back</button>
+        <button type="button" *ngIf="step() < stepTitles.length - 1" (click)="next()">Next</button>
+        <button type="submit" *ngIf="step() === stepTitles.length - 1">Submit end-user survey</button>
+      </div>
+    </form>
+
+    <ng-template #submittedMessage>
+      <div class="success-message"><strong>Thanks{{ name() ? ', ' + name() : '' }}.</strong><p>{{ submissionMessage() }}</p></div>
+    </ng-template>
+  </section>
+</main>

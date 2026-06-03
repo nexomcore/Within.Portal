@@ -1,0 +1,170 @@
+<main class="site-shell">
+  <header class="topbar" aria-label="Primary navigation">
+    <a class="brand" routerLink="/">
+      <img src="/within-logo.png" alt="" />
+      <span>Within</span>
+    </a>
+    <nav class="nav-links" aria-label="Landing page sections">
+      <a href="#listening" (click)="$event.preventDefault(); scrollToId('listening')">Why now</a>
+      <a href="#approach" (click)="$event.preventDefault(); scrollToId('approach')">Approach</a>
+      <a href="#take-part" (click)="$event.preventDefault(); scrollToId('take-part')">Take part</a>
+      <a routerLink="/providers/onboard">Provider onboarding</a>
+      <a href="#interest" (click)="$event.preventDefault(); scrollToId('interest')">Stay in touch</a>
+    </nav>
+    <a class="nav-cta" routerLink="/survey">Start survey</a>
+  </header>
+
+  <section id="home" class="hero-section">
+    <div class="hero-copy">
+      <span class="eyebrow"><i class="pulse-dot"></i> In development · Listening first</span>
+      <h1>A quieter companion for how you move, feel, and grow.</h1>
+      <p class="hero-lede">Within is a new platform for whole-life wellbeing - body, mind, and meaning. Before we build, we are listening to the people who will use it, and the people who guide them.</p>
+      <div class="hero-actions">
+        <a class="primary-action" routerLink="/survey">Take the 2-minute survey</a>
+        <a class="secondary-action" routerLink="/providers/onboard">Apply as a provider</a>
+      </div>
+      <div class="hero-proof" aria-label="Pilot focus">
+        <span>Body, mind, meaning</span>
+        <span>Perth pilot</span>
+        <span>Provider review before events</span>
+      </div>
+    </div>
+
+    <aside class="build-panel" aria-label="Three areas of growth">
+      <header class="panel-head">
+        <div class="panel-mark">
+          <img src="/within-logo.png" alt="Within mark" />
+          <div>
+            <span>Within</span>
+            <strong>Three quiet questions</strong>
+          </div>
+        </div>
+        <span class="status-chip"><i></i> Listening</span>
+      </header>
+      <ol class="pulse-list" aria-label="Three areas we are listening about">
+        <li *ngFor="let pulse of pulses">
+          <span>{{ pulse.tag }}</span>
+          <p>{{ pulse.headline }}</p>
+        </li>
+      </ol>
+      <footer class="panel-foot">
+        <div>
+          <span>Your two minutes</span>
+          <strong>shapes the first version.</strong>
+        </div>
+        <a routerLink="/survey">Start →</a>
+      </footer>
+    </aside>
+  </section>
+
+  <section class="signal-rail" aria-label="Survey signals">
+    <article><strong>3 areas</strong><span>body · mind · meaning</span></article>
+    <article><strong>Perth</strong><span>first city · early pilot</span></article>
+    <article><strong>Review</strong><span>providers approved before events</span></article>
+  </section>
+
+  <section id="listening" class="section-band">
+    <div class="section-heading">
+      <span class="section-eyebrow">Three areas. One quiet companion.</span>
+      <h2>Growth is rarely loud. Within is built around the parts that are not.</h2>
+      <p>Wellbeing is how you move through a day, how you meet your own mind, and the quieter questions you carry.</p>
+    </div>
+    <div class="pillar-grid">
+      <article *ngFor="let item of principles" class="pillar-card">
+        <span class="card-tag">{{ item.tag }}</span>
+        <h3>{{ item.label }}</h3>
+        <p>{{ item.description }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="approach" class="approach-section" aria-labelledby="approach-title">
+    <div class="section-heading compact">
+      <span class="section-eyebrow">Approach</span>
+      <h2 id="approach-title">Small, careful, and shaped in the open.</h2>
+      <p>We would rather earn one good city than chase ten.</p>
+    </div>
+    <ol class="approach-list">
+      <li *ngFor="let step of approach; let i = index" class="approach-row">
+        <span class="step-index">0{{ i + 1 }}</span>
+        <div>
+          <span class="step-tag">{{ step.category }}</span>
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.detail }}</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section id="take-part" class="take-part-section">
+    <div class="section-heading">
+      <span class="section-eyebrow">Take part</span>
+      <h2>Surveys for discovery. Onboarding for provider review.</h2>
+      <p>Use the survey to shape the product, or apply for provider review if you are ready to onboard.</p>
+    </div>
+    <div class="role-grid">
+      <a class="role-card user-card" routerLink="/survey/user">
+        <span class="role-eyebrow">For people growing</span>
+        <strong>I am trying to grow in body, mind, or meaning.</strong>
+        <p>Share barriers, discovery habits, and what would actually help.</p>
+        <span class="role-cta">Start survey →</span>
+      </a>
+      <a class="role-card provider-card" routerLink="/survey/provider">
+        <span class="role-eyebrow">For guides & practitioners</span>
+        <strong>I help others grow.</strong>
+        <p>Share how you meet your people today and what a better platform needs to solve.</p>
+        <span class="role-cta">Start provider survey →</span>
+      </a>
+      <a class="role-card provider-card onboarding-card" routerLink="/providers/onboard">
+        <span class="role-eyebrow">Provider onboarding</span>
+        <strong>Apply to become a Within provider.</strong>
+        <p>Submit profile, credential, safety, and event-readiness details for review.</p>
+        <span class="role-cta">Start application →</span>
+      </a>
+    </div>
+    <ul class="provider-points" aria-label="Why guides should take part">
+      <li *ngFor="let point of providerPoints"><i></i><span>{{ point }}</span></li>
+    </ul>
+  </section>
+
+  <section id="interest" class="interest-section" aria-labelledby="interest-title">
+    <div class="interest-copy">
+      <span class="section-eyebrow">Stay in touch</span>
+      <h2 id="interest-title">Not ready for a survey? Leave your name.</h2>
+      <p>We will only get in touch when the early pilot opens, or when we would genuinely value your opinion.</p>
+    </div>
+    <form class="interest-form" (ngSubmit)="submitInterest()" *ngIf="!interestSubmitted(); else interestThanks">
+      <div class="interest-fields">
+        <label>Your name<input name="interestName" type="text" required [ngModel]="interestName()" (ngModelChange)="interestName.set($event)" autocomplete="name" /></label>
+        <label>Email<input name="interestEmail" type="email" required [ngModel]="interestEmail()" (ngModelChange)="interestEmail.set($event)" autocomplete="email" /></label>
+        <label>You are...
+          <select name="interestRole" [ngModel]="interestRole()" (ngModelChange)="interestRole.set($event)">
+            <option value="" disabled>Choose one</option>
+            <option *ngFor="let option of interestRoleOptions">{{ option }}</option>
+          </select>
+        </label>
+      </div>
+      <label class="full-width">One line on what you wish existed (optional)<input name="interestNote" type="text" [ngModel]="interestNote()" (ngModelChange)="interestNote.set($event)" /></label>
+      <button type="submit" class="primary-action">Keep me posted</button>
+      <p class="validation-message" *ngIf="interestValidationMessage()">{{ interestValidationMessage() }}</p>
+      <p class="interest-fine">We do not share contact details. You can ask us to forget you any time.</p>
+    </form>
+    <ng-template #interestThanks>
+      <div class="interest-thanks">
+        <strong>Thanks{{ interestName() ? ', ' + interestName() : '' }}.</strong>
+        <p>You are on the quiet list. When the pilot opens, you will be the first to hear.</p>
+        <p class="interest-fine">{{ submissionMessage() }}</p>
+      </div>
+    </ng-template>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-brand"><img src="/within-logo.png" alt="" /><div><strong>Within</strong><span>Building quietly in Perth.</span></div></div>
+    <div class="footer-links">
+      <a routerLink="/survey/user">Attendee survey</a>
+      <a routerLink="/survey/provider">Provider survey</a>
+      <a routerLink="/providers/onboard">Provider onboarding</a>
+    </div>
+    <span class="footer-note">&copy; 2026 Within. All rights reserved.</span>
+  </footer>
+</main>

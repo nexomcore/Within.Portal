@@ -1,0 +1,38 @@
+<main class="guide-shell">
+  <header class="survey-topbar">
+    <a class="brand" routerLink="/"><img src="/within-logo.png" alt="" /><span>Within</span></a>
+    <span class="internal-label">Internal guide</span>
+  </header>
+
+  <section class="guide-hero">
+    <div>
+      <span>1:1 Conversation Guide</span>
+      <h1>Listen for pain, behaviour, and emotional triggers.</h1>
+      <p>Use this internal guide after survey responses. Start with behaviour, then test concept reaction later.</p>
+    </div>
+    <aside><strong>Facilitator rule</strong><p>Avoid selling too early. Ask for stories, recent behaviour, blockers, and commitment signals.</p></aside>
+  </section>
+
+  <section class="guide-layout">
+    <aside class="guide-toc" aria-label="Guide sections">
+      <a href="#end-user-guide">End-user guide</a>
+      <a href="#provider-guide">Provider guide</a>
+    </aside>
+    <div class="guide-content">
+      <article id="end-user-guide" class="guide-panel user-guide">
+        <div class="guide-panel-heading"><span>End-user 1:1</span><h2>Understand how people discover and join wellbeing experiences.</h2><p>Listen for behaviour, motivation, trust signals, and what would make someone act.</p></div>
+        <section *ngFor="let section of userSections" class="guide-block">
+          <h3>{{ section.title }}</h3>
+          <ol><li *ngFor="let question of section.questions">{{ question }}</li></ol>
+        </section>
+      </article>
+      <article id="provider-guide" class="guide-panel provider-guide">
+        <div class="guide-panel-heading"><span>Provider 1:1</span><h2>Test whether this solves a real provider business pain.</h2><p>Focus on discovery, bookings, trust, payments, repeat customers, admin, and marketing.</p></div>
+        <section *ngFor="let section of providerSections" class="guide-block">
+          <h3>{{ section.title }}</h3>
+          <ol><li *ngFor="let question of section.questions">{{ question }}</li></ol>
+        </section>
+      </article>
+    </div>
+  </section>
+</main>

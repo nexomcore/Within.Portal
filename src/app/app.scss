@@ -1,4 +1,5 @@
-:host {
+:root,
+app-root {
   // Brand palette
   --navy: #0d1b3d;
   --navy-soft: #1c2a4f;
@@ -707,6 +708,10 @@ h3 {
   background: linear-gradient(135deg, transparent 60%, rgba(255, 107, 107, 0.1));
 }
 
+.role-card.onboarding-card::after {
+  background: linear-gradient(135deg, transparent 58%, rgba(37, 99, 235, 0.1));
+}
+
 .role-card:hover {
   border-color: var(--ink);
   box-shadow: var(--shadow-md);
@@ -724,6 +729,10 @@ h3 {
 
 .role-card.provider-card .role-eyebrow {
   color: var(--coral);
+}
+
+.role-card.onboarding-card .role-eyebrow {
+  color: var(--blue);
 }
 
 .role-card strong {
@@ -1318,6 +1327,10 @@ h3 {
   border-color: var(--ink);
 }
 
+.declaration-option {
+  align-items: center;
+}
+
 .survey-form button:disabled {
   cursor: not-allowed;
   opacity: 0.4;
@@ -1876,6 +1889,23 @@ h3 {
   opacity: 0.6;
 }
 
+.admin-search {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  font: inherit;
+  min-height: 42px;
+  min-width: min(280px, 100%);
+  padding: 0 16px;
+}
+
+.admin-search:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+  outline: none;
+}
+
 .admin-grid {
   display: grid;
   gap: 18px;
@@ -1957,6 +1987,44 @@ h3 {
   color: #b53a3a;
 }
 
+.provider-status-pill {
+  background: var(--bg-tint);
+  border-radius: 999px;
+  color: var(--ink-soft);
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  text-transform: uppercase;
+  width: max-content;
+}
+
+.provider-status-pill[data-status="Submitted"] {
+  background: rgba(143, 211, 244, 0.28);
+  color: #1f5b80;
+}
+
+.provider-status-pill[data-status="InReview"] {
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+}
+
+.provider-status-pill[data-status="MoreInfoRequested"] {
+  background: rgba(255, 197, 87, 0.24);
+  color: #8a5a00;
+}
+
+.provider-status-pill[data-status="Approved"] {
+  background: rgba(127, 211, 198, 0.22);
+  color: var(--mint-deep);
+}
+
+.provider-status-pill[data-status="Rejected"] {
+  background: rgba(255, 107, 107, 0.16);
+  color: #b53a3a;
+}
+
 .admin-detail {
   background: var(--white);
   border: 1px solid var(--line);
@@ -1967,6 +2035,90 @@ h3 {
   max-height: 70vh;
   overflow: auto;
   padding: 24px;
+}
+
+.provider-application-detail {
+  gap: 20px;
+}
+
+.provider-review-panel,
+.provider-notes-panel {
+  background: var(--bg-warm);
+  border: 1px solid var(--line-soft);
+  border-radius: 18px;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.provider-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.provider-review-panel label,
+.provider-notes-panel label {
+  color: var(--ink);
+  display: grid;
+  font-size: 0.86rem;
+  font-weight: 700;
+  gap: 8px;
+}
+
+.provider-review-panel textarea,
+.provider-notes-panel textarea {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.45;
+  min-width: 0;
+  padding: 12px 14px;
+  resize: vertical;
+  width: 100%;
+}
+
+.provider-review-panel textarea:focus,
+.provider-notes-panel textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+  outline: none;
+}
+
+.provider-trust-checklist {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.provider-trust-checklist article {
+  background: rgba(255, 107, 107, 0.07);
+  border: 1px solid rgba(255, 107, 107, 0.18);
+  border-radius: 14px;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.provider-trust-checklist article.ok {
+  background: rgba(127, 211, 198, 0.13);
+  border-color: rgba(127, 211, 198, 0.32);
+}
+
+.provider-trust-checklist span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.provider-trust-checklist strong {
+  color: var(--ink);
+  font-size: 0.86rem;
+  line-height: 1.3;
 }
 
 .admin-empty-detail {
