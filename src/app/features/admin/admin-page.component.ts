@@ -32,6 +32,7 @@ export class AdminPageComponent {
   protected readonly selectedProviderApplicationId = signal<string | null>(null);
   protected readonly providerDecisionReason = signal('');
   protected readonly providerAdminNotesDraft = signal('');
+  protected readonly providerCredential = signal<{ email: string; password: string } | null>(null);
   protected readonly adminAuthed = this.admin.authed;
   protected readonly formatProviderCategory = formatProviderCategory;
   protected readonly formatProviderStatus = formatProviderStatus;
@@ -99,6 +100,7 @@ export class AdminPageComponent {
     this.providerApplications.set([]);
     this.adminSelectedId.set(null);
     this.selectedProviderApplicationId.set(null);
+    this.providerCredential.set(null);
     this.adminMessage.set('Signed out.');
   }
 
@@ -149,6 +151,7 @@ export class AdminPageComponent {
     const application = this.providerApplications().find(item => item.id === id);
     this.providerAdminNotesDraft.set(application?.adminNotes ?? '');
     this.providerDecisionReason.set('');
+    this.providerCredential.set(null);
   }
 
   protected async updateProviderApplicationStatus(status: ProviderApplicationStatus): Promise<void> {
@@ -159,14 +162,32 @@ export class AdminPageComponent {
       this.adminMessage.set('Add a reason before requesting more information or rejecting.');
       return;
     }
-    const updated = await this.admin.updateProviderApplicationStatus(application.id, status, reason);
-    if (!updated) {
-      this.adminMessage.set('Could not update provider application.');
-      return;
+    try {
+      const updated = await this.admin.updateProviderApplicationStatus(application.id, status, reason);
+      if (!updated) {
+        this.adminMessage.set('Could not update provider application.');
+        return;
+      }
+      this.replaceProviderApplication(updated);
+      this.providerDecisionReason.set('');
+      this.providerCredential.set(updated.temporaryPassword ? { email: updated.contactEmail, password: updated.temporaryPassword } : null);
+      this.adminMessage.set(`Provider application marked ${formatProviderStatus(status)}.`);
+    } catch (error) {
+      this.providerCredential.set(null);
+      this.adminMessage.set(error instanceof Error ? error.message : 'Could not update provider application.');
     }
-    this.replaceProviderApplication(updated);
-    this.providerDecisionReason.set('');
-    this.adminMessage.set(`Provider application marked ${formatProviderStatus(status)}.`);
+  }
+
+  protected async copyProviderCredential(): Promise<void> {
+    const credential = this.providerCredential();
+    if (!credential) return;
+    const text = `Within provider login\nEmail: ${credential.email}\nTemporary password: ${credential.password}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      this.adminMessage.set('Provider credential copied.');
+    } catch {
+      this.adminMessage.set('Could not copy automatically. Select the credential text and copy it manually.');
+    }
   }
 
   protected async saveProviderAdminNotes(): Promise<void> {
@@ -193,6 +214,28 @@ export class AdminPageComponent {
     if (this.adminSelectedId() === id) this.adminSelectedId.set(remaining[0]?.id ?? null);
     const stats = await this.admin.getStats();
     if (stats) this.adminStats.set(stats);
+  }
+
+  protected async deleteProvider(application: ProviderApplication): Promise<void> {
+    if (!application.approvedProviderId) {
+      this.adminMessage.set('This application does not have a linked provider to delete.');
+      return;
+    }
+
+    if (!confirm(`Delete provider "${application.providerName}"? This cannot be undone.`)) {
+      return;
+    }
+
+    const ok = await this.admin.deleteProvider(application.approvedProviderId);
+    if (ok === null) {
+      this.adminMessage.set('Could not delete provider. Providers with linked events or communities cannot be deleted.');
+      return;
+    }
+
+    this.providerApplications.set(this.providerApplications().map(item =>
+      item.id === application.id ? { ...item, approvedProviderId: null } : item
+    ));
+    this.adminMessage.set('Provider deleted. The application remains for audit history.');
   }
 
   protected answerEntries(submission: AdminSubmission | null): AdminAnswerEntry[] {

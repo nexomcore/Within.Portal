@@ -4,6 +4,10 @@ export type ProviderApplicationStatus = 'Submitted' | 'InReview' | 'MoreInfoRequ
 export type ProviderCategory = 'BusinessStudio' | 'IndividualPractitioner' | 'CollectiveCommunityGroup' | 'RetreatProgramOrganiser' | 'VenueSpacePartner' | 'CorporateWorkplaceWellness';
 export type WithinLens = 'Move' | 'Feel' | 'Seek';
 export type AdminProviderFilter = 'all' | ProviderApplicationStatus;
+export type WithinRole = 'User' | 'Provider' | 'Admin';
+export type SignupType = 'Internal' | 'External';
+export type EventStatus = 'Draft' | 'Published' | 'Cancelled';
+export type EventJoinState = 'Interested' | 'Going' | 'Attended';
 
 export interface AdminSubmission {
   id: string;
@@ -29,7 +33,7 @@ export interface AdminUserRecord {
   id: string;
   displayName: string;
   email: string;
-  role: 'User' | 'Provider' | 'Admin';
+  role: WithinRole;
   createdUtc: string;
 }
 
@@ -80,11 +84,79 @@ export interface ProviderApplication {
   updatedUtc: string;
   reviewedUtc: string | null;
   approvedProviderId: string | null;
+  temporaryPassword?: string | null;
 }
 
 export interface ProviderApplicationEntry {
   key: string;
   value: string;
+}
+
+export interface UserSummary {
+  id: string;
+  displayName: string;
+  email: string;
+  role: WithinRole;
+  preferredLens: WithinLens;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: UserSummary;
+}
+
+export interface Provider {
+  id: string;
+  name: string;
+  slug: string;
+  bio: string;
+  lens: WithinLens;
+  location: string;
+  websiteUrl: string | null;
+  instagramUrl: string | null;
+  isVerified: boolean;
+}
+
+export interface EventItem {
+  id: string;
+  providerId: string;
+  providerName: string;
+  title: string;
+  description: string;
+  lens: WithinLens;
+  locationName: string;
+  isOnline: boolean;
+  startUtc: string;
+  endUtc: string;
+  priceAmount: number;
+  currency: string;
+  capacity: number;
+  goingCount: number;
+  isSaved: boolean;
+  joinState: EventJoinState | null;
+  signupType: SignupType;
+  externalBookingUrl: string | null;
+  imageUrl: string | null;
+  status: EventStatus;
+  tags: string[];
+}
+
+export interface UpsertEventPayload {
+  title: string;
+  description: string;
+  lens: WithinLens;
+  locationName: string;
+  isOnline: boolean;
+  startUtc: string;
+  endUtc: string;
+  priceAmount: number;
+  currency: string;
+  capacity: number;
+  signupType: SignupType;
+  externalBookingUrl: string | null;
+  imageUrl: string | null;
+  tags: string[];
 }
 
 export interface Option<T extends string = string> {

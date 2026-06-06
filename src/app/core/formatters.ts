@@ -62,6 +62,7 @@ export function providerApplicationEntries(application: ProviderApplication | nu
     { key: 'Instagram', value: application.instagramUrl ?? '-' },
     { key: 'Other social', value: application.otherSocialUrl ?? '-' },
     { key: 'ABN', value: application.abn ?? '-' },
+    { key: 'Approved provider id', value: application.approvedProviderId ?? '-' },
   ];
 }
 

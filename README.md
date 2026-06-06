@@ -12,6 +12,36 @@ ng serve
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
+## API target switching
+
+When the Angular app runs on `localhost` or `127.0.0.1`, it uses the local API by default:
+
+```text
+http://localhost:5177/api
+```
+
+On deployed hosts, it uses the online API by default:
+
+```text
+https://app-within-api-np-001.azurewebsites.net/api
+```
+
+Override the target from the browser. On localhost, local API is always the default; use `?api=online` only when you deliberately want to test against the online API for that session.
+
+```text
+http://localhost:4200/?api=local
+http://localhost:4200/?api=online
+http://localhost:4200/?apiBase=http://192.168.1.105:5177/api
+```
+
+The selected target is saved in localStorage for deployed hosts. Localhost still defaults to the local API unless the URL explicitly includes an override. To reset saved values:
+
+```js
+localStorage.removeItem('within.api.target');
+localStorage.removeItem('within.api.customBaseUrl');
+location.reload();
+```
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:

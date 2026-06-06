@@ -22,6 +22,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/provider-onboarding/provider-onboarding-page.component').then(m => m.ProviderOnboardingPageComponent),
   },
   {
+    path: 'providers/login',
+    loadComponent: () => import('./features/provider-portal/provider-login-page.component').then(m => m.ProviderLoginPageComponent),
+  },
+  {
+    path: 'providers/dashboard',
+    loadComponent: () => import('./features/provider-portal/provider-dashboard-page.component').then(m => m.ProviderDashboardPageComponent),
+  },
+  {
     path: 'admin',
     loadComponent: () => import('./features/admin/admin-page.component').then(m => m.AdminPageComponent),
   },

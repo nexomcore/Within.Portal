@@ -49,8 +49,12 @@ export class AdminService {
     return this.adminFetch<void>(`/admin/submissions/${id}`, 'DELETE');
   }
 
+  deleteProvider(id: string): Promise<void | null> {
+    return this.adminFetch<void>(`/admin/providers/${id}`, 'DELETE');
+  }
+
   updateProviderApplicationStatus(id: string, status: ProviderApplicationStatus, reason: string): Promise<ProviderApplication | null> {
-    return this.adminFetch<ProviderApplication>(`/admin/provider-applications/${id}/status`, 'POST', { status, reason });
+    return this.adminPostProviderStatus(id, status, reason);
   }
 
   updateProviderApplicationNotes(id: string, adminNotes: string): Promise<ProviderApplication | null> {
@@ -85,5 +89,40 @@ export class AdminService {
     } catch {
       return null;
     }
+  }
+
+  private async adminPostProviderStatus(id: string, status: ProviderApplicationStatus, reason: string): Promise<ProviderApplication | null> {
+    const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+    if (!token) {
+      this.authed.set(false);
+      return null;
+    }
+
+    const response = await fetch(`${API_BASE}/admin/provider-applications/${id}/status`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status, reason }),
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      this.logout();
+      return null;
+    }
+
+    if (!response.ok) {
+      let message = 'Could not update provider application.';
+      try {
+        const body = await response.json() as { message?: string };
+        message = body.message ?? message;
+      } catch {
+        message = await response.text() || message;
+      }
+      throw new Error(message);
+    }
+
+    return await response.json() as ProviderApplication;
   }
 }

@@ -93,6 +93,21 @@
           </div>
           <label>Decision reason<textarea rows="3" [ngModel]="providerDecisionReason()" (ngModelChange)="providerDecisionReason.set($event)" placeholder="Required for more-info or rejected decisions"></textarea></label>
           <p class="admin-muted" *ngIf="application.reviewDecisionReason">Latest reason: {{ application.reviewDecisionReason }}</p>
+          <button type="button" class="admin-danger" *ngIf="application.approvedProviderId" (click)="deleteProvider(application)">Delete linked provider</button>
+        </section>
+        <section class="provider-credential-panel" *ngIf="providerCredential() as credential">
+          <div>
+            <span class="section-eyebrow">Provider login</span>
+            <h3>Share this one-time credential with the provider.</h3>
+            <p>This password is only shown now. It will not be available after refresh.</p>
+          </div>
+          <dl>
+            <dt>Email</dt>
+            <dd>{{ credential.email }}</dd>
+            <dt>Temporary password</dt>
+            <dd class="credential-password">{{ credential.password }}</dd>
+          </dl>
+          <button type="button" class="admin-refresh" (click)="copyProviderCredential()">Copy credential</button>
         </section>
         <section class="provider-trust-checklist" aria-label="Trust checklist"><article *ngFor="let item of trustChecklist(application)" [class.ok]="item.ok"><span>{{ item.ok ? 'Yes' : 'No' }}</span><strong>{{ item.label }}</strong></article></section>
         <section class="provider-notes-panel"><label>Internal admin notes<textarea rows="4" [ngModel]="providerAdminNotesDraft()" (ngModelChange)="providerAdminNotesDraft.set($event)"></textarea></label><button type="button" class="admin-refresh" (click)="saveProviderAdminNotes()">Save notes</button></section>
