@@ -1,0 +1,104 @@
+<main class="survey-shell">
+  <header class="survey-topbar">
+    <a class="brand" routerLink="/"><img src="/within-logo.png" alt="" /><span>Within</span></a>
+    <a routerLink="/survey/user">End-user survey</a>
+  </header>
+
+  <section class="survey-page">
+    <aside class="survey-context provider-context">
+      <span>For guides & practitioners</span>
+      <h1>Help shape a quieter place to meet the people you guide.</h1>
+      <p>Two minutes on how you meet your people today and what would make a new platform worth your time.</p>
+    </aside>
+
+    <form class="survey-form" (ngSubmit)="submit()" *ngIf="!submitted(); else submittedMessage">
+      <div class="wizard-progress">
+        <span>Step {{ step() + 1 }} of {{ stepTitles.length }}</span>
+        <strong>{{ stepTitles[step()] }}</strong>
+        <div><i [style.width.%]="((step() + 1) / stepTitles.length) * 100"></i></div>
+      </div>
+      <p class="validation-message" *ngIf="validationMessage()">{{ validationMessage() }}</p>
+
+      <ng-container *ngIf="step() === 0">
+        <label>How would you describe what you do?
+          <select name="providerType" [ngModel]="providerType()" (ngModelChange)="providerType.set($event)">
+            <option value="" disabled>Choose one</option>
+            <option *ngFor="let option of providerTypeOptions">{{ option }}</option>
+          </select>
+        </label>
+        <textarea class="comment-note" [ngModel]="comment('providerType')" (ngModelChange)="setComment('providerType', $event)" name="providerTypeComment" rows="2" placeholder="In your own words"></textarea>
+        <label>Do you currently use booking, scheduling, or client tools?
+          <select name="bookingTools" [ngModel]="bookingTools()" (ngModelChange)="bookingTools.set($event)">
+            <option value="" disabled>Choose one</option><option>Yes</option><option>No</option><option>Sometimes</option>
+          </select>
+        </label>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 1">
+        <fieldset><legend>What do you offer?</legend>
+          <label *ngFor="let option of providerExperienceOptions" class="check-option"><input type="checkbox" [checked]="experiences().includes(option)" (change)="toggle(experiences, option, $event)" /><span>{{ option }}</span></label>
+        </fieldset>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 2">
+        <fieldset><legend>How do people usually find you today?</legend>
+          <label *ngFor="let option of providerPromotionOptions" class="check-option"><input type="checkbox" [checked]="promotion().includes(option)" (change)="toggle(promotion, option, $event)" /><span>{{ option }}</span></label>
+        </fieldset>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 3">
+        <fieldset><legend>What is hardest right now? Up to 3.</legend>
+          <label *ngFor="let option of providerChallengeOptions" class="check-option"><input type="checkbox" [checked]="challenges().includes(option)" (change)="toggle(challenges, option, $event, 3)" /><span>{{ option }}</span></label>
+        </fieldset>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 4">
+        <label>Would you be open to a wellbeing-focused place to meet your people?
+          <select name="wouldList" [ngModel]="wouldList()" (ngModelChange)="wouldList.set($event)">
+            <option value="" disabled>Choose one</option><option>Yes, definitely</option><option>Maybe, if it brings the right people</option><option>Maybe, depending on price</option><option>Not sure</option><option>No</option>
+          </select>
+        </label>
+        <fieldset><legend>What would make it valuable?</legend>
+          <label *ngFor="let option of providerValueOptions" class="check-option"><input type="checkbox" [checked]="valueDrivers().includes(option)" (change)="toggle(valueDrivers, option, $event)" /><span>{{ option }}</span></label>
+        </fieldset>
+        <label>Preferred pricing model
+          <select name="pricing" [ngModel]="pricing()" (ngModelChange)="pricing.set($event)">
+            <option value="" disabled>Choose one</option><option *ngFor="let option of pricingOptions">{{ option }}</option>
+          </select>
+        </label>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 5">
+        <div class="inline-fields">
+          <label>Join early Perth pilot?
+            <select name="pilot" [ngModel]="pilot()" (ngModelChange)="pilot.set($event)"><option value="" disabled>Choose one</option><option>Yes</option><option>Maybe</option><option>No</option></select>
+          </label>
+          <label>List first event free?
+            <select name="firstEvent" [ngModel]="firstEvent()" (ngModelChange)="firstEvent.set($event)"><option value="" disabled>Choose one</option><option>Yes</option><option>Maybe</option><option>No</option></select>
+          </label>
+        </div>
+        <div class="inline-fields">
+          <label>Name<input data-field="name" name="name" type="text" [class.input-error]="fieldError('name')" [ngModel]="name()" (ngModelChange)="name.set($event)" /><span class="field-error" *ngIf="fieldError('name')">{{ fieldError('name') }}</span></label>
+          <label>Email or phone<input data-field="contact" name="contact" type="text" [class.input-error]="fieldError('contact')" [ngModel]="contact()" (ngModelChange)="contact.set($event)" /><span class="field-error" *ngIf="fieldError('contact')">{{ fieldError('contact') }}</span></label>
+        </div>
+        <label>Business/provider name<input name="businessName" type="text" [ngModel]="businessName()" (ngModelChange)="businessName.set($event)" /></label>
+        <label>Website or social link<input name="link" type="text" [ngModel]="link()" (ngModelChange)="link.set($event)" /></label>
+        <label>What would stop you from using a platform like this?<textarea name="blocker" [ngModel]="blocker()" (ngModelChange)="blocker.set($event)" rows="4"></textarea></label>
+      </ng-container>
+
+      <div class="wizard-actions">
+        <button type="button" class="secondary-button" (click)="previous()" [disabled]="step() === 0">Back</button>
+        <button type="button" *ngIf="step() < stepTitles.length - 1" (click)="next()">Next</button>
+        <button type="submit" *ngIf="step() === stepTitles.length - 1">Submit provider survey</button>
+      </div>
+    </form>
+
+    <ng-template #submittedMessage>
+      <div class="success-message">
+        <strong>Thanks{{ name() ? ', ' + name() : '' }}.</strong>
+        <p>{{ submissionMessage() }}</p>
+        <button type="button" routerLink="/providers/onboard">Apply for provider review</button>
+      </div>
+    </ng-template>
+  </section>
+</main>

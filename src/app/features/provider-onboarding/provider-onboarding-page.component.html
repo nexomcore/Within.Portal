@@ -1,0 +1,97 @@
+<main class="survey-shell">
+  <header class="survey-topbar">
+    <a class="brand" routerLink="/"><img src="/within-logo.png" alt="" /><span>Within</span></a>
+    <a routerLink="/survey/provider">Provider survey</a>
+  </header>
+
+  <section class="survey-page provider-onboarding-page">
+    <aside class="survey-context provider-context">
+      <span>Provider onboarding</span>
+      <h1>Apply to become a Within provider.</h1>
+      <p>Share profile, credential, safety, and event-readiness details so the team can review your application before provider tools open.</p>
+    </aside>
+
+    <form class="survey-form onboarding-form" (ngSubmit)="submit()" *ngIf="!submitted(); else submittedMessage">
+      <div class="wizard-progress">
+        <span>Step {{ step() + 1 }} of {{ stepTitles.length }}</span>
+        <strong>{{ stepTitles[step()] }}</strong>
+        <div><i [style.width.%]="((step() + 1) / stepTitles.length) * 100"></i></div>
+      </div>
+      <p class="validation-message" *ngIf="validationMessage()">{{ validationMessage() }}</p>
+
+      <ng-container *ngIf="step() === 0">
+        <div class="inline-fields">
+          <label>Primary contact name<input data-field="contactName" name="contactName" type="text" [class.input-error]="fieldError('contactName')" [ngModel]="contactName()" (ngModelChange)="contactName.set($event)" /><span class="field-error" *ngIf="fieldError('contactName')">{{ fieldError('contactName') }}</span></label>
+          <label>Email<input data-field="contactEmail" name="contactEmail" type="email" [class.input-error]="fieldError('contactEmail')" [ngModel]="contactEmail()" (ngModelChange)="contactEmail.set($event)" /><span class="field-error" *ngIf="fieldError('contactEmail')">{{ fieldError('contactEmail') }}</span></label>
+        </div>
+        <div class="inline-fields">
+          <label>Phone<input name="contactPhone" type="tel" [ngModel]="contactPhone()" (ngModelChange)="contactPhone.set($event)" /></label>
+          <label>Preferred contact<select name="preferredContact" [ngModel]="preferredContact()" (ngModelChange)="preferredContact.set($event)"><option value="" disabled>Choose one</option><option>Email</option><option>Phone</option><option>SMS</option></select></label>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 1">
+        <label>Provider display name<input name="providerName" type="text" [ngModel]="providerName()" (ngModelChange)="providerName.set($event)" /></label>
+        <div class="inline-fields">
+          <label>Provider category<select name="category" [ngModel]="category()" (ngModelChange)="category.set($event)"><option value="" disabled>Choose one</option><option *ngFor="let option of providerCategoryOptions" [value]="option.value">{{ option.label }}</option></select></label>
+          <label>Business / individual type<input name="businessType" type="text" [ngModel]="businessType()" (ngModelChange)="businessType.set($event)" /></label>
+        </div>
+        <div class="inline-fields">
+          <label>ABN (optional)<input name="abn" type="text" [ngModel]="abn()" (ngModelChange)="abn.set($event)" /></label>
+          <label>Website<input name="website" type="url" [ngModel]="website()" (ngModelChange)="website.set($event)" /></label>
+        </div>
+        <div class="inline-fields">
+          <label>Instagram<input name="instagram" type="text" [ngModel]="instagram()" (ngModelChange)="instagram.set($event)" /></label>
+          <label>Other social link<input name="otherSocial" type="text" [ngModel]="otherSocial()" (ngModelChange)="otherSocial.set($event)" /></label>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 2">
+        <div class="inline-fields">
+          <label>Suburb / city<input name="location" type="text" [ngModel]="location()" (ngModelChange)="location.set($event)" /></label>
+          <label>Primary lens<select name="primaryLens" [ngModel]="primaryLens()" (ngModelChange)="primaryLens.set($event)"><option value="" disabled>Choose one</option><option *ngFor="let option of lensOptions" [value]="option">{{ option }}</option></select></label>
+        </div>
+        <fieldset><legend>Delivery modes</legend><label *ngFor="let option of deliveryModeOptions" class="check-option"><input type="checkbox" [checked]="deliveryModes().includes(option)" (change)="toggle(deliveryModes, option, $event)" /><span>{{ option }}</span></label></fieldset>
+        <label>Venue names (optional)<input name="venueNames" type="text" [ngModel]="venueNames()" (ngModelChange)="venueNames.set($event)" /></label>
+        <fieldset><legend>Service areas</legend><label *ngFor="let option of serviceAreaOptions" class="check-option"><input type="checkbox" [checked]="serviceAreas().includes(option)" (change)="toggle(serviceAreas, option, $event)" /><span>{{ option }}</span></label></fieldset>
+        <fieldset><legend>Services offered</legend><label *ngFor="let option of onboardingServiceOptions" class="check-option"><input type="checkbox" [checked]="servicesOffered().includes(option)" (change)="toggle(servicesOffered, option, $event)" /><span>{{ option }}</span></label></fieldset>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 3">
+        <label>Years practicing<input name="yearsPracticing" type="text" [ngModel]="yearsPracticing()" (ngModelChange)="yearsPracticing.set($event)" /></label>
+        <label>Typical audience<textarea name="typicalAudience" rows="3" [ngModel]="typicalAudience()" (ngModelChange)="typicalAudience.set($event)"></textarea></label>
+        <label>Short public bio<textarea name="bio" rows="4" [ngModel]="bio()" (ngModelChange)="bio.set($event)"></textarea></label>
+        <label>Why do you want to join Within?<textarea name="joinReason" rows="4" [ngModel]="joinReason()" (ngModelChange)="joinReason.set($event)"></textarea></label>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 4">
+        <label>Certifications, issuing bodies, expiry dates, licence numbers<textarea name="certifications" rows="5" [ngModel]="certifications()" (ngModelChange)="certifications.set($event)"></textarea></label>
+        <div class="inline-fields">
+          <label>Insurance status<select name="insuranceStatus" [ngModel]="insuranceStatus()" (ngModelChange)="insuranceStatus.set($event)"><option value="" disabled>Choose one</option><option>Current public liability insurance</option><option>Current professional indemnity insurance</option><option>Both public liability and professional indemnity</option><option>Not currently insured</option><option>Not applicable</option></select></label>
+          <label>Working with children status<select name="workingWithChildren" [ngModel]="workingWithChildren()" (ngModelChange)="workingWithChildren.set($event)"><option value="" disabled>Choose one</option><option>Current check</option><option>Not current</option><option>Not applicable</option></select></label>
+        </div>
+        <label>First aid / CPR status<select name="firstAid" [ngModel]="firstAid()" (ngModelChange)="firstAid.set($event)"><option value="" disabled>Choose one</option><option>Current first aid and CPR</option><option>First aid only</option><option>CPR only</option><option>Not current</option><option>Not applicable</option></select></label>
+        <label>Professional memberships (optional)<textarea name="memberships" rows="2" [ngModel]="memberships()" (ngModelChange)="memberships.set($event)"></textarea></label>
+        <label>Public evidence links (optional)<textarea name="credentialLinks" rows="2" [ngModel]="credentialLinks()" (ngModelChange)="credentialLinks.set($event)"></textarea></label>
+      </ng-container>
+
+      <ng-container *ngIf="step() === 5">
+        <label>Do you have events ready?<select name="hasEventsReady" [ngModel]="hasEventsReady()" (ngModelChange)="hasEventsReady.set($event)"><option value="" disabled>Choose one</option><option>Yes, ready now</option><option>Yes, within 30 days</option><option>Not yet</option></select></label>
+        <label>Expected first event type<input name="expectedFirstEvent" type="text" [ngModel]="expectedFirstEvent()" (ngModelChange)="expectedFirstEvent.set($event)" /></label>
+        <label>Booking/payment tools used today<textarea name="bookingTools" rows="3" [ngModel]="bookingTools()" (ngModelChange)="bookingTools.set($event)"></textarea></label>
+        <label>Anything the Within team should know?<textarea name="adminNotes" rows="3" [ngModel]="adminNotes()" (ngModelChange)="adminNotes.set($event)"></textarea></label>
+        <label class="check-option declaration-option"><input type="checkbox" [checked]="declaration()" (change)="declaration.set($any($event.target).checked)" /><span>I confirm this information is accurate and that Within may review it before approving provider access.</span></label>
+      </ng-container>
+
+      <div class="wizard-actions">
+        <button type="button" class="secondary-button" (click)="previous()" [disabled]="step() === 0">Back</button>
+        <button type="button" *ngIf="step() < stepTitles.length - 1" (click)="next()">Next</button>
+        <button type="submit" *ngIf="step() === stepTitles.length - 1">Submit application</button>
+      </div>
+    </form>
+
+    <ng-template #submittedMessage>
+      <div class="success-message"><strong>Application received.</strong><p>{{ submissionMessage() }}</p><button type="button" routerLink="/">Back to Within</button></div>
+    </ng-template>
+  </section>
+</main>

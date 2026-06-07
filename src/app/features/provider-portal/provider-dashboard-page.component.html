@@ -1,0 +1,105 @@
+<main class="provider-portal-shell">
+  <header class="survey-topbar provider-topbar">
+    <a class="brand" routerLink="/"><img src="/within-logo.png" alt="" /><span>Within</span></a>
+    <div class="admin-topbar-actions">
+      <button type="button" class="admin-refresh" (click)="load()" [disabled]="loading()">{{ loading() ? 'Loading...' : 'Refresh' }}</button>
+      <button type="button" class="admin-signout" (click)="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <section class="provider-dashboard" *ngIf="provider() as profile; else providerLoading">
+    <aside class="provider-dashboard-side">
+      <span class="section-eyebrow">Provider workspace</span>
+      <div class="provider-avatar">{{ profile.name.slice(0, 1) }}</div>
+      <h1>{{ profile.name }}</h1>
+      <p>{{ profile.bio }}</p>
+      <dl>
+        <dt>Lens</dt>
+        <dd>{{ profile.lens }}</dd>
+        <dt>Location</dt>
+        <dd>{{ profile.location }}</dd>
+        <dt>Status</dt>
+        <dd><span class="provider-status-pill" [attr.data-status]="profile.isVerified ? 'Approved' : 'Submitted'">{{ profile.isVerified ? 'Verified' : 'Unverified' }}</span></dd>
+      </dl>
+      <button type="button" class="primary-action provider-new-event" (click)="newEvent()">New event</button>
+    </aside>
+
+    <section class="provider-event-workspace">
+      <div class="provider-dashboard-head">
+        <div>
+          <span class="section-eyebrow">Event management</span>
+          <h2>Plan, publish, and monitor your Within events.</h2>
+        </div>
+        <button type="button" class="admin-refresh" (click)="newEvent()">Clear editor</button>
+      </div>
+
+      <div class="provider-stats-row" aria-label="Event summary">
+        <article><span>Total events</span><strong>{{ events().length }}</strong></article>
+        <article><span>Published</span><strong>{{ publishedCount() }}</strong></article>
+        <article><span>Drafts</span><strong>{{ draftCount() }}</strong></article>
+        <article><span>Capacity</span><strong>{{ totalCapacity() }}</strong></article>
+      </div>
+
+      <div class="provider-management-grid">
+        <form class="provider-event-form" (ngSubmit)="saveEvent()">
+          <header>
+            <span class="section-eyebrow">{{ selectedEvent() ? 'Edit event' : 'Create event' }}</span>
+            <h2>{{ selectedEvent() ? selectedEvent()?.title : 'New Within event' }}</h2>
+            <p>Keep the essentials crisp: what it is, where it happens, who it helps, and how people book.</p>
+          </header>
+
+          <div class="provider-form-grid">
+            <label class="full-width">Title<input name="title" type="text" [ngModel]="title()" (ngModelChange)="title.set($event)" /></label>
+            <label class="full-width">Description<textarea name="description" rows="4" [ngModel]="description()" (ngModelChange)="description.set($event)"></textarea></label>
+            <label>Lens<select name="lens" [ngModel]="lens()" (ngModelChange)="lens.set($event)"><option *ngFor="let option of lensOptions" [value]="option">{{ option }}</option></select></label>
+            <label>Location<input name="locationName" type="text" [ngModel]="locationName()" (ngModelChange)="locationName.set($event)" /></label>
+            <label>Start<input name="startLocal" type="datetime-local" [ngModel]="startLocal()" (ngModelChange)="startLocal.set($event)" /></label>
+            <label>End<input name="endLocal" type="datetime-local" [ngModel]="endLocal()" (ngModelChange)="endLocal.set($event)" /></label>
+            <label>Price<input name="priceAmount" type="number" min="0" step="0.01" [ngModel]="priceAmount()" (ngModelChange)="priceAmount.set(+$event)" /></label>
+            <label>Currency<input name="currency" type="text" maxlength="8" [ngModel]="currency()" (ngModelChange)="currency.set($event)" /></label>
+            <label>Capacity<input name="capacity" type="number" min="1" step="1" [ngModel]="capacity()" (ngModelChange)="capacity.set(+$event)" /></label>
+            <label>Signup<select name="signupType" [ngModel]="signupType()" (ngModelChange)="signupType.set($event)"><option *ngFor="let option of signupTypes" [value]="option">{{ option }}</option></select></label>
+            <label class="check-option provider-online-option"><input type="checkbox" [checked]="isOnline()" (change)="isOnline.set($any($event.target).checked)" /><span>Online event</span></label>
+            <label class="full-width">External booking URL<input name="externalBookingUrl" type="url" [ngModel]="externalBookingUrl()" (ngModelChange)="externalBookingUrl.set($event)" /></label>
+            <label class="full-width">Image URL<input name="imageUrl" type="url" [ngModel]="imageUrl()" (ngModelChange)="imageUrl.set($event)" /></label>
+            <label class="full-width">Tags<input name="tagsText" type="text" placeholder="breathwork, beginners, perth" [ngModel]="tagsText()" (ngModelChange)="tagsText.set($event)" /></label>
+          </div>
+
+          <div class="provider-form-actions">
+            <button type="submit" class="primary-action" [disabled]="saving()">{{ saving() ? 'Saving...' : selectedEvent() ? 'Update event' : 'Create event' }}</button>
+            <button type="button" class="admin-refresh" (click)="newEvent()">Clear</button>
+          </div>
+          <p class="admin-message" *ngIf="message()">{{ message() }}</p>
+        </form>
+
+        <section class="provider-event-list">
+          <header>
+            <div>
+              <span class="section-eyebrow">Event library</span>
+              <h2>Your events</h2>
+            </div>
+            <span>{{ events().length }} total</span>
+          </header>
+          <p class="admin-empty" *ngIf="!events().length">No events yet. Create your first event above.</p>
+          <button type="button" class="provider-event-row" *ngFor="let event of events()" [class.active]="event.id === selectedEventId()" (click)="editEvent(event)">
+            <span class="provider-status-pill" [attr.data-status]="event.status">{{ event.status }}</span>
+            <strong>{{ event.title }}</strong>
+            <span>{{ eventTime(event) }}</span>
+            <small>{{ event.locationName }} - {{ event.goingCount }} going - {{ event.capacity }} capacity</small>
+          </button>
+        </section>
+      </div>
+    </section>
+  </section>
+
+  <ng-template #providerLoading>
+    <section class="admin-login-wrap">
+      <aside class="admin-login-context">
+        <span class="section-eyebrow">Provider portal</span>
+        <h1>{{ message() || 'Loading provider dashboard...' }}</h1>
+        <p>Approved providers can manage events after signing in.</p>
+        <a class="primary-action" routerLink="/providers/login">Provider login</a>
+      </aside>
+    </section>
+  </ng-template>
+</main>
