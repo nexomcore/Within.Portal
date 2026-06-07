@@ -5,8 +5,7 @@
       <span>Within</span>
     </a>
     <nav class="nav-links" aria-label="Landing page sections">
-      <a href="#community" (click)="$event.preventDefault(); scrollToId('community')">Community</a>
-      <a href="#providers" (click)="$event.preventDefault(); scrollToId('providers')">Providers</a>
+      <a routerLink="/survey">Survey</a>
       <a href="#interest" (click)="$event.preventDefault(); scrollToId('interest')">Stay in touch</a>
     </nav>
     <a class="nav-cta" href="#interest" (click)="$event.preventDefault(); scrollToId('interest')">Join waitlist</a>
@@ -18,7 +17,6 @@
       <p class="hero-lede">Within is launching with community-led wellbeing and trusted providers, starting in Perth.</p>
       <div class="hero-actions">
         <a class="primary-action" href="#interest" (click)="$event.preventDefault(); scrollToId('interest')">Join waitlist</a>
-        <a class="secondary-action" routerLink="/providers/onboard">Provider onboarding</a>
       </div>
     </div>
 
@@ -35,7 +33,7 @@
       </article>
       <article id="providers" class="hero-3d-tile provider-spotlight">
         <span class="tile-label coral">Providers</span>
-        <strong>Trusted local guides</strong>
+        <strong>Trusted Providers</strong>
         <p>Reviewed before they publish into the Within community.</p>
       </article>
     </aside>
@@ -73,8 +71,6 @@
   <footer class="site-footer compact-footer">
     <div class="footer-brand"><img src="/within-logo.png" alt="" /><div><strong>Within</strong><span>Building quietly in Perth.</span></div></div>
     <div class="footer-links">
-      <a routerLink="/providers/onboard">Provider onboarding</a>
-      <a routerLink="/survey/user">Short survey</a>
     </div>
     <span class="footer-note">&copy; 2026 Within.</span>
   </footer>
