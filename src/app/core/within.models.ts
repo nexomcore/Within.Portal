@@ -7,7 +7,7 @@ export type AdminProviderFilter = 'all' | ProviderApplicationStatus;
 export type WithinRole = 'User' | 'Provider' | 'Admin';
 export type SignupType = 'Internal' | 'External';
 export type EventStatus = 'Draft' | 'Published' | 'Cancelled';
-export type EventJoinState = 'Interested' | 'Going' | 'Attended';
+export type EventJoinState = 'Interested' | 'Going' | 'Attended' | 'Declined';
 
 export interface AdminSubmission {
   id: string;
@@ -157,6 +157,25 @@ export interface UpsertEventPayload {
   externalBookingUrl: string | null;
   imageUrl: string | null;
   tags: string[];
+}
+
+export interface ProviderEventParticipant {
+  userId: string;
+  displayName: string;
+  updatedUtc: string;
+}
+
+export interface ProviderEventEngagement {
+  eventId: string;
+  eventTitle: string;
+  goingCount: number;
+  interestedCount: number;
+  declinedCount: number;
+  savedCount: number;
+  going: ProviderEventParticipant[];
+  interested: ProviderEventParticipant[];
+  declined: ProviderEventParticipant[];
+  saved: ProviderEventParticipant[];
 }
 
 export interface Option<T extends string = string> {

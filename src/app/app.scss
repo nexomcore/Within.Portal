@@ -2927,7 +2927,10 @@ app-root {
 .provider-dashboard-side,
 .provider-event-form,
 .provider-event-list,
-.provider-stats-row article {
+.provider-engagement-panel,
+.provider-response-group,
+.provider-stats-row article,
+.provider-response-stats article {
   border-color: var(--portal-line);
   border-radius: 18px;
   box-shadow: var(--portal-shadow);
@@ -3050,6 +3053,81 @@ app-root {
   transform: translateY(-1px);
 }
 
+.provider-engagement-panel {
+  background: #ffffff;
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+}
+
+.provider-engagement-panel > header {
+  align-items: end;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.provider-engagement-panel h2,
+.provider-response-group h3 {
+  margin: 4px 0 0;
+}
+
+.provider-response-stats,
+.provider-response-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.provider-response-stats article {
+  background: var(--portal-surface-soft);
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+}
+
+.provider-response-stats span {
+  color: var(--portal-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.provider-response-stats strong {
+  color: var(--portal-ink);
+  font-size: 1.55rem;
+  letter-spacing: -0.03em;
+}
+
+.provider-response-group {
+  align-self: start;
+  background: var(--portal-surface-soft);
+  display: grid;
+  gap: 10px;
+  min-height: 160px;
+  padding: 16px;
+}
+
+.provider-person-row {
+  background: #ffffff;
+  border: 1px solid var(--portal-line);
+  border-radius: 12px;
+  display: grid;
+  gap: 3px;
+  padding: 11px 12px;
+}
+
+.provider-person-row strong {
+  color: var(--portal-ink);
+  font-size: 0.94rem;
+}
+
+.provider-person-row span {
+  color: var(--portal-muted);
+  font-size: 0.78rem;
+}
+
 @keyframes portal-fade-up {
   from {
     opacity: 0;
@@ -3075,7 +3153,8 @@ app-root {
 
 @media (max-width: 1120px) {
   .portal-preview,
-  .provider-management-grid {
+  .provider-management-grid,
+  .provider-response-grid {
     grid-template-columns: 1fr;
   }
 
@@ -3084,6 +3163,10 @@ app-root {
   }
 
   .provider-stats-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .provider-response-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -3099,7 +3182,8 @@ app-root {
   }
 
   .survey-link-band,
-  .provider-dashboard-head {
+  .provider-dashboard-head,
+  .provider-engagement-panel > header {
     align-items: stretch;
     flex-direction: column;
   }
@@ -3114,7 +3198,8 @@ app-root {
     display: none;
   }
 
-  .provider-stats-row {
+  .provider-stats-row,
+  .provider-response-stats {
     grid-template-columns: 1fr;
   }
 

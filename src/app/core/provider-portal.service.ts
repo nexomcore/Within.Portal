@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { API_BASE, PROVIDER_REFRESH_TOKEN_KEY, PROVIDER_TOKEN_KEY } from './api.config';
-import { AuthResponse, EventItem, Provider, UpsertEventPayload } from './within.models';
+import { AuthResponse, EventItem, Provider, ProviderEventEngagement, UpsertEventPayload } from './within.models';
 
 @Injectable({ providedIn: 'root' })
 export class ProviderPortalService {
@@ -41,6 +41,10 @@ export class ProviderPortalService {
     return this.providerFetch<EventItem[]>('/providers/me/events');
   }
 
+  getEventEngagement(id: string): Promise<ProviderEventEngagement | null> {
+    return this.providerFetch<ProviderEventEngagement>(`/providers/me/events/${id}/engagement`);
+  }
+
   createEvent(payload: UpsertEventPayload): Promise<EventItem | null> {
     return this.providerFetch<EventItem>('/events', 'POST', payload);
   }
@@ -73,10 +77,11 @@ export class ProviderPortalService {
     if (!response.ok) {
       let message = 'Provider request failed.';
       try {
-        const parsed = await response.json() as { message?: string };
-        message = parsed.message ?? message;
+        const text = await response.text();
+        const parsed = text ? JSON.parse(text) as { message?: string } : null;
+        message = parsed?.message ?? message;
       } catch {
-        message = await response.text() || message;
+        message = response.statusText || message;
       }
       throw new Error(message);
     }

@@ -3,7 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ProviderPortalService } from '../../core/provider-portal.service';
-import { EventItem, Provider, SignupType, UpsertEventPayload, WithinLens } from '../../core/within.models';
+import { EventItem, Provider, ProviderEventEngagement, ProviderEventParticipant, SignupType, UpsertEventPayload, WithinLens } from '../../core/within.models';
 import { lensOptions } from '../../core/within-options';
 
 @Component({
@@ -20,6 +20,8 @@ export class ProviderDashboardPageComponent {
   protected readonly provider = signal<Provider | null>(null);
   protected readonly events = signal<EventItem[]>([]);
   protected readonly selectedEventId = signal<string | null>(null);
+  protected readonly engagement = signal<ProviderEventEngagement | null>(null);
+  protected readonly engagementLoading = signal(false);
   protected readonly message = signal('');
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
@@ -49,8 +51,8 @@ export class ProviderDashboardPageComponent {
   protected readonly draftCount = computed(() =>
     this.events().filter(item => item.status === 'Draft').length
   );
-  protected readonly totalCapacity = computed(() =>
-    this.events().reduce((total, item) => total + item.capacity, 0)
+  protected readonly totalGoing = computed(() =>
+    this.events().reduce((total, item) => total + item.goingCount, 0)
   );
 
   constructor() {
@@ -79,6 +81,10 @@ export class ProviderDashboardPageComponent {
 
       this.provider.set(provider);
       this.events.set(events);
+      if (this.selectedEventId() && !events.some(event => event.id === this.selectedEventId())) {
+        this.selectedEventId.set(null);
+        this.engagement.set(null);
+      }
       if (!this.lens()) this.lens.set(provider.lens);
     } catch (error) {
       this.message.set(error instanceof Error ? error.message : 'Could not load provider dashboard.');
@@ -92,7 +98,7 @@ export class ProviderDashboardPageComponent {
     void this.router.navigateByUrl('/providers/login');
   }
 
-  protected editEvent(event: EventItem): void {
+  protected async editEvent(event: EventItem): Promise<void> {
     this.selectedEventId.set(event.id);
     this.title.set(event.title);
     this.description.set(event.description);
@@ -109,11 +115,13 @@ export class ProviderDashboardPageComponent {
     this.imageUrl.set(event.imageUrl ?? '');
     this.tagsText.set(event.tags.join(', '));
     this.message.set(`Editing ${event.title}.`);
+    await this.loadEngagement(event.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   protected newEvent(): void {
     this.selectedEventId.set(null);
+    this.engagement.set(null);
     this.title.set('');
     this.description.set('');
     this.lens.set(this.provider()?.lens ?? 'Move');
@@ -149,6 +157,7 @@ export class ProviderDashboardPageComponent {
 
       await this.load();
       this.selectedEventId.set(saved.id);
+      await this.loadEngagement(saved.id);
       this.message.set(eventId ? 'Event updated.' : 'Event created.');
     } catch (error) {
       this.message.set(error instanceof Error ? error.message : 'Could not save event.');
@@ -159,6 +168,26 @@ export class ProviderDashboardPageComponent {
 
   protected eventTime(event: EventItem): string {
     return `${new Date(event.startUtc).toLocaleString()} - ${new Date(event.endUtc).toLocaleTimeString()}`;
+  }
+
+  protected async loadEngagement(eventId = this.selectedEventId()): Promise<void> {
+    if (!eventId) {
+      this.engagement.set(null);
+      return;
+    }
+
+    this.engagementLoading.set(true);
+    try {
+      this.engagement.set(await this.providerPortal.getEventEngagement(eventId));
+    } catch (error) {
+      this.message.set(error instanceof Error ? error.message : 'Could not load event responses.');
+    } finally {
+      this.engagementLoading.set(false);
+    }
+  }
+
+  protected attendeeTime(participant: ProviderEventParticipant): string {
+    return new Date(participant.updatedUtc).toLocaleString();
   }
 
   private buildPayload(): UpsertEventPayload | null {

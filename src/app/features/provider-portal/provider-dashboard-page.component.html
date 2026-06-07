@@ -37,7 +37,7 @@
         <article><span>Total events</span><strong>{{ events().length }}</strong></article>
         <article><span>Published</span><strong>{{ publishedCount() }}</strong></article>
         <article><span>Drafts</span><strong>{{ draftCount() }}</strong></article>
-        <article><span>Capacity</span><strong>{{ totalCapacity() }}</strong></article>
+        <article><span>Going</span><strong>{{ totalGoing() }}</strong></article>
       </div>
 
       <div class="provider-management-grid">
@@ -89,6 +89,67 @@
           </button>
         </section>
       </div>
+
+      <section class="provider-engagement-panel" *ngIf="selectedEvent() as event">
+        <header>
+          <div>
+            <span class="section-eyebrow">Event responses</span>
+            <h2>{{ engagement()?.eventTitle || event.title }}</h2>
+          </div>
+          <button type="button" class="admin-refresh" (click)="loadEngagement()" [disabled]="engagementLoading()">
+            {{ engagementLoading() ? 'Loading...' : 'Refresh responses' }}
+          </button>
+        </header>
+
+        <div class="provider-response-stats" *ngIf="engagement() as detail; else engagementEmpty">
+          <article><span>Going</span><strong>{{ detail.goingCount }}</strong></article>
+          <article><span>Interested</span><strong>{{ detail.interestedCount }}</strong></article>
+          <article><span>Not interested</span><strong>{{ detail.declinedCount }}</strong></article>
+          <article><span>Saved</span><strong>{{ detail.savedCount }}</strong></article>
+        </div>
+
+        <ng-template #engagementEmpty>
+          <p class="admin-empty">{{ engagementLoading() ? 'Loading responses...' : 'No responses loaded yet.' }}</p>
+        </ng-template>
+
+        <div class="provider-response-grid" *ngIf="engagement() as detail">
+          <section class="provider-response-group">
+            <h3>Going</h3>
+            <p class="admin-empty" *ngIf="!detail.going.length">No one has RSVP'd going yet.</p>
+            <article class="provider-person-row" *ngFor="let person of detail.going">
+              <strong>{{ person.displayName }}</strong>
+              <span>{{ attendeeTime(person) }}</span>
+            </article>
+          </section>
+
+          <section class="provider-response-group">
+            <h3>Interested</h3>
+            <p class="admin-empty" *ngIf="!detail.interested.length">No interested users yet.</p>
+            <article class="provider-person-row" *ngFor="let person of detail.interested">
+              <strong>{{ person.displayName }}</strong>
+              <span>{{ attendeeTime(person) }}</span>
+            </article>
+          </section>
+
+          <section class="provider-response-group">
+            <h3>Not interested</h3>
+            <p class="admin-empty" *ngIf="!detail.declined.length">No one has marked not interested.</p>
+            <article class="provider-person-row" *ngFor="let person of detail.declined">
+              <strong>{{ person.displayName }}</strong>
+              <span>{{ attendeeTime(person) }}</span>
+            </article>
+          </section>
+
+          <section class="provider-response-group">
+            <h3>Saved</h3>
+            <p class="admin-empty" *ngIf="!detail.saved.length">No one has saved this event yet.</p>
+            <article class="provider-person-row" *ngFor="let person of detail.saved">
+              <strong>{{ person.displayName }}</strong>
+              <span>{{ attendeeTime(person) }}</span>
+            </article>
+          </section>
+        </div>
+      </section>
     </section>
   </section>
 

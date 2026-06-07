@@ -5,7 +5,7 @@ export const PROVIDER_REFRESH_TOKEN_KEY = 'within.provider.refreshToken';
 export const API_TARGET_KEY = 'within.api.target';
 export const CUSTOM_API_BASE_KEY = 'within.api.customBaseUrl';
 
-const LOCAL_API_BASE = 'http://localhost:5177/api';
+const LOCAL_API_PORT = '5177';
 const ONLINE_API_BASE = 'https://app-within-api-np-001.azurewebsites.net/api';
 
 type ApiTarget = 'local' | 'online' | 'custom';
@@ -36,7 +36,7 @@ export function clearApiTarget(): void {
 function resolveApiBase(): string {
   const runtimeConfig = typeof window !== 'undefined' ? window.__WITHIN_CONFIG__ : undefined;
   const host = typeof window !== 'undefined' ? window.location.hostname : '';
-  const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+  const isLocalHost = isLocalDevelopmentHost(host);
 
   if (runtimeConfig?.apiBaseUrl) {
     return trimTrailingSlash(runtimeConfig.apiBaseUrl);
@@ -55,7 +55,7 @@ function resolveApiBase(): string {
   }
 
   if (isLocalHost) {
-    return LOCAL_API_BASE;
+    return localApiBase();
   }
 
   const configuredTarget = normalizeTarget(runtimeConfig?.apiTarget ?? localStorage.getItem(API_TARGET_KEY));
@@ -67,9 +67,23 @@ function resolveApiBase(): string {
 }
 
 function targetToBaseUrl(target: ApiTarget): string {
-  if (target === 'local') return LOCAL_API_BASE;
+  if (target === 'local') return localApiBase();
   if (target === 'online') return ONLINE_API_BASE;
-  return localStorage.getItem(CUSTOM_API_BASE_KEY) ?? LOCAL_API_BASE;
+  return localStorage.getItem(CUSTOM_API_BASE_KEY) ?? localApiBase();
+}
+
+function localApiBase(): string {
+  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+  const apiHost = host && host !== '127.0.0.1' && host !== '::1' ? host : 'localhost';
+  return `http://${apiHost}:${LOCAL_API_PORT}/api`;
+}
+
+function isLocalDevelopmentHost(host: string): boolean {
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return true;
+  if (host.startsWith('192.168.') || host.startsWith('10.')) return true;
+
+  const match = /^172\.(\d{1,2})\./.exec(host);
+  return match ? Number(match[1]) >= 16 && Number(match[1]) <= 31 : false;
 }
 
 function normalizeTarget(value: string | null | undefined): ApiTarget | null {

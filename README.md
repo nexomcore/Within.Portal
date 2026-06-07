@@ -14,10 +14,11 @@ Once the server is running, open your browser and navigate to `http://localhost:
 
 ## API target switching
 
-When the Angular app runs on `localhost` or `127.0.0.1`, it uses the local API by default:
+When the Angular app runs on `localhost`, `127.0.0.1`, or a private LAN host such as `192.168.1.105`, it uses the local API by default:
 
 ```text
 http://localhost:5177/api
+http://192.168.1.105:5177/api
 ```
 
 On deployed hosts, it uses the online API by default:
