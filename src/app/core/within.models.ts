@@ -8,6 +8,10 @@ export type WithinRole = 'User' | 'Provider' | 'Admin';
 export type SignupType = 'Internal' | 'External';
 export type EventStatus = 'Draft' | 'Published' | 'Cancelled';
 export type EventJoinState = 'Interested' | 'Going' | 'Attended' | 'Declined';
+export type CommunityPostType = 'AskCommunity' | 'ShareExperience' | 'FindBuddy' | 'LocalRecommendation' | 'Reflection';
+export type CommunityContentStatus = 'Active' | 'Hidden' | 'Removed' | 'UnderReview';
+export type CommunityReportReason = 'SpamOrPromotion' | 'HarassmentOrAbuse' | 'MedicalMisinformation' | 'InappropriateContent' | 'SafetyConcern' | 'Other';
+export type CommunityReportStatus = 'Pending' | 'Reviewed' | 'ActionTaken' | 'Dismissed';
 
 export interface AdminSubmission {
   id: string;
@@ -176,6 +180,77 @@ export interface ProviderEventEngagement {
   interested: ProviderEventParticipant[];
   declined: ProviderEventParticipant[];
   saved: ProviderEventParticipant[];
+}
+
+export interface CommunityAuthor {
+  id: string;
+  displayName: string;
+  role: WithinRole;
+  isVerifiedProvider: boolean;
+}
+
+export interface CommunityTopic {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  isActive: boolean;
+}
+
+export interface CommunityEventSummary {
+  id: string;
+  title: string;
+  providerName: string;
+  startUtc: string;
+  locationName: string;
+}
+
+export interface CommunityPost {
+  id: string;
+  postType: CommunityPostType;
+  title: string;
+  body: string;
+  status: CommunityContentStatus;
+  author: CommunityAuthor;
+  topics: CommunityTopic[];
+  linkedEvent: CommunityEventSummary | null;
+  helpfulCount: number;
+  commentCount: number;
+  savedCount: number;
+  isHelpful: boolean;
+  isSaved: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CommunityComment {
+  id: string;
+  postId: string;
+  body: string;
+  status: CommunityContentStatus;
+  author: CommunityAuthor;
+  helpfulCount: number;
+  isHelpful: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CommunityReport {
+  id: string;
+  circleId?: string;
+  circleEventId?: string | null;
+  circleName?: string;
+  reason: CommunityReportReason;
+  description: string | null;
+  status: CommunityReportStatus;
+  post: CommunityPost | null;
+  thread?: CommunityPost | null;
+  comment: CommunityComment | null;
+  sharedEvent?: EventItem | null;
+  reporter: CommunityAuthor;
+  reviewer: CommunityAuthor | null;
+  createdAt: string;
+  reviewedAt: string | null;
 }
 
 export interface Option<T extends string = string> {

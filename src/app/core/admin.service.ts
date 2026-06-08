@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { ADMIN_REFRESH_TOKEN_KEY, ADMIN_TOKEN_KEY, API_BASE } from './api.config';
-import { AdminStats, AdminSubmission, AdminUserRecord, ProviderApplication, ProviderApplicationStatus } from './within.models';
+import { AdminStats, AdminSubmission, AdminUserRecord, CommunityReport, CommunityReportStatus, ProviderApplication, ProviderApplicationStatus } from './within.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -45,6 +45,10 @@ export class AdminService {
     return this.adminFetch<ProviderApplication[]>('/admin/provider-applications');
   }
 
+  getCommunityReports(): Promise<CommunityReport[] | null> {
+    return this.adminFetch<CommunityReport[]>('/admin/circles/reports');
+  }
+
   deleteSubmission(id: string): Promise<void | null> {
     return this.adminFetch<void>(`/admin/submissions/${id}`, 'DELETE');
   }
@@ -59,6 +63,22 @@ export class AdminService {
 
   updateProviderApplicationNotes(id: string, adminNotes: string): Promise<ProviderApplication | null> {
     return this.adminFetch<ProviderApplication>(`/admin/provider-applications/${id}/notes`, 'POST', { adminNotes });
+  }
+
+  reviewCommunityReport(id: string, status: CommunityReportStatus): Promise<CommunityReport | null> {
+    return this.adminFetch<CommunityReport>(`/admin/circles/reports/${id}/review`, 'POST', { status });
+  }
+
+  removeCommunityPost(id: string): Promise<void | null> {
+    return this.adminFetch<void>(`/admin/circles/threads/${id}/remove`, 'POST');
+  }
+
+  removeCommunityComment(id: string): Promise<void | null> {
+    return this.adminFetch<void>(`/admin/circles/comments/${id}/remove`, 'POST');
+  }
+
+  removeCircleEventShare(id: string): Promise<void | null> {
+    return this.adminFetch<void>(`/admin/circles/events/${id}/remove`, 'POST');
   }
 
   private async adminFetch<T>(path: string, method: 'GET' | 'DELETE' | 'POST' = 'GET', body?: Record<string, unknown>): Promise<T | null> {

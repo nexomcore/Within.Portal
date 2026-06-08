@@ -4,6 +4,7 @@
     <div class="admin-topbar-actions">
       <button type="button" class="admin-tab" [class.active]="adminTab() === 'submissions'" (click)="setAdminTab('submissions')" *ngIf="adminAuthed()">Submissions</button>
       <button type="button" class="admin-tab" [class.active]="adminTab() === 'providers'" (click)="setAdminTab('providers')" *ngIf="adminAuthed()">Providers</button>
+      <button type="button" class="admin-tab" [class.active]="adminTab() === 'moderation'" (click)="setAdminTab('moderation')" *ngIf="adminAuthed()">Moderation</button>
       <button type="button" class="admin-tab" [class.active]="adminTab() === 'users'" (click)="setAdminTab('users')" *ngIf="adminAuthed()">Users</button>
       <button type="button" class="admin-signout" *ngIf="adminAuthed()" (click)="adminLogout()">Sign out</button>
     </div>
@@ -29,6 +30,7 @@
       <article class="admin-stat-card"><span>End-user surveys</span><strong>{{ stats.userSubmissions }}</strong></article>
       <article class="admin-stat-card"><span>Provider surveys</span><strong>{{ stats.providerSubmissions }}</strong></article>
       <article class="admin-stat-card"><span>Provider applications</span><strong>{{ providerApplications().length }}</strong></article>
+      <article class="admin-stat-card"><span>Community reports</span><strong>{{ communityReports().length }}</strong></article>
       <article class="admin-stat-card"><span>Registered accounts</span><strong>{{ stats.totalUsers }}</strong><small>{{ stats.providerUsers }} providers - {{ stats.adminUsers }} admin</small></article>
     </div>
 
@@ -114,6 +116,63 @@
         <dl class="admin-answer-list"><ng-container *ngFor="let entry of providerApplicationEntries(application)"><dt>{{ entry.key }}</dt><dd>{{ entry.value }}</dd></ng-container></dl>
       </article>
       <ng-template #noProviderSelected><article class="admin-detail admin-empty-detail"><p>Select a provider application to review.</p></article></ng-template>
+    </div>
+
+    <div class="admin-toolbar" *ngIf="adminTab() === 'moderation'">
+      <div class="admin-filter-group" role="group" aria-label="Moderation status">
+        <button type="button" class="active">All reports</button>
+      </div>
+      <button type="button" class="admin-refresh" (click)="loadAdminData()" [disabled]="adminLoading()">{{ adminLoading() ? 'Loading...' : 'Refresh' }}</button>
+    </div>
+
+    <div class="admin-grid" *ngIf="adminTab() === 'moderation'">
+      <aside class="admin-list" aria-label="Community reports list">
+        <p *ngIf="!communityReports().length" class="admin-empty">No community reports.</p>
+        <button *ngFor="let report of communityReports()" type="button" class="admin-list-item" [class.active]="report.id === selectedCommunityReportId()" (click)="selectCommunityReport(report.id)">
+          <span class="provider-status-pill" [attr.data-status]="report.status">{{ report.status }}</span>
+          <strong>{{ formatCommunityReportReason(report.reason) }}</strong>
+          <span class="admin-contact" *ngIf="report.circleName">{{ report.circleName }}</span>
+          <span class="admin-contact">{{ report.reporter.displayName }}</span>
+          <span class="admin-created">{{ report.createdAt | date:'medium' }}</span>
+        </button>
+      </aside>
+      <article class="admin-detail" *ngIf="selectedCommunityReport() as report; else noReportSelected">
+        <header class="admin-detail-header">
+          <div>
+            <span class="provider-status-pill" [attr.data-status]="report.status">{{ report.status }}</span>
+            <h2>{{ formatCommunityReportReason(report.reason) }}</h2>
+            <p class="admin-muted">Reported by {{ report.reporter.displayName }}<ng-container *ngIf="report.circleName"> in {{ report.circleName }}</ng-container> on {{ report.createdAt | date:'medium' }}</p>
+          </div>
+        </header>
+        <section class="provider-review-panel">
+          <div class="provider-review-actions">
+            <button type="button" class="admin-refresh" (click)="reviewCommunityReport('Reviewed')">Mark reviewed</button>
+            <button type="button" class="admin-refresh" (click)="reviewCommunityReport('Dismissed')">Dismiss</button>
+            <button type="button" class="admin-danger" (click)="removeReportedContent(report)">Remove content</button>
+          </div>
+          <p class="admin-muted" *ngIf="report.description">{{ report.description }}</p>
+        </section>
+        <section class="provider-notes-panel" *ngIf="report.thread || report.post">
+          <ng-container *ngIf="(report.thread || report.post) as thread">
+            <span class="section-eyebrow">Reported thread</span>
+            <h3>{{ thread.title }}</h3>
+            <p>{{ thread.body }}</p>
+            <p class="admin-muted">By {{ thread.author.displayName }} - {{ thread.createdAt | date:'medium' }}</p>
+          </ng-container>
+        </section>
+        <section class="provider-notes-panel" *ngIf="report.comment">
+          <span class="section-eyebrow">Reported comment</span>
+          <p>{{ report.comment.body }}</p>
+          <p class="admin-muted">By {{ report.comment.author.displayName }} - {{ report.comment.createdAt | date:'medium' }}</p>
+        </section>
+        <section class="provider-notes-panel" *ngIf="report.sharedEvent">
+          <span class="section-eyebrow">Reported shared event</span>
+          <h3>{{ report.sharedEvent.title }}</h3>
+          <p>{{ report.sharedEvent.description }}</p>
+          <p class="admin-muted">By {{ report.sharedEvent.providerName }} - {{ report.sharedEvent.startUtc | date:'medium' }}</p>
+        </section>
+      </article>
+      <ng-template #noReportSelected><article class="admin-detail admin-empty-detail"><p>Select a report to review.</p></article></ng-template>
     </div>
 
     <div class="admin-users" *ngIf="adminTab() === 'users'">

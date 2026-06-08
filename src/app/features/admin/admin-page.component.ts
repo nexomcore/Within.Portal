@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AdminService } from '../../core/admin.service';
 import { formatKey, formatProviderCategory, formatProviderStatus, formatValue, providerApplicationEntries, trustChecklist } from '../../core/formatters';
-import { AdminAnswerEntry, AdminAudienceFilter, AdminStats, AdminSubmission, AdminUserRecord, AdminProviderFilter, ProviderApplication, ProviderApplicationStatus } from '../../core/within.models';
+import { AdminAnswerEntry, AdminAudienceFilter, AdminStats, AdminSubmission, AdminUserRecord, AdminProviderFilter, CommunityReport, CommunityReportStatus, ProviderApplication, ProviderApplicationStatus } from '../../core/within.models';
 import { providerStatusFilters } from '../../core/within-options';
 
 @Component({
@@ -23,9 +23,11 @@ export class AdminPageComponent {
   protected readonly adminSubmissions = signal<AdminSubmission[]>([]);
   protected readonly adminStats = signal<AdminStats | null>(null);
   protected readonly adminUsers = signal<AdminUserRecord[]>([]);
+  protected readonly communityReports = signal<CommunityReport[]>([]);
   protected readonly adminFilter = signal<AdminAudienceFilter>('all');
   protected readonly adminSelectedId = signal<string | null>(null);
-  protected readonly adminTab = signal<'submissions' | 'providers' | 'users'>('submissions');
+  protected readonly adminTab = signal<'submissions' | 'providers' | 'users' | 'moderation'>('submissions');
+  protected readonly selectedCommunityReportId = signal<string | null>(null);
   protected readonly providerApplications = signal<ProviderApplication[]>([]);
   protected readonly providerApplicationFilter = signal<AdminProviderFilter>('all');
   protected readonly providerApplicationSearch = signal('');
@@ -67,6 +69,10 @@ export class AdminPageComponent {
     this.providerApplications().find(item => item.id === this.selectedProviderApplicationId()) ?? null
   );
 
+  protected readonly selectedCommunityReport = computed(() =>
+    this.communityReports().find(item => item.id === this.selectedCommunityReportId()) ?? null
+  );
+
   constructor() {
     if (this.adminAuthed()) void this.loadAdminData();
   }
@@ -97,9 +103,11 @@ export class AdminPageComponent {
     this.adminSubmissions.set([]);
     this.adminStats.set(null);
     this.adminUsers.set([]);
+    this.communityReports.set([]);
     this.providerApplications.set([]);
     this.adminSelectedId.set(null);
     this.selectedProviderApplicationId.set(null);
+    this.selectedCommunityReportId.set(null);
     this.providerCredential.set(null);
     this.adminMessage.set('Signed out.');
   }
@@ -107,14 +115,15 @@ export class AdminPageComponent {
   protected async loadAdminData(): Promise<void> {
     this.adminLoading.set(true);
     this.adminMessage.set('');
-    const [submissions, stats, users, providerApplications] = await Promise.all([
+    const [submissions, stats, users, providerApplications, communityReports] = await Promise.all([
       this.admin.getSubmissions(),
       this.admin.getStats(),
       this.admin.getUsers(),
       this.admin.getProviderApplications(),
+      this.admin.getCommunityReports(),
     ]);
     this.adminLoading.set(false);
-    if (submissions === null || stats === null || users === null || providerApplications === null) {
+    if (submissions === null || stats === null || users === null || providerApplications === null || communityReports === null) {
       this.adminMessage.set('Could not load admin data. Check the API and session.');
       return;
     }
@@ -122,8 +131,10 @@ export class AdminPageComponent {
     this.adminStats.set(stats);
     this.adminUsers.set(users);
     this.providerApplications.set(providerApplications);
+    this.communityReports.set(communityReports);
     if (!this.adminSelectedId() && submissions.length) this.adminSelectedId.set(submissions[0].id);
     if (!this.selectedProviderApplicationId() && providerApplications.length) this.selectProviderApplication(providerApplications[0].id);
+    if (!this.selectedCommunityReportId() && communityReports.length) this.selectedCommunityReportId.set(communityReports[0].id);
   }
 
   protected setAdminFilter(filter: AdminAudienceFilter): void {
@@ -132,12 +143,46 @@ export class AdminPageComponent {
     if (filtered.length && !filtered.some(item => item.id === this.adminSelectedId())) this.adminSelectedId.set(filtered[0].id);
   }
 
-  protected setAdminTab(tab: 'submissions' | 'providers' | 'users'): void {
+  protected setAdminTab(tab: 'submissions' | 'providers' | 'users' | 'moderation'): void {
     this.adminTab.set(tab);
   }
 
   protected selectSubmission(id: string): void {
     this.adminSelectedId.set(id);
+  }
+
+  protected selectCommunityReport(id: string): void {
+    this.selectedCommunityReportId.set(id);
+  }
+
+  protected async reviewCommunityReport(status: CommunityReportStatus): Promise<void> {
+    const report = this.selectedCommunityReport();
+    if (!report) return;
+    const updated = await this.admin.reviewCommunityReport(report.id, status);
+    if (!updated) {
+      this.adminMessage.set('Could not update moderation report.');
+      return;
+    }
+    this.replaceCommunityReport(updated);
+    this.adminMessage.set(`Report marked ${status}.`);
+  }
+
+  protected async removeReportedContent(report: CommunityReport): Promise<void> {
+    const targetPost = report.thread ?? report.post;
+    const ok = targetPost
+      ? await this.admin.removeCommunityPost(targetPost.id)
+      : report.comment
+        ? await this.admin.removeCommunityComment(report.comment.id)
+        : report.sharedEvent && report.circleEventId
+          ? await this.admin.removeCircleEventShare(report.circleEventId)
+          : null;
+    if (ok === null) {
+      this.adminMessage.set('Could not remove reported content.');
+      return;
+    }
+    const updated = await this.admin.reviewCommunityReport(report.id, 'ActionTaken');
+    if (updated) this.replaceCommunityReport(updated);
+    this.adminMessage.set('Reported content removed.');
   }
 
   protected setProviderApplicationFilter(filter: AdminProviderFilter): void {
@@ -252,9 +297,17 @@ export class AdminPageComponent {
     return 'User';
   }
 
+  protected formatCommunityReportReason(reason: string): string {
+    return reason.replace(/([A-Z])/g, ' $1').trim();
+  }
+
   private replaceProviderApplication(updated: ProviderApplication): void {
     this.providerApplications.set(this.providerApplications().map(item => item.id === updated.id ? updated : item));
     this.providerAdminNotesDraft.set(updated.adminNotes ?? '');
+  }
+
+  private replaceCommunityReport(updated: CommunityReport): void {
+    this.communityReports.set(this.communityReports().map(item => item.id === updated.id ? updated : item));
   }
 
   private extractComments(value: unknown): Record<string, string> {

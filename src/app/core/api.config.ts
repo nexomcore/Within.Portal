@@ -6,7 +6,9 @@ export const API_TARGET_KEY = 'within.api.target';
 export const CUSTOM_API_BASE_KEY = 'within.api.customBaseUrl';
 
 const LOCAL_API_PORT = '5177';
-const ONLINE_API_BASE = 'https://webapp-within-np-001-bxftg0d9fhd8cjbg.australiasoutheast-01.azurewebsites.net/api';
+//const ONLINE_API_BASE = 'https://webapp-within-np-001-bxftg0d9fhd8cjbg.australiasoutheast-01.azurewebsites.net/api';
+const ONLINE_API_BASE = ' https://localhost:7264';
+
 
 type ApiTarget = 'local' | 'online' | 'custom';
 
