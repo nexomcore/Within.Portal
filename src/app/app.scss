@@ -2428,6 +2428,72 @@ h3 {
   outline: none;
 }
 
+.provider-metadata-section {
+  background: #ffffff;
+  border: 1px solid var(--portal-line, var(--line));
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.provider-metadata-section summary {
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 800;
+  list-style-position: inside;
+  padding: 16px 18px;
+}
+
+.provider-metadata-section[open] summary {
+  border-bottom: 1px solid var(--portal-line, var(--line));
+}
+
+.provider-metadata-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 18px;
+}
+
+.provider-metadata-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+.provider-metadata-grid fieldset {
+  border: 0;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.provider-metadata-grid legend {
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 800;
+  padding: 0;
+}
+
+.provider-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.provider-chip-grid .check-option {
+  background: var(--portal-surface-soft, var(--bg-warm));
+  border-radius: 999px;
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+.provider-accessibility-fieldset {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.18) !important;
+  border-radius: 14px;
+  padding: 14px !important;
+}
+
 .provider-online-option {
   align-self: end;
   min-height: 46px;
@@ -2959,6 +3025,36 @@ app-root {
   text-align: center;
 }
 
+.provider-side-edit {
+  background: var(--portal-surface-soft);
+  border: 1px solid var(--portal-line);
+  border-radius: 16px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.provider-side-edit summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.provider-side-edit label {
+  display: grid;
+  gap: 6px;
+}
+
+.provider-side-edit input,
+.provider-side-edit textarea {
+  background: #ffffff;
+  border: 1px solid var(--portal-line);
+  border-radius: 10px;
+  color: var(--portal-ink);
+  font: inherit;
+  min-height: 42px;
+  padding: 10px 12px;
+}
+
 .provider-dashboard-head {
   align-items: end;
   display: flex;
@@ -3058,6 +3154,20 @@ app-root {
   display: grid;
   gap: 18px;
   padding: 24px;
+}
+
+.provider-services-panel {
+  margin-bottom: 18px;
+}
+
+.provider-service-form {
+  display: grid;
+  gap: 16px;
+}
+
+.provider-service-list {
+  display: grid;
+  gap: 10px;
 }
 
 .provider-engagement-panel > header {

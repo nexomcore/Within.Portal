@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { API_BASE, PROVIDER_REFRESH_TOKEN_KEY, PROVIDER_TOKEN_KEY } from './api.config';
-import { AuthResponse, EventItem, Provider, ProviderEventEngagement, UpsertEventPayload } from './within.models';
+import { AuthResponse, EventItem, Provider, ProviderEventEngagement, ProviderService, UpsertEventPayload, UpsertProviderPayload, UpsertProviderServicePayload } from './within.models';
 
 @Injectable({ providedIn: 'root' })
 export class ProviderPortalService {
@@ -41,6 +41,10 @@ export class ProviderPortalService {
     return this.providerFetch<EventItem[]>('/providers/me/events');
   }
 
+  getServices(): Promise<ProviderService[] | null> {
+    return this.providerFetch<ProviderService[]>('/providers/me/services');
+  }
+
   getEventEngagement(id: string): Promise<ProviderEventEngagement | null> {
     return this.providerFetch<ProviderEventEngagement>(`/providers/me/events/${id}/engagement`);
   }
@@ -53,7 +57,23 @@ export class ProviderPortalService {
     return this.providerFetch<EventItem>(`/events/${id}`, 'PUT', payload);
   }
 
-  private async providerFetch<T>(path: string, method: 'GET' | 'POST' | 'PUT' = 'GET', body?: UpsertEventPayload): Promise<T | null> {
+  updateProvider(payload: UpsertProviderPayload): Promise<Provider | null> {
+    return this.providerFetch<Provider>('/providers/me', 'PUT', payload);
+  }
+
+  createService(providerId: string, payload: UpsertProviderServicePayload): Promise<ProviderService | null> {
+    return this.providerFetch<ProviderService>(`/providers/${providerId}/services`, 'POST', payload);
+  }
+
+  updateService(serviceId: string, payload: UpsertProviderServicePayload): Promise<ProviderService | null> {
+    return this.providerFetch<ProviderService>(`/provider-services/${serviceId}`, 'PUT', payload);
+  }
+
+  deleteService(serviceId: string): Promise<void | null> {
+    return this.providerFetch<void>(`/provider-services/${serviceId}`, 'DELETE');
+  }
+
+  private async providerFetch<T>(path: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: unknown): Promise<T | null> {
     const token = localStorage.getItem(PROVIDER_TOKEN_KEY);
     if (!token) {
       this.authed.set(false);
@@ -86,6 +106,6 @@ export class ProviderPortalService {
       throw new Error(message);
     }
 
-    return await response.json() as T;
+    return response.status === 204 ? null : await response.json() as T;
   }
 }

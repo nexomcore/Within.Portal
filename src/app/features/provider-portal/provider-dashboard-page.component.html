@@ -14,13 +14,27 @@
       <h1>{{ profile.name }}</h1>
       <p>{{ profile.bio }}</p>
       <dl>
+        <dt>Type</dt>
+        <dd>{{ profile.providerType === 'Individual' ? 'Individual Practitioner' : 'Business / Organization' }}</dd>
         <dt>Lens</dt>
         <dd>{{ profile.lens }}</dd>
         <dt>Location</dt>
         <dd>{{ profile.location }}</dd>
         <dt>Status</dt>
-        <dd><span class="provider-status-pill" [attr.data-status]="profile.isVerified ? 'Approved' : 'Submitted'">{{ profile.isVerified ? 'Verified' : 'Unverified' }}</span></dd>
+        <dd><span class="provider-status-pill" [attr.data-status]="profile.verificationStatus">{{ profile.verificationStatus }}</span></dd>
       </dl>
+      <details class="provider-side-edit">
+        <summary>Edit profile</summary>
+        <label>Name<input name="profileName" type="text" [ngModel]="profileName()" (ngModelChange)="profileName.set($event)" /></label>
+        <label>Bio<textarea name="profileBio" rows="4" [ngModel]="profileBio()" (ngModelChange)="profileBio.set($event)"></textarea></label>
+        <label>Location<input name="profileLocation" type="text" [ngModel]="profileLocation()" (ngModelChange)="profileLocation.set($event)" /></label>
+        <label>Categories<input name="profileCategoriesText" type="text" [ngModel]="profileCategoriesText()" (ngModelChange)="profileCategoriesText.set($event)" /></label>
+        <label>Website<input name="profileWebsite" type="url" [ngModel]="profileWebsite()" (ngModelChange)="profileWebsite.set($event)" /></label>
+        <label>Instagram<input name="profileInstagram" type="text" [ngModel]="profileInstagram()" (ngModelChange)="profileInstagram.set($event)" /></label>
+        <label class="check-option"><input type="checkbox" [checked]="profileOnlineAvailable()" (change)="profileOnlineAvailable.set($any($event.target).checked)" /><span>Online available</span></label>
+        <label class="check-option"><input type="checkbox" [checked]="profileInPersonAvailable()" (change)="profileInPersonAvailable.set($any($event.target).checked)" /><span>In person available</span></label>
+        <button type="button" class="admin-refresh" (click)="saveProfile()" [disabled]="saving()">Save profile</button>
+      </details>
       <button type="button" class="primary-action provider-new-event" (click)="newEvent()">New event</button>
     </aside>
 
@@ -37,8 +51,42 @@
         <article><span>Total events</span><strong>{{ events().length }}</strong></article>
         <article><span>Published</span><strong>{{ publishedCount() }}</strong></article>
         <article><span>Drafts</span><strong>{{ draftCount() }}</strong></article>
-        <article><span>Going</span><strong>{{ totalGoing() }}</strong></article>
+        <article><span>Services</span><strong>{{ activeServices().length }}</strong></article>
       </div>
+
+      <section class="provider-engagement-panel provider-services-panel">
+        <header>
+          <div>
+            <span class="section-eyebrow">Service catalogue</span>
+            <h2>{{ selectedServiceId() ? 'Edit service' : 'Add service' }}</h2>
+          </div>
+          <button type="button" class="admin-refresh" (click)="newService()">Clear service</button>
+        </header>
+        <form class="provider-service-form" (ngSubmit)="saveService()">
+          <div class="provider-form-grid">
+            <label>Name<input name="serviceName" type="text" [ngModel]="serviceName()" (ngModelChange)="serviceName.set($event)" /></label>
+            <label>Category<input name="serviceCategory" type="text" [ngModel]="serviceCategory()" (ngModelChange)="serviceCategory.set($event)" /></label>
+            <label class="full-width">Description<textarea name="serviceDescription" rows="3" [ngModel]="serviceDescription()" (ngModelChange)="serviceDescription.set($event)"></textarea></label>
+            <label>Category group<select name="serviceLens" [ngModel]="serviceLens()" (ngModelChange)="serviceLens.set($event)"><option *ngFor="let option of lensOptions" [value]="option">{{ option }}</option></select></label>
+            <label>Delivery<select name="serviceDeliveryMode" [ngModel]="serviceDeliveryMode()" (ngModelChange)="serviceDeliveryMode.set($event)"><option *ngFor="let option of serviceDeliveryModeOptions" [value]="option.value">{{ option.label }}</option></select></label>
+            <label>Duration minutes<input name="serviceDuration" type="number" min="0" [ngModel]="serviceDuration()" (ngModelChange)="serviceDuration.set($event === '' ? null : +$event)" /></label>
+            <label>Price type<select name="servicePriceType" [ngModel]="servicePriceType()" (ngModelChange)="servicePriceType.set($event)"><option *ngFor="let option of priceTypeOptions" [value]="option.value">{{ option.label }}</option></select></label>
+            <label>Price amount<input name="servicePriceAmount" type="number" min="0" step="0.01" [ngModel]="servicePriceAmount()" (ngModelChange)="servicePriceAmount.set($event === '' ? null : +$event)" /></label>
+            <label>Location<input name="serviceLocation" type="text" [ngModel]="serviceLocation()" (ngModelChange)="serviceLocation.set($event)" /></label>
+          </div>
+          <div class="provider-form-actions">
+            <button type="submit" class="primary-action" [disabled]="saving()">{{ selectedServiceId() ? 'Update service' : 'Add service' }}</button>
+          </div>
+        </form>
+        <div class="provider-service-list">
+          <button type="button" class="provider-event-row" *ngFor="let service of services()" [class.active]="service.id === selectedServiceId()" (click)="editService(service)">
+            <span class="provider-status-pill" [attr.data-status]="service.isActive ? 'Published' : 'Draft'">{{ service.deliveryMode }}</span>
+            <strong>{{ service.name }}</strong>
+            <small>{{ service.category }} · {{ service.priceType }} · {{ service.location || profile.location }}</small>
+          </button>
+          <button type="button" class="admin-signout" *ngIf="selectedService() as selected" (click)="deleteService(selected)">Remove selected service</button>
+        </div>
+      </section>
 
       <div class="provider-management-grid">
         <form class="provider-event-form" (ngSubmit)="saveEvent()">
@@ -59,11 +107,84 @@
             <label>Currency<input name="currency" type="text" maxlength="8" [ngModel]="currency()" (ngModelChange)="currency.set($event)" /></label>
             <label>Capacity<input name="capacity" type="number" min="1" step="1" [ngModel]="capacity()" (ngModelChange)="capacity.set(+$event)" /></label>
             <label>Signup<select name="signupType" [ngModel]="signupType()" (ngModelChange)="signupType.set($event)"><option *ngFor="let option of signupTypes" [value]="option">{{ option }}</option></select></label>
+            <label>Linked service<select name="providerServiceId" [ngModel]="providerServiceId()" (ngModelChange)="providerServiceId.set($event)"><option value="">No linked service</option><option *ngFor="let service of activeServices()" [value]="service.id">{{ service.name }}</option></select></label>
             <label class="check-option provider-online-option"><input type="checkbox" [checked]="isOnline()" (change)="isOnline.set($any($event.target).checked)" /><span>Online event</span></label>
             <label class="full-width">External booking URL<input name="externalBookingUrl" type="url" [ngModel]="externalBookingUrl()" (ngModelChange)="externalBookingUrl.set($event)" /></label>
             <label class="full-width">Image URL<input name="imageUrl" type="url" [ngModel]="imageUrl()" (ngModelChange)="imageUrl.set($event)" /></label>
             <label class="full-width">Tags<input name="tagsText" type="text" placeholder="breathwork, beginners, perth" [ngModel]="tagsText()" (ngModelChange)="tagsText.set($event)" /></label>
           </div>
+
+          <details class="provider-metadata-section">
+            <summary>Preparation and facilities</summary>
+            <div class="provider-metadata-grid">
+              <fieldset class="full-width">
+                <legend>What to bring</legend>
+                <div class="provider-chip-grid">
+                  <label class="check-option" *ngFor="let option of bringItemOptions">
+                    <input type="checkbox" [checked]="bringItems().includes(option.value)" (change)="toggle(bringItems, option.value, $event)" />
+                    <span>{{ option.label }}</span>
+                  </label>
+                </div>
+              </fieldset>
+              <label class="full-width">Additional bring notes<textarea rows="3" [ngModel]="bringNotes()" (ngModelChange)="bringNotes.set($event)" name="bringNotes"></textarea></label>
+              <fieldset class="full-width">
+                <legend>Facilities available</legend>
+                <div class="provider-chip-grid">
+                  <label class="check-option" *ngFor="let option of facilityOptions">
+                    <input type="checkbox" [checked]="facilities().includes(option.value)" (change)="toggle(facilities, option.value, $event)" />
+                    <span>{{ option.label }}</span>
+                  </label>
+                </div>
+              </fieldset>
+            </div>
+          </details>
+
+          <details class="provider-metadata-section">
+            <summary>Accessibility and comfort</summary>
+            <div class="provider-metadata-grid">
+              <fieldset class="full-width provider-accessibility-fieldset">
+                <legend>Accessibility support</legend>
+                <div class="provider-chip-grid">
+                  <label class="check-option" *ngFor="let option of accessibilityOptions">
+                    <input type="checkbox" [checked]="accessibilityFeatures().includes(option.value)" (change)="toggle(accessibilityFeatures, option.value, $event)" />
+                    <span>{{ option.label }}</span>
+                  </label>
+                </div>
+              </fieldset>
+              <label>Physical intensity<select name="physicalIntensity" [ngModel]="physicalIntensity()" (ngModelChange)="physicalIntensity.set($event)"><option value="">Not specified</option><option *ngFor="let option of intensityOptions" [value]="option.value">{{ option.label }}</option></select></label>
+              <label>Social interaction<select name="socialInteractionLevel" [ngModel]="socialInteractionLevel()" (ngModelChange)="socialInteractionLevel.set($event)"><option value="">Not specified</option><option *ngFor="let option of intensityOptions" [value]="option.value">{{ option.label }}</option></select></label>
+              <label class="full-width">Experience level<select name="experienceLevel" [ngModel]="experienceLevel()" (ngModelChange)="experienceLevel.set($event)"><option value="">Not specified</option><option *ngFor="let option of experienceLevelOptions" [value]="option.value">{{ option.label }}</option></select></label>
+              <fieldset class="full-width">
+                <legend>Atmosphere / comfort indicators</legend>
+                <div class="provider-chip-grid">
+                  <label class="check-option" *ngFor="let option of atmosphereOptions">
+                    <input type="checkbox" [checked]="atmosphereTags().includes(option.value)" (change)="toggle(atmosphereTags, option.value, $event)" />
+                    <span>{{ option.label }}</span>
+                  </label>
+                </div>
+              </fieldset>
+            </div>
+          </details>
+
+          <details class="provider-metadata-section">
+            <summary>Food, age, and safety notes</summary>
+            <div class="provider-metadata-grid">
+              <label class="check-option provider-online-option"><input type="checkbox" [checked]="foodProvided()" (change)="foodProvided.set($any($event.target).checked)" /><span>Food provided</span></label>
+              <label class="check-option provider-online-option"><input type="checkbox" [checked]="drinksProvided()" (change)="drinksProvided.set($any($event.target).checked)" /><span>Drinks provided</span></label>
+              <fieldset class="full-width">
+                <legend>Dietary options</legend>
+                <div class="provider-chip-grid">
+                  <label class="check-option" *ngFor="let option of dietaryOptionsList">
+                    <input type="checkbox" [checked]="dietaryOptions().includes(option.value)" (change)="toggle(dietaryOptions, option.value, $event)" />
+                    <span>{{ option.label }}</span>
+                  </label>
+                </div>
+              </fieldset>
+              <label class="full-width">Additional food notes<textarea rows="3" [ngModel]="foodNotes()" (ngModelChange)="foodNotes.set($event)" name="foodNotes"></textarea></label>
+              <label class="full-width">Age restriction<select name="ageRestriction" [ngModel]="ageRestriction()" (ngModelChange)="ageRestriction.set($event)"><option value="">Not specified</option><option *ngFor="let option of ageRestrictionOptions" [value]="option.value">{{ option.label }}</option></select></label>
+              <label class="full-width">Safety / additional notes<textarea rows="4" [ngModel]="safetyNotes()" (ngModelChange)="safetyNotes.set($event)" name="safetyNotes" placeholder="Weather, medical or emotional content notes, cancellation preparation, or anything else attendees should know."></textarea></label>
+            </div>
+          </details>
 
           <div class="provider-form-actions">
             <button type="submit" class="primary-action" [disabled]="saving()">{{ saving() ? 'Saving...' : selectedEvent() ? 'Update event' : 'Create event' }}</button>

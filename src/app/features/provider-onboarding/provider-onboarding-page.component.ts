@@ -3,14 +3,14 @@ import { Component, WritableSignal, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ProviderApplicationService } from '../../core/provider-application.service';
-import { ProviderCategory, WithinLens } from '../../core/within.models';
+import { ProviderType, WithinLens } from '../../core/within.models';
 import {
-  deliveryModeOptions,
   lensOptions,
   onboardingServiceOptions,
   onboardingStepTitles,
-  providerCategoryOptions,
+  providerServiceDeliveryModeOptions,
   serviceAreaOptions,
+  unifiedProviderTypeOptions,
 } from '../../core/within-options';
 
 @Component({
@@ -20,9 +20,9 @@ import {
 })
 export class ProviderOnboardingPageComponent {
   protected readonly stepTitles = onboardingStepTitles;
-  protected readonly providerCategoryOptions = providerCategoryOptions;
+  protected readonly providerTypeOptions = unifiedProviderTypeOptions;
   protected readonly lensOptions = lensOptions;
-  protected readonly deliveryModeOptions = deliveryModeOptions;
+  protected readonly deliveryModeOptions = providerServiceDeliveryModeOptions;
   protected readonly serviceAreaOptions = serviceAreaOptions;
   protected readonly onboardingServiceOptions = onboardingServiceOptions;
 
@@ -30,52 +30,39 @@ export class ProviderOnboardingPageComponent {
   protected readonly submitted = signal(false);
   protected readonly validationMessage = signal('');
   protected readonly submissionMessage = signal('');
-  protected readonly invalidField = signal('');
-  protected readonly contactName = signal('');
-  protected readonly contactEmail = signal('');
-  protected readonly contactPhone = signal('');
-  protected readonly preferredContact = signal('');
+  protected readonly providerType = signal<ProviderType | ''>('');
   protected readonly providerName = signal('');
-  protected readonly category = signal<ProviderCategory | ''>('');
-  protected readonly businessType = signal('');
-  protected readonly abn = signal('');
-  protected readonly website = signal('');
-  protected readonly instagram = signal('');
-  protected readonly otherSocial = signal('');
-  protected readonly location = signal('');
-  protected readonly deliveryModes = signal<string[]>([]);
-  protected readonly venueNames = signal('');
   protected readonly primaryLens = signal<WithinLens | ''>('');
   protected readonly serviceAreas = signal<string[]>([]);
   protected readonly servicesOffered = signal<string[]>([]);
-  protected readonly yearsPracticing = signal('');
-  protected readonly typicalAudience = signal('');
+  protected readonly location = signal('');
   protected readonly bio = signal('');
-  protected readonly joinReason = signal('');
+  protected readonly practitionerTitle = signal('');
+  protected readonly yearsPracticing = signal('');
   protected readonly certifications = signal('');
-  protected readonly insuranceStatus = signal('');
-  protected readonly workingWithChildren = signal('');
-  protected readonly firstAid = signal('');
-  protected readonly memberships = signal('');
-  protected readonly credentialLinks = signal('');
-  protected readonly hasEventsReady = signal('');
-  protected readonly expectedFirstEvent = signal('');
-  protected readonly bookingTools = signal('');
-  protected readonly adminNotes = signal('');
+  protected readonly businessType = signal('');
+  protected readonly abn = signal('');
+  protected readonly facilities = signal('');
+  protected readonly accessibilityFeatures = signal('');
+  protected readonly deliveryModes = signal<string[]>([]);
+  protected readonly contactName = signal('');
+  protected readonly contactEmail = signal('');
+  protected readonly contactPhone = signal('');
+  protected readonly preferredContact = signal('Email');
+  protected readonly website = signal('');
+  protected readonly instagram = signal('');
   protected readonly declaration = signal(false);
 
   constructor(private readonly providerApplications: ProviderApplicationService) {}
 
   protected next(): void {
     if (!this.validate()) return;
-    this.validationMessage.set('');
     this.step.set(Math.min(this.step() + 1, this.stepTitles.length - 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   protected previous(): void {
     this.validationMessage.set('');
-    this.invalidField.set('');
     this.step.set(Math.max(this.step() - 1, 0));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -83,18 +70,19 @@ export class ProviderOnboardingPageComponent {
   protected toggle(selection: WritableSignal<string[]>, value: string, event: Event): void {
     const checkbox = event.target as HTMLInputElement;
     const current = selection();
-    selection.set(checkbox.checked ? [...current, value] : current.filter(item => item !== value));
+    selection.set(checkbox.checked ? Array.from(new Set([...current, value])) : current.filter(item => item !== value));
   }
 
-  protected fieldError(field: string): string {
-    if (this.invalidField() !== field) return '';
-    return field === 'contactName' ? 'Enter the primary contact name.' : 'Enter an email address.';
+  protected isIndividual(): boolean {
+    return this.providerType() === 'Individual';
   }
 
   protected async submit(): Promise<void> {
     if (!this.validate()) return;
+    const isIndividual = this.isIndividual();
     const result = await this.providerApplications.submit({
-      providerCategory: this.category(),
+      providerType: this.providerType(),
+      providerCategory: isIndividual ? 'IndividualPractitioner' : 'BusinessStudio',
       primaryLens: this.primaryLens(),
       serviceAreas: this.serviceAreas(),
       contactName: this.contactName().trim(),
@@ -102,29 +90,29 @@ export class ProviderOnboardingPageComponent {
       contactPhone: this.contactPhone().trim(),
       preferredContactMethod: this.preferredContact().trim(),
       providerName: this.providerName().trim(),
-      businessType: this.businessType().trim(),
-      abn: this.abn().trim() || null,
+      businessType: isIndividual ? this.practitionerTitle().trim() : this.businessType().trim(),
+      abn: isIndividual ? null : this.abn().trim() || null,
       websiteUrl: this.website().trim() || null,
       instagramUrl: this.instagram().trim() || null,
-      otherSocialUrl: this.otherSocial().trim() || null,
+      otherSocialUrl: null,
       location: this.location().trim(),
       deliveryModes: this.deliveryModes(),
-      venueNames: this.venueNames().trim() || null,
+      venueNames: isIndividual ? null : this.facilities().trim() || null,
       servicesOffered: this.servicesOffered(),
       yearsPracticing: this.yearsPracticing().trim(),
-      typicalAudience: this.typicalAudience().trim(),
+      typicalAudience: '',
       bio: this.bio().trim(),
-      joinReason: this.joinReason().trim(),
+      joinReason: '',
       certifications: this.certifications().trim(),
-      insuranceStatus: this.insuranceStatus().trim(),
-      workingWithChildrenCheck: this.workingWithChildren().trim(),
-      firstAidCpr: this.firstAid().trim(),
-      professionalMemberships: this.memberships().trim() || null,
-      credentialLinks: this.credentialLinks().trim() || null,
-      hasEventsReady: this.hasEventsReady(),
-      expectedFirstEvent: this.expectedFirstEvent().trim(),
-      bookingTools: this.bookingTools().trim(),
-      adminFacingNotes: this.adminNotes().trim() || null,
+      insuranceStatus: '',
+      workingWithChildrenCheck: '',
+      firstAidCpr: '',
+      professionalMemberships: null,
+      credentialLinks: null,
+      hasEventsReady: '',
+      expectedFirstEvent: '',
+      bookingTools: '',
+      adminFacingNotes: isIndividual ? null : this.accessibilityFeatures().trim() || null,
       declarationAccepted: this.declaration(),
     });
     this.submissionMessage.set(result.message);
@@ -140,29 +128,19 @@ export class ProviderOnboardingPageComponent {
   private validationForStep(): string {
     switch (this.step()) {
       case 0:
-        if (!this.contactName().trim()) {
-          this.invalidField.set('contactName');
-          return 'Add the primary contact name.';
-        }
-        if (!this.contactEmail().trim()) {
-          this.invalidField.set('contactEmail');
-          return 'Add the primary contact email.';
-        }
-        if (!this.preferredContact()) return 'Choose a preferred contact method.';
-        this.invalidField.set('');
-        return '';
+        return this.providerType() ? '' : 'Choose what best describes you.';
       case 1:
-        return !this.providerName().trim() || !this.category() || !this.businessType().trim() ? 'Add the provider name, category, and business type.' : '';
+        if (!this.providerName().trim() || !this.primaryLens() || !this.location().trim()) return 'Add display name, category group, and location.';
+        return this.bio().trim() ? '' : this.isIndividual() ? 'Add a short About me description.' : 'Add a short About the business description.';
       case 2:
-        if (!this.location().trim() || !this.primaryLens()) return 'Add the location and primary lens.';
-        return !this.deliveryModes().length || !this.serviceAreas().length || !this.servicesOffered().length ? 'Choose delivery, service areas, and services offered.' : '';
+        if (this.isIndividual()) return this.practitionerTitle().trim() ? '' : 'Add your practitioner title.';
+        return this.businessType().trim() ? '' : 'Add the business type.';
       case 3:
-        return !this.yearsPracticing().trim() || !this.typicalAudience().trim() || !this.bio().trim() || !this.joinReason().trim() ? 'Complete experience, audience, bio, and why Within is a fit.' : '';
+        if (!this.servicesOffered().length) return 'Add at least one service.';
+        return this.deliveryModes().length ? '' : 'Choose at least one delivery mode.';
       case 4:
-        return !this.certifications().trim() || !this.insuranceStatus().trim() || !this.workingWithChildren().trim() || !this.firstAid().trim() ? 'Add credentials, insurance status, working-with-children status, and first-aid/CPR status.' : '';
-      case 5:
-        if (!this.hasEventsReady() || !this.expectedFirstEvent().trim() || !this.bookingTools().trim()) return 'Complete event readiness and booking tool details.';
-        return this.declaration() ? '' : 'Accept the declaration before submitting.';
+        if (!this.contactName().trim() || !this.contactEmail().trim()) return 'Add contact name and email.';
+        return this.declaration() ? '' : 'Confirm the declaration before submitting.';
       default:
         return '';
     }

@@ -2,12 +2,19 @@ export type SurveyAudience = 'user' | 'provider';
 export type AdminAudienceFilter = 'all' | 'user' | 'provider' | 'interest';
 export type ProviderApplicationStatus = 'Submitted' | 'InReview' | 'MoreInfoRequested' | 'Approved' | 'Rejected';
 export type ProviderCategory = 'BusinessStudio' | 'IndividualPractitioner' | 'CollectiveCommunityGroup' | 'RetreatProgramOrganiser' | 'VenueSpacePartner' | 'CorporateWorkplaceWellness';
+export type ProviderType = 'Individual' | 'Business';
+export type ProviderVerificationStatus = 'Unverified' | 'Pending' | 'Verified' | 'Rejected';
+export type ProviderPriceType = 'Free' | 'Fixed' | 'FromPrice' | 'ContactProvider';
+export type ProviderServiceDeliveryMode = 'InPerson' | 'Online' | 'Hybrid';
 export type WithinLens = 'Move' | 'Feel' | 'Seek';
 export type AdminProviderFilter = 'all' | ProviderApplicationStatus;
 export type WithinRole = 'User' | 'Provider' | 'Admin';
 export type SignupType = 'Internal' | 'External';
 export type EventStatus = 'Draft' | 'Published' | 'Cancelled';
 export type EventJoinState = 'Interested' | 'Going' | 'Attended' | 'Declined';
+export type EventIntensity = 'low' | 'medium' | 'high';
+export type EventExperienceLevel = 'beginner_friendly' | 'some_experience_recommended' | 'experienced_participants_only';
+export type EventAgeRestriction = 'all_ages' | '13_plus' | '16_plus' | '18_plus' | 'seniors_focused' | 'family_kids_friendly';
 export type CommunityPostType = 'AskCommunity' | 'ShareExperience' | 'FindBuddy' | 'LocalRecommendation' | 'Reflection';
 export type CommunityContentStatus = 'Active' | 'Hidden' | 'Removed' | 'UnderReview';
 export type CommunityReportReason = 'SpamOrPromotion' | 'HarassmentOrAbuse' | 'MedicalMisinformation' | 'InappropriateContent' | 'SafetyConcern' | 'Other';
@@ -50,6 +57,7 @@ export interface AdminAnswerEntry {
 export interface ProviderApplication {
   id: string;
   status: ProviderApplicationStatus;
+  providerType: ProviderType;
   providerCategory: ProviderCategory;
   primaryLens: WithinLens;
   serviceAreas: string[];
@@ -114,18 +122,130 @@ export interface Provider {
   id: string;
   name: string;
   slug: string;
+  providerType: ProviderType;
+  legalName: string | null;
+  bio: string;
+  lens: WithinLens;
+  categories: string[];
+  profileImageUrl: string | null;
+  coverImageUrl: string | null;
+  location: string;
+  suburb: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  websiteUrl: string | null;
+  instagramUrl: string | null;
+  phone: string | null;
+  email: string | null;
+  isVerified: boolean;
+  verificationStatus: ProviderVerificationStatus;
+  isActive: boolean;
+  showEmailPublicly: boolean;
+  showPhonePublicly: boolean;
+  showWebsitePublicly: boolean;
+  practitionerTitle: string | null;
+  yearsExperience: number | null;
+  qualifications: string | null;
+  servicesOffered: string[];
+  languages: string[];
+  onlineAvailable: boolean;
+  inPersonAvailable: boolean;
+  businessType: string | null;
+  abn: string | null;
+  facilities: string[];
+  accessibilityFeatures: string[];
+  teamMembers: string[];
+  openingHours: string | null;
+  serviceCount: number;
+  createdUtc: string;
+  updatedUtc: string;
+}
+
+export interface ProviderSummary {
+  id: string;
+  name: string;
+  providerType: ProviderType;
+  lens: WithinLens;
+  location: string;
+  isVerified: boolean;
+  verificationStatus: ProviderVerificationStatus;
+}
+
+export interface ProviderService {
+  id: string;
+  providerId: string;
+  name: string;
+  description: string;
+  lens: WithinLens;
+  category: string;
+  durationMinutes: number | null;
+  priceAmount: number | null;
+  priceType: ProviderPriceType;
+  deliveryMode: ProviderServiceDeliveryMode;
+  location: string | null;
+  isActive: boolean;
+  createdUtc: string;
+  updatedUtc: string;
+}
+
+export interface UpsertProviderPayload {
+  name: string;
   bio: string;
   lens: WithinLens;
   location: string;
   websiteUrl: string | null;
   instagramUrl: string | null;
-  isVerified: boolean;
+  providerType: ProviderType;
+  legalName: string | null;
+  categories: string[];
+  profileImageUrl: string | null;
+  coverImageUrl: string | null;
+  suburb: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  phone: string | null;
+  email: string | null;
+  showEmailPublicly: boolean;
+  showPhonePublicly: boolean;
+  showWebsitePublicly: boolean;
+  practitionerTitle: string | null;
+  yearsExperience: number | null;
+  qualifications: string | null;
+  servicesOffered: string[];
+  languages: string[];
+  onlineAvailable: boolean;
+  inPersonAvailable: boolean;
+  businessType: string | null;
+  abn: string | null;
+  facilities: string[];
+  accessibilityFeatures: string[];
+  teamMembers: string[];
+  openingHours: string | null;
+  isActive: boolean;
+}
+
+export interface UpsertProviderServicePayload {
+  name: string;
+  description: string;
+  lens: WithinLens;
+  category: string;
+  durationMinutes: number | null;
+  priceAmount: number | null;
+  priceType: ProviderPriceType;
+  deliveryMode: ProviderServiceDeliveryMode;
+  location: string | null;
+  isActive: boolean;
 }
 
 export interface EventItem {
   id: string;
   providerId: string;
+  providerServiceId: string | null;
   providerName: string;
+  provider: ProviderSummary;
+  providerService: ProviderService | null;
   title: string;
   description: string;
   lens: WithinLens;
@@ -144,6 +264,20 @@ export interface EventItem {
   imageUrl: string | null;
   status: EventStatus;
   tags: string[];
+  bringItems: string[];
+  bringNotes: string | null;
+  facilities: string[];
+  accessibilityFeatures: string[];
+  physicalIntensity: EventIntensity | null;
+  socialInteractionLevel: EventIntensity | null;
+  experienceLevel: EventExperienceLevel | null;
+  atmosphereTags: string[];
+  foodProvided: boolean;
+  drinksProvided: boolean;
+  dietaryOptions: string[];
+  foodNotes: string | null;
+  ageRestriction: EventAgeRestriction | null;
+  safetyNotes: string | null;
 }
 
 export interface UpsertEventPayload {
@@ -158,9 +292,24 @@ export interface UpsertEventPayload {
   currency: string;
   capacity: number;
   signupType: SignupType;
+  providerServiceId: string | null;
   externalBookingUrl: string | null;
   imageUrl: string | null;
   tags: string[];
+  bringItems: string[];
+  bringNotes: string | null;
+  facilities: string[];
+  accessibilityFeatures: string[];
+  physicalIntensity: EventIntensity | null;
+  socialInteractionLevel: EventIntensity | null;
+  experienceLevel: EventExperienceLevel | null;
+  atmosphereTags: string[];
+  foodProvided: boolean;
+  drinksProvided: boolean;
+  dietaryOptions: string[];
+  foodNotes: string | null;
+  ageRestriction: EventAgeRestriction | null;
+  safetyNotes: string | null;
 }
 
 export interface ProviderEventParticipant {

@@ -1,4 +1,22 @@
-import { AdminProviderFilter, Option, ProviderCategory, WithinLens } from './within.models';
+import { AdminProviderFilter, Option, ProviderCategory, ProviderPriceType, ProviderServiceDeliveryMode, ProviderType, WithinLens } from './within.models';
+
+export const unifiedProviderTypeOptions: Option<ProviderType>[] = [
+  { value: 'Individual', label: 'Individual Practitioner' },
+  { value: 'Business', label: 'Business / Organization' },
+];
+
+export const providerPriceTypeOptions: Option<ProviderPriceType>[] = [
+  { value: 'Free', label: 'Free' },
+  { value: 'Fixed', label: 'Fixed price' },
+  { value: 'FromPrice', label: 'From price' },
+  { value: 'ContactProvider', label: 'Contact provider' },
+];
+
+export const providerServiceDeliveryModeOptions: Option<ProviderServiceDeliveryMode>[] = [
+  { value: 'InPerson', label: 'In person' },
+  { value: 'Online', label: 'Online' },
+  { value: 'Hybrid', label: 'Hybrid' },
+];
 
 export const providerCategoryOptions: Option<ProviderCategory>[] = [
   { value: 'BusinessStudio', label: 'Business / Studio' },
@@ -49,7 +67,7 @@ export const interestRoleOptions = [
 
 export const userStepTitles = ['About you', 'Your three areas', 'What you have tried', 'Where you get stuck', 'What would help', 'Contact'];
 export const providerStepTitles = ['Provider type', 'Offerings', 'Promotion', 'Challenges', 'Platform fit', 'Pilot contact'];
-export const onboardingStepTitles = ['Contact', 'Provider identity', 'Location and services', 'Experience', 'Credentials', 'Event readiness'];
+export const onboardingStepTitles = ['Provider type', 'Basic details', 'Your setup', 'Services', 'Review'];
 
 export const userProfileOptions = [
   'I have a consistent daily practice',
