@@ -27,6 +27,23 @@ export class AdminPageComponent {
   protected readonly adminFilter = signal<AdminAudienceFilter>('all');
   protected readonly adminSelectedId = signal<string | null>(null);
   protected readonly adminTab = signal<'submissions' | 'providers' | 'users' | 'moderation' | 'habits' | 'circles'>('submissions');
+  protected readonly navOpen = signal(false);
+  protected readonly navItems: { id: 'submissions' | 'providers' | 'users' | 'moderation' | 'habits' | 'circles'; label: string; icon: string }[] = [
+    { id: 'submissions', label: 'Submissions', icon: 'inbox' },
+    { id: 'providers', label: 'Providers', icon: 'verified_user' },
+    { id: 'moderation', label: 'Moderation', icon: 'flag' },
+    { id: 'users', label: 'Users', icon: 'group' },
+    { id: 'habits', label: 'Habits', icon: 'check_circle' },
+    { id: 'circles', label: 'Circles', icon: 'forum' },
+  ];
+  protected readonly sectionMeta: Record<'submissions' | 'providers' | 'users' | 'moderation' | 'habits' | 'circles', { title: string; sub: string }> = {
+    submissions: { title: 'Submissions', sub: 'Survey responses from users and providers' },
+    providers: { title: 'Providers', sub: 'Review and approve provider applications' },
+    moderation: { title: 'Moderation', sub: 'Community reports awaiting review' },
+    users: { title: 'Users', sub: 'Registered accounts on the platform' },
+    habits: { title: 'Habits', sub: 'Master data for habit templates' },
+    circles: { title: 'Circles', sub: 'Platform circles and their guidelines' },
+  };
   protected readonly selectedCommunityReportId = signal<string | null>(null);
   protected readonly providerApplications = signal<ProviderApplication[]>([]);
   protected readonly providerApplicationFilter = signal<AdminProviderFilter>('all');
@@ -179,6 +196,7 @@ export class AdminPageComponent {
 
   protected setAdminTab(tab: 'submissions' | 'providers' | 'users' | 'moderation' | 'habits' | 'circles'): void {
     this.adminTab.set(tab);
+    this.navOpen.set(false);
   }
 
   protected selectSubmission(id: string): void {
@@ -293,6 +311,24 @@ export class AdminPageComponent {
     if (this.adminSelectedId() === id) this.adminSelectedId.set(remaining[0]?.id ?? null);
     const stats = await this.admin.getStats();
     if (stats) this.adminStats.set(stats);
+  }
+
+  protected isTombstoneUser(user: AdminUserRecord): boolean {
+    return user.email.endsWith('@deleted.invalid');
+  }
+
+  protected async deleteUser(user: AdminUserRecord): Promise<void> {
+    if (this.isTombstoneUser(user)) return;
+    if (!confirm(`Delete ${user.displayName} (${user.email})?\n\nThis removes their personal data permanently. Their past contributions remain but show as "Deleted user". This cannot be undone.`)) {
+      return;
+    }
+    try {
+      await this.admin.deleteUser(user.id);
+      this.adminUsers.set(this.adminUsers().filter(item => item.id !== user.id));
+      this.adminMessage.set(`${user.displayName} was deleted.`);
+    } catch (error) {
+      this.adminMessage.set(error instanceof Error ? error.message : 'Could not delete this user.');
+    }
   }
 
   protected async deleteProvider(application: ProviderApplication): Promise<void> {

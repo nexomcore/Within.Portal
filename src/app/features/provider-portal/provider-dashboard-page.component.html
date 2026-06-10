@@ -1,287 +1,364 @@
-<main class="provider-portal-shell">
-  <header class="survey-topbar provider-topbar">
-    <a class="brand" routerLink="/"><img src="/within-logo.png" alt="" /><span>Within</span></a>
-    <div class="admin-topbar-actions">
-      <button type="button" class="admin-refresh" (click)="load()" [disabled]="loading()">{{ loading() ? 'Loading...' : 'Refresh' }}</button>
-      <button type="button" class="admin-signout" (click)="logout()">Sign out</button>
+<main class="wp-shell" [class.nav-open]="navOpen()" *ngIf="provider() as profile; else providerLoading">
+  <div class="wp-scrim" (click)="navOpen.set(false)"></div>
+
+  <aside class="wp-side">
+    <a class="wp-side-brand" routerLink="/"><img src="/within-logo.png" alt="" /><span>Within</span></a>
+    <div class="wp-side-user">
+      <span class="wp-avatar">{{ profile.name.slice(0, 1) }}</span>
+      <strong>{{ profile.name }}</strong>
+      <span>{{ profile.lens }} · {{ profile.providerType === 'Individual' ? 'Practitioner' : 'Business' }}</span>
     </div>
-  </header>
+    <nav class="wp-nav">
+      <span class="wp-nav-label">Workspace</span>
+      <button type="button" class="wp-nav-item" *ngFor="let item of navItems" [class.active]="section() === item.id" (click)="setSection(item.id)">
+        <span class="material-symbols-rounded">{{ item.icon }}</span>{{ item.label }}
+      </button>
+    </nav>
+    <div class="wp-nav-foot">
+      <button type="button" class="wp-nav-item" (click)="load()" [disabled]="loading()"><span class="material-symbols-rounded">refresh</span>{{ loading() ? 'Loading…' : 'Refresh' }}</button>
+      <button type="button" class="wp-nav-item" (click)="logout()"><span class="material-symbols-rounded">logout</span>Sign out</button>
+    </div>
+  </aside>
 
-  <section class="provider-dashboard" *ngIf="provider() as profile; else providerLoading">
-    <aside class="provider-dashboard-side">
-      <span class="section-eyebrow">Provider workspace</span>
-      <div class="provider-avatar">{{ profile.name.slice(0, 1) }}</div>
-      <h1>{{ profile.name }}</h1>
-      <p>{{ profile.bio }}</p>
-      <dl>
-        <dt>Type</dt>
-        <dd>{{ profile.providerType === 'Individual' ? 'Individual Practitioner' : 'Business / Organization' }}</dd>
-        <dt>Lens</dt>
-        <dd>{{ profile.lens }}</dd>
-        <dt>Location</dt>
-        <dd>{{ profile.location }}</dd>
-        <dt>Status</dt>
-        <dd><span class="provider-status-pill" [attr.data-status]="profile.verificationStatus">{{ profile.verificationStatus }}</span></dd>
-      </dl>
-      <details class="provider-side-edit">
-        <summary>Edit profile</summary>
-        <label>Name<input name="profileName" type="text" [ngModel]="profileName()" (ngModelChange)="profileName.set($event)" /></label>
-        <label>Bio<textarea name="profileBio" rows="4" [ngModel]="profileBio()" (ngModelChange)="profileBio.set($event)"></textarea></label>
-        <label>Location<input name="profileLocation" type="text" [ngModel]="profileLocation()" (ngModelChange)="profileLocation.set($event)" /></label>
-        <label>Categories<input name="profileCategoriesText" type="text" [ngModel]="profileCategoriesText()" (ngModelChange)="profileCategoriesText.set($event)" /></label>
-        <label>Website<input name="profileWebsite" type="url" [ngModel]="profileWebsite()" (ngModelChange)="profileWebsite.set($event)" /></label>
-        <label>Instagram<input name="profileInstagram" type="text" [ngModel]="profileInstagram()" (ngModelChange)="profileInstagram.set($event)" /></label>
-        <label class="check-option"><input type="checkbox" [checked]="profileOnlineAvailable()" (change)="profileOnlineAvailable.set($any($event.target).checked)" /><span>Online available</span></label>
-        <label class="check-option"><input type="checkbox" [checked]="profileInPersonAvailable()" (change)="profileInPersonAvailable.set($any($event.target).checked)" /><span>In person available</span></label>
-        <button type="button" class="admin-refresh" (click)="saveProfile()" [disabled]="saving()">Save profile</button>
-      </details>
-      <button type="button" class="primary-action provider-new-event" (click)="newEvent()">New event</button>
-    </aside>
-
-    <section class="provider-event-workspace">
-      <div class="provider-dashboard-head">
-        <div>
-          <span class="section-eyebrow">Event management</span>
-          <h2>Plan, publish, and monitor your Within events.</h2>
+  <div class="wp-main">
+    <header class="wp-topbar">
+      <div class="wp-topbar-lead">
+        <button type="button" class="wp-burger" (click)="navOpen.set(!navOpen())" aria-label="Menu"><span class="material-symbols-rounded">menu</span></button>
+        <div class="wp-topbar-title">
+          <span class="wp-eyebrow">Provider portal</span>
+          <h1>{{ sectionMeta[section()].title }}</h1>
         </div>
-        <button type="button" class="admin-refresh" (click)="newEvent()">Clear editor</button>
       </div>
-
-      <div class="provider-stats-row" aria-label="Event summary">
-        <article><span>Total events</span><strong>{{ events().length }}</strong></article>
-        <article><span>Published</span><strong>{{ publishedCount() }}</strong></article>
-        <article><span>Drafts</span><strong>{{ draftCount() }}</strong></article>
-        <article><span>Services</span><strong>{{ activeServices().length }}</strong></article>
+      <div class="wp-topbar-actions">
+        <button type="button" class="primary-action" (click)="goCreateEvent()"><span class="material-symbols-rounded">add</span>New event</button>
       </div>
+    </header>
 
-      <section class="provider-engagement-panel provider-services-panel">
-        <header>
-          <div>
-            <span class="section-eyebrow">Service catalogue</span>
-            <h2>{{ selectedServiceId() ? 'Edit service' : 'Add service' }}</h2>
-          </div>
-          <button type="button" class="admin-refresh" (click)="newService()">Clear service</button>
-        </header>
-        <form class="provider-service-form" (ngSubmit)="saveService()">
-          <div class="provider-form-grid">
-            <label>Name<input name="serviceName" type="text" [ngModel]="serviceName()" (ngModelChange)="serviceName.set($event)" /></label>
-            <label>Category<input name="serviceCategory" type="text" [ngModel]="serviceCategory()" (ngModelChange)="serviceCategory.set($event)" /></label>
-            <label class="full-width">Description<textarea name="serviceDescription" rows="3" [ngModel]="serviceDescription()" (ngModelChange)="serviceDescription.set($event)"></textarea></label>
-            <label>Category group<select name="serviceLens" [ngModel]="serviceLens()" (ngModelChange)="serviceLens.set($event)"><option *ngFor="let option of lensOptions" [value]="option">{{ option }}</option></select></label>
-            <label>Delivery<select name="serviceDeliveryMode" [ngModel]="serviceDeliveryMode()" (ngModelChange)="serviceDeliveryMode.set($event)"><option *ngFor="let option of serviceDeliveryModeOptions" [value]="option.value">{{ option.label }}</option></select></label>
-            <label>Duration minutes<input name="serviceDuration" type="number" min="0" [ngModel]="serviceDuration()" (ngModelChange)="serviceDuration.set($event === '' ? null : +$event)" /></label>
-            <label>Price type<select name="servicePriceType" [ngModel]="servicePriceType()" (ngModelChange)="servicePriceType.set($event)"><option *ngFor="let option of priceTypeOptions" [value]="option.value">{{ option.label }}</option></select></label>
-            <label>Price amount<input name="servicePriceAmount" type="number" min="0" step="0.01" [ngModel]="servicePriceAmount()" (ngModelChange)="servicePriceAmount.set($event === '' ? null : +$event)" /></label>
-            <label>Location<input name="serviceLocation" type="text" [ngModel]="serviceLocation()" (ngModelChange)="serviceLocation.set($event)" /></label>
-          </div>
-          <div class="provider-form-actions">
-            <button type="submit" class="primary-action" [disabled]="saving()">{{ selectedServiceId() ? 'Update service' : 'Add service' }}</button>
-          </div>
-        </form>
-        <div class="provider-service-list">
-          <button type="button" class="provider-event-row" *ngFor="let service of services()" [class.active]="service.id === selectedServiceId()" (click)="editService(service)">
-            <span class="provider-status-pill" [attr.data-status]="service.isActive ? 'Published' : 'Draft'">{{ service.deliveryMode }}</span>
-            <strong>{{ service.name }}</strong>
-            <small>{{ service.category }} · {{ service.priceType }} · {{ service.location || profile.location }}</small>
-          </button>
-          <button type="button" class="admin-signout" *ngIf="selectedService() as selected" (click)="deleteService(selected)">Remove selected service</button>
-        </div>
-      </section>
+    <div class="wp-content">
+      <p class="admin-message" *ngIf="message()">{{ message() }}</p>
 
-      <div class="provider-management-grid">
-        <form class="provider-event-form" (ngSubmit)="saveEvent()">
-          <header>
-            <span class="section-eyebrow">{{ selectedEvent() ? 'Edit event' : 'Create event' }}</span>
-            <h2>{{ selectedEvent() ? selectedEvent()?.title : 'New Within event' }}</h2>
-            <p>Keep the essentials crisp: what it is, where it happens, who it helps, and how people book.</p>
-          </header>
-
-          <div class="provider-form-grid">
-            <label class="full-width">Title<input name="title" type="text" [ngModel]="title()" (ngModelChange)="title.set($event)" /></label>
-            <label class="full-width">Description<textarea name="description" rows="4" [ngModel]="description()" (ngModelChange)="description.set($event)"></textarea></label>
-            <label>Lens<select name="lens" [ngModel]="lens()" (ngModelChange)="lens.set($event)"><option *ngFor="let option of lensOptions" [value]="option">{{ option }}</option></select></label>
-            <label>Location<input name="locationName" type="text" [ngModel]="locationName()" (ngModelChange)="locationName.set($event)" /></label>
-            <label>Start<input name="startLocal" type="datetime-local" [ngModel]="startLocal()" (ngModelChange)="startLocal.set($event)" /></label>
-            <label>End<input name="endLocal" type="datetime-local" [ngModel]="endLocal()" (ngModelChange)="endLocal.set($event)" /></label>
-            <label>Price<input name="priceAmount" type="number" min="0" step="0.01" [ngModel]="priceAmount()" (ngModelChange)="priceAmount.set(+$event)" /></label>
-            <label>Currency<input name="currency" type="text" maxlength="8" [ngModel]="currency()" (ngModelChange)="currency.set($event)" /></label>
-            <label>Capacity<input name="capacity" type="number" min="1" step="1" [ngModel]="capacity()" (ngModelChange)="capacity.set(+$event)" /></label>
-            <label>Signup<select name="signupType" [ngModel]="signupType()" (ngModelChange)="signupType.set($event)"><option *ngFor="let option of signupTypes" [value]="option">{{ option }}</option></select></label>
-            <label>Linked service<select name="providerServiceId" [ngModel]="providerServiceId()" (ngModelChange)="providerServiceId.set($event)"><option value="">No linked service</option><option *ngFor="let service of activeServices()" [value]="service.id">{{ service.name }}</option></select></label>
-            <label class="check-option provider-online-option"><input type="checkbox" [checked]="isOnline()" (change)="isOnline.set($any($event.target).checked)" /><span>Online event</span></label>
-            <label class="full-width">External booking URL<input name="externalBookingUrl" type="url" [ngModel]="externalBookingUrl()" (ngModelChange)="externalBookingUrl.set($event)" /></label>
-            <label class="full-width">Image URL<input name="imageUrl" type="url" [ngModel]="imageUrl()" (ngModelChange)="imageUrl.set($event)" /></label>
-            <label class="full-width">Tags<input name="tagsText" type="text" placeholder="breathwork, beginners, perth" [ngModel]="tagsText()" (ngModelChange)="tagsText.set($event)" /></label>
-          </div>
-
-          <details class="provider-metadata-section">
-            <summary>Preparation and facilities</summary>
-            <div class="provider-metadata-grid">
-              <fieldset class="full-width">
-                <legend>What to bring</legend>
-                <div class="provider-chip-grid">
-                  <label class="check-option" *ngFor="let option of bringItemOptions">
-                    <input type="checkbox" [checked]="bringItems().includes(option.value)" (change)="toggle(bringItems, option.value, $event)" />
-                    <span>{{ option.label }}</span>
-                  </label>
-                </div>
-              </fieldset>
-              <label class="full-width">Additional bring notes<textarea rows="3" [ngModel]="bringNotes()" (ngModelChange)="bringNotes.set($event)" name="bringNotes"></textarea></label>
-              <fieldset class="full-width">
-                <legend>Facilities available</legend>
-                <div class="provider-chip-grid">
-                  <label class="check-option" *ngFor="let option of facilityOptions">
-                    <input type="checkbox" [checked]="facilities().includes(option.value)" (change)="toggle(facilities, option.value, $event)" />
-                    <span>{{ option.label }}</span>
-                  </label>
-                </div>
-              </fieldset>
-            </div>
-          </details>
-
-          <details class="provider-metadata-section">
-            <summary>Accessibility and comfort</summary>
-            <div class="provider-metadata-grid">
-              <fieldset class="full-width provider-accessibility-fieldset">
-                <legend>Accessibility support</legend>
-                <div class="provider-chip-grid">
-                  <label class="check-option" *ngFor="let option of accessibilityOptions">
-                    <input type="checkbox" [checked]="accessibilityFeatures().includes(option.value)" (change)="toggle(accessibilityFeatures, option.value, $event)" />
-                    <span>{{ option.label }}</span>
-                  </label>
-                </div>
-              </fieldset>
-              <label>Physical intensity<select name="physicalIntensity" [ngModel]="physicalIntensity()" (ngModelChange)="physicalIntensity.set($event)"><option value="">Not specified</option><option *ngFor="let option of intensityOptions" [value]="option.value">{{ option.label }}</option></select></label>
-              <label>Social interaction<select name="socialInteractionLevel" [ngModel]="socialInteractionLevel()" (ngModelChange)="socialInteractionLevel.set($event)"><option value="">Not specified</option><option *ngFor="let option of intensityOptions" [value]="option.value">{{ option.label }}</option></select></label>
-              <label class="full-width">Experience level<select name="experienceLevel" [ngModel]="experienceLevel()" (ngModelChange)="experienceLevel.set($event)"><option value="">Not specified</option><option *ngFor="let option of experienceLevelOptions" [value]="option.value">{{ option.label }}</option></select></label>
-              <fieldset class="full-width">
-                <legend>Atmosphere / comfort indicators</legend>
-                <div class="provider-chip-grid">
-                  <label class="check-option" *ngFor="let option of atmosphereOptions">
-                    <input type="checkbox" [checked]="atmosphereTags().includes(option.value)" (change)="toggle(atmosphereTags, option.value, $event)" />
-                    <span>{{ option.label }}</span>
-                  </label>
-                </div>
-              </fieldset>
-            </div>
-          </details>
-
-          <details class="provider-metadata-section">
-            <summary>Food, age, and safety notes</summary>
-            <div class="provider-metadata-grid">
-              <label class="check-option provider-online-option"><input type="checkbox" [checked]="foodProvided()" (change)="foodProvided.set($any($event.target).checked)" /><span>Food provided</span></label>
-              <label class="check-option provider-online-option"><input type="checkbox" [checked]="drinksProvided()" (change)="drinksProvided.set($any($event.target).checked)" /><span>Drinks provided</span></label>
-              <fieldset class="full-width">
-                <legend>Dietary options</legend>
-                <div class="provider-chip-grid">
-                  <label class="check-option" *ngFor="let option of dietaryOptionsList">
-                    <input type="checkbox" [checked]="dietaryOptions().includes(option.value)" (change)="toggle(dietaryOptions, option.value, $event)" />
-                    <span>{{ option.label }}</span>
-                  </label>
-                </div>
-              </fieldset>
-              <label class="full-width">Additional food notes<textarea rows="3" [ngModel]="foodNotes()" (ngModelChange)="foodNotes.set($event)" name="foodNotes"></textarea></label>
-              <label class="full-width">Age restriction<select name="ageRestriction" [ngModel]="ageRestriction()" (ngModelChange)="ageRestriction.set($event)"><option value="">Not specified</option><option *ngFor="let option of ageRestrictionOptions" [value]="option.value">{{ option.label }}</option></select></label>
-              <label class="full-width">Safety / additional notes<textarea rows="4" [ngModel]="safetyNotes()" (ngModelChange)="safetyNotes.set($event)" name="safetyNotes" placeholder="Weather, medical or emotional content notes, cancellation preparation, or anything else attendees should know."></textarea></label>
-            </div>
-          </details>
-
-          <div class="provider-form-actions">
-            <button type="submit" class="primary-action" [disabled]="saving()">{{ saving() ? 'Saving...' : selectedEvent() ? 'Update event' : 'Create event' }}</button>
-            <button type="button" class="admin-refresh" (click)="newEvent()">Clear</button>
-          </div>
-          <p class="admin-message" *ngIf="message()">{{ message() }}</p>
-        </form>
-
-        <section class="provider-event-list">
-          <header>
+      <!-- ===================== OVERVIEW ===================== -->
+      <ng-container *ngIf="section() === 'overview'">
+        <section class="wp-card">
+          <div class="wp-section-head">
             <div>
-              <span class="section-eyebrow">Event library</span>
-              <h2>Your events</h2>
+              <span class="wp-eyebrow">{{ greeting() }}</span>
+              <h2>{{ profile.name }}</h2>
+              <p>Here's what's happening across your events and services.</p>
             </div>
-            <span>{{ events().length }} total</span>
-          </header>
-          <p class="admin-empty" *ngIf="!events().length">No events yet. Create your first event above.</p>
-          <button type="button" class="provider-event-row" *ngFor="let event of events()" [class.active]="event.id === selectedEventId()" (click)="editEvent(event)">
-            <span class="provider-status-pill" [attr.data-status]="event.status">{{ event.status }}</span>
-            <strong>{{ event.title }}</strong>
-            <span>{{ eventTime(event) }}</span>
-            <small>{{ event.locationName }} - {{ event.goingCount }} going - {{ event.capacity }} capacity</small>
-          </button>
-        </section>
-      </div>
-
-      <section class="provider-engagement-panel" *ngIf="selectedEvent() as event">
-        <header>
-          <div>
-            <span class="section-eyebrow">Event responses</span>
-            <h2>{{ engagement()?.eventTitle || event.title }}</h2>
+            <span class="provider-status-pill" [attr.data-status]="profile.verificationStatus">{{ profile.verificationStatus }}</span>
           </div>
-          <button type="button" class="admin-refresh" (click)="loadEngagement()" [disabled]="engagementLoading()">
-            {{ engagementLoading() ? 'Loading...' : 'Refresh responses' }}
-          </button>
-        </header>
+        </section>
 
-        <div class="provider-response-stats" *ngIf="engagement() as detail; else engagementEmpty">
-          <article><span>Going</span><strong>{{ detail.goingCount }}</strong></article>
-          <article><span>Interested</span><strong>{{ detail.interestedCount }}</strong></article>
-          <article><span>Not interested</span><strong>{{ detail.declinedCount }}</strong></article>
-          <article><span>Saved</span><strong>{{ detail.savedCount }}</strong></article>
+        <div class="wp-stats">
+          <article class="wp-stat"><span class="wp-stat-ico"><span class="material-symbols-rounded">event</span></span><span>Total events</span><strong>{{ events().length }}</strong></article>
+          <article class="wp-stat green"><span class="wp-stat-ico"><span class="material-symbols-rounded">check_circle</span></span><span>Published</span><strong>{{ publishedCount() }}</strong></article>
+          <article class="wp-stat amber"><span class="wp-stat-ico"><span class="material-symbols-rounded">edit_note</span></span><span>Drafts</span><strong>{{ draftCount() }}</strong></article>
+          <article class="wp-stat"><span class="wp-stat-ico"><span class="material-symbols-rounded">group</span></span><span>Total going</span><strong>{{ totalGoing() }}</strong></article>
+          <article class="wp-stat coral"><span class="wp-stat-ico"><span class="material-symbols-rounded">spa</span></span><span>Active services</span><strong>{{ activeServices().length }}</strong></article>
         </div>
 
-        <ng-template #engagementEmpty>
-          <p class="admin-empty">{{ engagementLoading() ? 'Loading responses...' : 'No responses loaded yet.' }}</p>
-        </ng-template>
+        <section class="wp-card">
+          <div class="wp-card-head"><h3>Quick actions</h3></div>
+          <div class="wp-quick">
+            <button type="button" class="wp-quick-btn" (click)="goCreateEvent()"><span class="wp-stat-ico"><span class="material-symbols-rounded">add</span></span><strong>Create event</strong><span>Publish a new Within event</span></button>
+            <button type="button" class="wp-quick-btn" (click)="goAddService()"><span class="wp-stat-ico"><span class="material-symbols-rounded">design_services</span></span><strong>Add service</strong><span>Grow your catalogue</span></button>
+            <button type="button" class="wp-quick-btn" (click)="setSection('profile')"><span class="wp-stat-ico"><span class="material-symbols-rounded">storefront</span></span><strong>Edit profile</strong><span>Update your public details</span></button>
+            <button type="button" class="wp-quick-btn" (click)="setSection('events')"><span class="wp-stat-ico"><span class="material-symbols-rounded">insights</span></span><strong>View responses</strong><span>See who's coming along</span></button>
+          </div>
+        </section>
 
-        <div class="provider-response-grid" *ngIf="engagement() as detail">
-          <section class="provider-response-group">
-            <h3>Going</h3>
-            <p class="admin-empty" *ngIf="!detail.going.length">No one has RSVP'd going yet.</p>
-            <article class="provider-person-row" *ngFor="let person of detail.going">
-              <strong>{{ person.displayName }}</strong>
-              <span>{{ attendeeTime(person) }}</span>
-            </article>
+        <div class="wp-grid-2">
+          <section class="wp-card">
+            <div class="wp-card-head">
+              <div><span class="wp-eyebrow">Event library</span><h3>Recent events</h3></div>
+              <button type="button" class="admin-refresh" (click)="setSection('events')">View all</button>
+            </div>
+            <div class="wp-list">
+              <p class="wp-empty" *ngIf="!recentEvents().length">No events yet. Create your first event to get started.</p>
+              <button type="button" class="wp-row" *ngFor="let event of recentEvents()" (click)="editEvent(event); setSection('events')">
+                <span class="provider-status-pill" [attr.data-status]="event.status">{{ event.status }}</span>
+                <span class="wp-row-title">{{ event.title }}</span>
+                <span class="wp-row-meta">{{ eventTime(event) }} · {{ event.locationName }}</span>
+                <span class="wp-row-num">{{ event.goingCount }}/{{ event.capacity }}</span>
+              </button>
+            </div>
           </section>
 
-          <section class="provider-response-group">
-            <h3>Interested</h3>
-            <p class="admin-empty" *ngIf="!detail.interested.length">No interested users yet.</p>
-            <article class="provider-person-row" *ngFor="let person of detail.interested">
-              <strong>{{ person.displayName }}</strong>
-              <span>{{ attendeeTime(person) }}</span>
-            </article>
+          <section class="wp-card wp-snap">
+            <div class="wp-card-head"><h3>Your profile</h3></div>
+            <p style="color: var(--wp-muted); margin: 0; line-height: 1.55;">{{ profile.bio }}</p>
+            <dl>
+              <dt>Type</dt><dd>{{ profile.providerType === 'Individual' ? 'Individual' : 'Business' }}</dd>
+              <dt>Lens</dt><dd>{{ profile.lens }}</dd>
+              <dt>Location</dt><dd>{{ profile.location }}</dd>
+              <dt>Status</dt><dd><span class="provider-status-pill" [attr.data-status]="profile.verificationStatus">{{ profile.verificationStatus }}</span></dd>
+            </dl>
+            <button type="button" class="admin-refresh" (click)="setSection('profile')">Edit profile</button>
           </section>
+        </div>
+      </ng-container>
 
-          <section class="provider-response-group">
-            <h3>Not interested</h3>
-            <p class="admin-empty" *ngIf="!detail.declined.length">No one has marked not interested.</p>
-            <article class="provider-person-row" *ngFor="let person of detail.declined">
-              <strong>{{ person.displayName }}</strong>
-              <span>{{ attendeeTime(person) }}</span>
-            </article>
-          </section>
+      <!-- ===================== EVENTS ===================== -->
+      <ng-container *ngIf="section() === 'events'">
+        <div class="wp-grid-2">
+          <form class="wp-card" (ngSubmit)="saveEvent()">
+            <div class="wp-section-head">
+              <div>
+                <span class="wp-eyebrow">{{ selectedEvent() ? 'Edit event' : 'Create event' }}</span>
+                <h2>{{ selectedEvent() ? selectedEvent()?.title : 'New Within event' }}</h2>
+                <p>Keep the essentials crisp: what it is, where it happens, who it helps, and how people book.</p>
+              </div>
+            </div>
 
-          <section class="provider-response-group">
-            <h3>Saved</h3>
-            <p class="admin-empty" *ngIf="!detail.saved.length">No one has saved this event yet.</p>
-            <article class="provider-person-row" *ngFor="let person of detail.saved">
-              <strong>{{ person.displayName }}</strong>
-              <span>{{ attendeeTime(person) }}</span>
-            </article>
+            <div class="provider-form-grid">
+              <label class="full-width">Title<input name="title" type="text" [ngModel]="title()" (ngModelChange)="title.set($event)" /></label>
+              <label class="full-width">Description<textarea name="description" rows="4" [ngModel]="description()" (ngModelChange)="description.set($event)"></textarea></label>
+              <label>Lens<select name="lens" [ngModel]="lens()" (ngModelChange)="lens.set($event)"><option *ngFor="let option of lensOptions" [value]="option">{{ option }}</option></select></label>
+              <label>Location<input name="locationName" type="text" [ngModel]="locationName()" (ngModelChange)="locationName.set($event)" /></label>
+              <label>Start<input name="startLocal" type="datetime-local" [ngModel]="startLocal()" (ngModelChange)="startLocal.set($event)" /></label>
+              <label>End<input name="endLocal" type="datetime-local" [ngModel]="endLocal()" (ngModelChange)="endLocal.set($event)" /></label>
+              <label>Price<input name="priceAmount" type="number" min="0" step="0.01" [ngModel]="priceAmount()" (ngModelChange)="priceAmount.set(+$event)" /></label>
+              <label>Currency<input name="currency" type="text" maxlength="8" [ngModel]="currency()" (ngModelChange)="currency.set($event)" /></label>
+              <label>Capacity<input name="capacity" type="number" min="1" step="1" [ngModel]="capacity()" (ngModelChange)="capacity.set(+$event)" /></label>
+              <label>Signup<select name="signupType" [ngModel]="signupType()" (ngModelChange)="signupType.set($event)"><option *ngFor="let option of signupTypes" [value]="option">{{ option }}</option></select></label>
+              <label>Linked service<select name="providerServiceId" [ngModel]="providerServiceId()" (ngModelChange)="providerServiceId.set($event)"><option value="">No linked service</option><option *ngFor="let service of activeServices()" [value]="service.id">{{ service.name }}</option></select></label>
+              <label class="check-option provider-online-option"><input type="checkbox" [checked]="isOnline()" (change)="isOnline.set($any($event.target).checked)" /><span>Online event</span></label>
+              <label class="full-width">External booking URL<input name="externalBookingUrl" type="url" [ngModel]="externalBookingUrl()" (ngModelChange)="externalBookingUrl.set($event)" /></label>
+              <label class="full-width">Image URL<input name="imageUrl" type="url" [ngModel]="imageUrl()" (ngModelChange)="imageUrl.set($event)" /></label>
+              <label class="full-width">Tags<input name="tagsText" type="text" placeholder="breathwork, beginners, perth" [ngModel]="tagsText()" (ngModelChange)="tagsText.set($event)" /></label>
+            </div>
+
+            <details class="provider-metadata-section">
+              <summary>Preparation and facilities</summary>
+              <div class="provider-metadata-grid">
+                <fieldset class="full-width">
+                  <legend>What to bring</legend>
+                  <div class="provider-chip-grid">
+                    <label class="check-option" *ngFor="let option of bringItemOptions">
+                      <input type="checkbox" [checked]="bringItems().includes(option.value)" (change)="toggle(bringItems, option.value, $event)" />
+                      <span>{{ option.label }}</span>
+                    </label>
+                  </div>
+                </fieldset>
+                <label class="full-width">Additional bring notes<textarea rows="3" [ngModel]="bringNotes()" (ngModelChange)="bringNotes.set($event)" name="bringNotes"></textarea></label>
+                <fieldset class="full-width">
+                  <legend>Facilities available</legend>
+                  <div class="provider-chip-grid">
+                    <label class="check-option" *ngFor="let option of facilityOptions">
+                      <input type="checkbox" [checked]="facilities().includes(option.value)" (change)="toggle(facilities, option.value, $event)" />
+                      <span>{{ option.label }}</span>
+                    </label>
+                  </div>
+                </fieldset>
+              </div>
+            </details>
+
+            <details class="provider-metadata-section">
+              <summary>Accessibility and comfort</summary>
+              <div class="provider-metadata-grid">
+                <fieldset class="full-width provider-accessibility-fieldset">
+                  <legend>Accessibility support</legend>
+                  <div class="provider-chip-grid">
+                    <label class="check-option" *ngFor="let option of accessibilityOptions">
+                      <input type="checkbox" [checked]="accessibilityFeatures().includes(option.value)" (change)="toggle(accessibilityFeatures, option.value, $event)" />
+                      <span>{{ option.label }}</span>
+                    </label>
+                  </div>
+                </fieldset>
+                <label>Physical intensity<select name="physicalIntensity" [ngModel]="physicalIntensity()" (ngModelChange)="physicalIntensity.set($event)"><option value="">Not specified</option><option *ngFor="let option of intensityOptions" [value]="option.value">{{ option.label }}</option></select></label>
+                <label>Social interaction<select name="socialInteractionLevel" [ngModel]="socialInteractionLevel()" (ngModelChange)="socialInteractionLevel.set($event)"><option value="">Not specified</option><option *ngFor="let option of intensityOptions" [value]="option.value">{{ option.label }}</option></select></label>
+                <label class="full-width">Experience level<select name="experienceLevel" [ngModel]="experienceLevel()" (ngModelChange)="experienceLevel.set($event)"><option value="">Not specified</option><option *ngFor="let option of experienceLevelOptions" [value]="option.value">{{ option.label }}</option></select></label>
+                <fieldset class="full-width">
+                  <legend>Atmosphere / comfort indicators</legend>
+                  <div class="provider-chip-grid">
+                    <label class="check-option" *ngFor="let option of atmosphereOptions">
+                      <input type="checkbox" [checked]="atmosphereTags().includes(option.value)" (change)="toggle(atmosphereTags, option.value, $event)" />
+                      <span>{{ option.label }}</span>
+                    </label>
+                  </div>
+                </fieldset>
+              </div>
+            </details>
+
+            <details class="provider-metadata-section">
+              <summary>Food, age, and safety notes</summary>
+              <div class="provider-metadata-grid">
+                <label class="check-option provider-online-option"><input type="checkbox" [checked]="foodProvided()" (change)="foodProvided.set($any($event.target).checked)" /><span>Food provided</span></label>
+                <label class="check-option provider-online-option"><input type="checkbox" [checked]="drinksProvided()" (change)="drinksProvided.set($any($event.target).checked)" /><span>Drinks provided</span></label>
+                <fieldset class="full-width">
+                  <legend>Dietary options</legend>
+                  <div class="provider-chip-grid">
+                    <label class="check-option" *ngFor="let option of dietaryOptionsList">
+                      <input type="checkbox" [checked]="dietaryOptions().includes(option.value)" (change)="toggle(dietaryOptions, option.value, $event)" />
+                      <span>{{ option.label }}</span>
+                    </label>
+                  </div>
+                </fieldset>
+                <label class="full-width">Additional food notes<textarea rows="3" [ngModel]="foodNotes()" (ngModelChange)="foodNotes.set($event)" name="foodNotes"></textarea></label>
+                <label class="full-width">Age restriction<select name="ageRestriction" [ngModel]="ageRestriction()" (ngModelChange)="ageRestriction.set($event)"><option value="">Not specified</option><option *ngFor="let option of ageRestrictionOptions" [value]="option.value">{{ option.label }}</option></select></label>
+                <label class="full-width">Safety / additional notes<textarea rows="4" [ngModel]="safetyNotes()" (ngModelChange)="safetyNotes.set($event)" name="safetyNotes" placeholder="Weather, medical or emotional content notes, cancellation preparation, or anything else attendees should know."></textarea></label>
+              </div>
+            </details>
+
+            <div class="provider-form-actions">
+              <button type="submit" class="primary-action" [disabled]="saving()">{{ saving() ? 'Saving…' : selectedEvent() ? 'Update event' : 'Create event' }}</button>
+              <button type="button" class="admin-signout" (click)="newEvent()">Clear</button>
+            </div>
+          </form>
+
+          <section class="wp-card">
+            <div class="wp-card-head">
+              <div><span class="wp-eyebrow">Event library</span><h3>Your events</h3></div>
+              <span class="wp-row-num">{{ events().length }} total</span>
+            </div>
+            <div class="wp-list">
+              <p class="wp-empty" *ngIf="!events().length">No events yet. Create your first event with the form.</p>
+              <button type="button" class="wp-row" *ngFor="let event of events()" [class.active]="event.id === selectedEventId()" (click)="editEvent(event)">
+                <span class="provider-status-pill" [attr.data-status]="event.status">{{ event.status }}</span>
+                <span class="wp-row-title">{{ event.title }}</span>
+                <span class="wp-row-meta">{{ eventTime(event) }} · {{ event.locationName }}</span>
+                <span class="wp-row-num">{{ event.goingCount }}/{{ event.capacity }}</span>
+              </button>
+            </div>
           </section>
+        </div>
+
+        <section class="wp-card" *ngIf="selectedEvent() as event">
+          <div class="wp-card-head">
+            <div><span class="wp-eyebrow">Event responses</span><h3>{{ engagement()?.eventTitle || event.title }}</h3></div>
+            <button type="button" class="admin-refresh" (click)="loadEngagement()" [disabled]="engagementLoading()">{{ engagementLoading() ? 'Loading…' : 'Refresh responses' }}</button>
+          </div>
+
+          <div class="provider-response-stats" *ngIf="engagement() as detail; else engagementEmpty">
+            <article><span>Going</span><strong>{{ detail.goingCount }}</strong></article>
+            <article><span>Interested</span><strong>{{ detail.interestedCount }}</strong></article>
+            <article><span>Not interested</span><strong>{{ detail.declinedCount }}</strong></article>
+            <article><span>Saved</span><strong>{{ detail.savedCount }}</strong></article>
+          </div>
+
+          <ng-template #engagementEmpty>
+            <p class="wp-empty">{{ engagementLoading() ? 'Loading responses…' : 'No responses loaded yet.' }}</p>
+          </ng-template>
+
+          <div class="provider-response-grid" *ngIf="engagement() as detail">
+            <section class="provider-response-group">
+              <h3>Going</h3>
+              <p class="wp-empty" *ngIf="!detail.going.length">No one has RSVP'd going yet.</p>
+              <article class="provider-person-row" *ngFor="let person of detail.going"><strong>{{ person.displayName }}</strong><span>{{ attendeeTime(person) }}</span></article>
+            </section>
+            <section class="provider-response-group">
+              <h3>Interested</h3>
+              <p class="wp-empty" *ngIf="!detail.interested.length">No interested users yet.</p>
+              <article class="provider-person-row" *ngFor="let person of detail.interested"><strong>{{ person.displayName }}</strong><span>{{ attendeeTime(person) }}</span></article>
+            </section>
+            <section class="provider-response-group">
+              <h3>Not interested</h3>
+              <p class="wp-empty" *ngIf="!detail.declined.length">No one has marked not interested.</p>
+              <article class="provider-person-row" *ngFor="let person of detail.declined"><strong>{{ person.displayName }}</strong><span>{{ attendeeTime(person) }}</span></article>
+            </section>
+            <section class="provider-response-group">
+              <h3>Saved</h3>
+              <p class="wp-empty" *ngIf="!detail.saved.length">No one has saved this event yet.</p>
+              <article class="provider-person-row" *ngFor="let person of detail.saved"><strong>{{ person.displayName }}</strong><span>{{ attendeeTime(person) }}</span></article>
+            </section>
+          </div>
+        </section>
+      </ng-container>
+
+      <!-- ===================== SERVICES ===================== -->
+      <ng-container *ngIf="section() === 'services'">
+        <div class="wp-grid-2">
+          <form class="wp-card" (ngSubmit)="saveService()">
+            <div class="wp-section-head">
+              <div>
+                <span class="wp-eyebrow">Service catalogue</span>
+                <h2>{{ selectedServiceId() ? 'Edit service' : 'Add service' }}</h2>
+                <p>Services power your event listings and let members understand what you offer.</p>
+              </div>
+              <button type="button" class="admin-signout" (click)="newService()">Clear</button>
+            </div>
+            <div class="provider-form-grid">
+              <label>Name<input name="serviceName" type="text" [ngModel]="serviceName()" (ngModelChange)="serviceName.set($event)" /></label>
+              <label>Category<input name="serviceCategory" type="text" [ngModel]="serviceCategory()" (ngModelChange)="serviceCategory.set($event)" /></label>
+              <label class="full-width">Description<textarea name="serviceDescription" rows="3" [ngModel]="serviceDescription()" (ngModelChange)="serviceDescription.set($event)"></textarea></label>
+              <label>Category group<select name="serviceLens" [ngModel]="serviceLens()" (ngModelChange)="serviceLens.set($event)"><option *ngFor="let option of lensOptions" [value]="option">{{ option }}</option></select></label>
+              <label>Delivery<select name="serviceDeliveryMode" [ngModel]="serviceDeliveryMode()" (ngModelChange)="serviceDeliveryMode.set($event)"><option *ngFor="let option of serviceDeliveryModeOptions" [value]="option.value">{{ option.label }}</option></select></label>
+              <label>Duration minutes<input name="serviceDuration" type="number" min="0" [ngModel]="serviceDuration()" (ngModelChange)="serviceDuration.set($event === '' ? null : +$event)" /></label>
+              <label>Price type<select name="servicePriceType" [ngModel]="servicePriceType()" (ngModelChange)="servicePriceType.set($event)"><option *ngFor="let option of priceTypeOptions" [value]="option.value">{{ option.label }}</option></select></label>
+              <label>Price amount<input name="servicePriceAmount" type="number" min="0" step="0.01" [ngModel]="servicePriceAmount()" (ngModelChange)="servicePriceAmount.set($event === '' ? null : +$event)" /></label>
+              <label class="full-width">Location<input name="serviceLocation" type="text" [ngModel]="serviceLocation()" (ngModelChange)="serviceLocation.set($event)" /></label>
+            </div>
+            <div class="provider-form-actions">
+              <button type="submit" class="primary-action" [disabled]="saving()">{{ selectedServiceId() ? 'Update service' : 'Add service' }}</button>
+              <button type="button" class="admin-danger" *ngIf="selectedService() as selected" (click)="deleteService(selected)">Remove service</button>
+            </div>
+          </form>
+
+          <section class="wp-card">
+            <div class="wp-card-head">
+              <div><span class="wp-eyebrow">Catalogue</span><h3>Your services</h3></div>
+              <span class="wp-row-num">{{ services().length }} total</span>
+            </div>
+            <div class="wp-list">
+              <p class="wp-empty" *ngIf="!services().length">No services yet. Add your first service with the form.</p>
+              <button type="button" class="wp-row" *ngFor="let service of services()" [class.active]="service.id === selectedServiceId()" (click)="editService(service)">
+                <span class="provider-status-pill" [attr.data-status]="service.isActive ? 'Published' : 'Draft'">{{ service.deliveryMode }}</span>
+                <span class="wp-row-title">{{ service.name }}</span>
+                <span class="wp-row-meta">{{ service.category }} · {{ service.priceType }} · {{ service.location || profile.location }}</span>
+              </button>
+            </div>
+          </section>
+        </div>
+      </ng-container>
+
+      <!-- ===================== PROFILE ===================== -->
+      <ng-container *ngIf="section() === 'profile'">
+        <form class="wp-card" (ngSubmit)="saveProfile()">
+          <div class="wp-section-head">
+            <div>
+              <span class="wp-eyebrow">Public profile</span>
+              <h2>{{ profile.name }}</h2>
+              <p>This is how members discover and recognise your practice across Within.</p>
+            </div>
+            <span class="provider-status-pill" [attr.data-status]="profile.verificationStatus">{{ profile.verificationStatus }}</span>
+          </div>
+          <div class="provider-form-grid">
+            <label>Name<input name="profileName" type="text" [ngModel]="profileName()" (ngModelChange)="profileName.set($event)" /></label>
+            <label>Location<input name="profileLocation" type="text" [ngModel]="profileLocation()" (ngModelChange)="profileLocation.set($event)" /></label>
+            <label class="full-width">Bio<textarea name="profileBio" rows="4" [ngModel]="profileBio()" (ngModelChange)="profileBio.set($event)"></textarea></label>
+            <label class="full-width">Categories<input name="profileCategoriesText" type="text" placeholder="yoga, breathwork, meditation" [ngModel]="profileCategoriesText()" (ngModelChange)="profileCategoriesText.set($event)" /></label>
+            <label>Website<input name="profileWebsite" type="url" [ngModel]="profileWebsite()" (ngModelChange)="profileWebsite.set($event)" /></label>
+            <label>Instagram<input name="profileInstagram" type="text" [ngModel]="profileInstagram()" (ngModelChange)="profileInstagram.set($event)" /></label>
+            <label class="check-option provider-online-option"><input type="checkbox" [checked]="profileOnlineAvailable()" (change)="profileOnlineAvailable.set($any($event.target).checked)" /><span>Online available</span></label>
+            <label class="check-option provider-online-option"><input type="checkbox" [checked]="profileInPersonAvailable()" (change)="profileInPersonAvailable.set($any($event.target).checked)" /><span>In person available</span></label>
+          </div>
+          <div class="provider-form-actions">
+            <button type="submit" class="primary-action" [disabled]="saving()">Save profile</button>
+          </div>
+        </form>
+      </ng-container>
+    </div>
+  </div>
+</main>
+
+<ng-template #providerLoading>
+  <main class="wp-shell">
+    <div class="wp-main">
+      <section class="wp-auth">
+        <div class="wp-auth-grid">
+          <div class="wp-auth-context">
+            <span class="wp-eyebrow">Provider portal</span>
+            <h1>{{ message() || 'Loading provider dashboard…' }}</h1>
+            <p>Approved providers can manage events, services and their profile after signing in.</p>
+          </div>
+          <div class="wp-auth-card">
+            <h2>Provider sign in</h2>
+            <p class="wp-msg">Use the credentials shared by the Within team after approval.</p>
+            <a class="primary-action" routerLink="/providers/login">Go to provider login</a>
+          </div>
         </div>
       </section>
-    </section>
-  </section>
-
-  <ng-template #providerLoading>
-    <section class="admin-login-wrap">
-      <aside class="admin-login-context">
-        <span class="section-eyebrow">Provider portal</span>
-        <h1>{{ message() || 'Loading provider dashboard...' }}</h1>
-        <p>Approved providers can manage events after signing in.</p>
-        <a class="primary-action" routerLink="/providers/login">Provider login</a>
-      </aside>
-    </section>
-  </ng-template>
-</main>
+    </div>
+  </main>
+</ng-template>

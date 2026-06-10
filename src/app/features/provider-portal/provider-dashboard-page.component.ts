@@ -6,6 +6,8 @@ import { ProviderPortalService } from '../../core/provider-portal.service';
 import { EventAgeRestriction, EventExperienceLevel, EventIntensity, EventItem, Option, Provider, ProviderEventEngagement, ProviderEventParticipant, ProviderPriceType, ProviderService, ProviderServiceDeliveryMode, SignupType, UpsertEventPayload, UpsertProviderPayload, UpsertProviderServicePayload, WithinLens } from '../../core/within.models';
 import { lensOptions, providerPriceTypeOptions, providerServiceDeliveryModeOptions } from '../../core/within-options';
 
+type ProviderSection = 'overview' | 'events' | 'services' | 'profile';
+
 @Component({
   selector: 'app-provider-dashboard-page',
   imports: [CommonModule, FormsModule, RouterLink],
@@ -118,6 +120,29 @@ export class ProviderDashboardPageComponent {
   protected readonly saving = signal(false);
   protected readonly authed = this.providerPortal.authed;
 
+  // ---- Dashboard navigation ----
+  protected readonly section = signal<ProviderSection>('overview');
+  protected readonly navOpen = signal(false);
+  protected readonly navItems: { id: ProviderSection; label: string; icon: string }[] = [
+    { id: 'overview', label: 'Overview', icon: 'dashboard' },
+    { id: 'events', label: 'Events', icon: 'event' },
+    { id: 'services', label: 'Services', icon: 'spa' },
+    { id: 'profile', label: 'Profile', icon: 'storefront' },
+  ];
+  protected readonly sectionMeta: Record<ProviderSection, { title: string; sub: string }> = {
+    overview: { title: 'Dashboard', sub: 'Your provider workspace at a glance' },
+    events: { title: 'Events', sub: 'Create, publish and monitor your events' },
+    services: { title: 'Services', sub: 'Manage your service catalogue' },
+    profile: { title: 'Profile', sub: 'How members discover your practice' },
+  };
+  protected readonly greeting = computed(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  });
+  protected readonly recentEvents = computed(() => this.events().slice(0, 5));
+
   protected readonly title = signal('');
   protected readonly description = signal('');
   protected readonly lens = signal<WithinLens>('Move');
@@ -228,6 +253,21 @@ export class ProviderDashboardPageComponent {
   protected logout(): void {
     this.providerPortal.logout();
     void this.router.navigateByUrl('/providers/login');
+  }
+
+  protected setSection(section: ProviderSection): void {
+    this.section.set(section);
+    this.navOpen.set(false);
+  }
+
+  protected goCreateEvent(): void {
+    this.newEvent();
+    this.setSection('events');
+  }
+
+  protected goAddService(): void {
+    this.newService();
+    this.setSection('services');
   }
 
   protected async editEvent(event: EventItem): Promise<void> {

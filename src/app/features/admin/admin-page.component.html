@@ -1,303 +1,341 @@
-<main class="admin-shell">
-  <header class="survey-topbar">
-    <a class="brand" routerLink="/"><img src="/within-logo.png" alt="" /><span>Within</span></a>
-    <div class="admin-topbar-actions">
-      <button type="button" class="admin-tab" [class.active]="adminTab() === 'submissions'" (click)="setAdminTab('submissions')" *ngIf="adminAuthed()">Submissions</button>
-      <button type="button" class="admin-tab" [class.active]="adminTab() === 'providers'" (click)="setAdminTab('providers')" *ngIf="adminAuthed()">Providers</button>
-      <button type="button" class="admin-tab" [class.active]="adminTab() === 'moderation'" (click)="setAdminTab('moderation')" *ngIf="adminAuthed()">Moderation</button>
-      <button type="button" class="admin-tab" [class.active]="adminTab() === 'users'" (click)="setAdminTab('users')" *ngIf="adminAuthed()">Users</button>
-      <button type="button" class="admin-tab" [class.active]="adminTab() === 'habits'" (click)="setAdminTab('habits')" *ngIf="adminAuthed()">Habits</button>
-      <button type="button" class="admin-tab" [class.active]="adminTab() === 'circles'" (click)="setAdminTab('circles')" *ngIf="adminAuthed()">Circles</button>
-      <button type="button" class="admin-signout" *ngIf="adminAuthed()" (click)="adminLogout()">Sign out</button>
-    </div>
-  </header>
-
-  <section class="admin-login-wrap" *ngIf="!adminAuthed()">
-    <aside class="admin-login-context">
-      <span class="section-eyebrow">Admin</span>
-      <h1>Sign in to view survey responses and provider applications.</h1>
-      <p>Only accounts with the Admin role can view submissions, provider applications, aggregate stats, and registered users.</p>
-    </aside>
-    <form class="admin-login-form" (ngSubmit)="adminLogin()">
-      <label>Admin email<input name="adminEmail" type="email" autocomplete="username" [ngModel]="adminEmail()" (ngModelChange)="adminEmail.set($event)" /></label>
-      <label>Password<input name="adminPassword" type="password" autocomplete="current-password" [ngModel]="adminPassword()" (ngModelChange)="adminPassword.set($event)" /></label>
-      <button type="submit" class="primary-action" [disabled]="adminLoading()">{{ adminLoading() ? 'Signing in...' : 'Sign in' }}</button>
-      <p class="admin-login-message" *ngIf="adminMessage()">{{ adminMessage() }}</p>
-    </form>
-  </section>
-
-  <section class="admin-dashboard" *ngIf="adminAuthed()">
-    <div class="admin-stats-row" *ngIf="adminStats() as stats">
-      <article class="admin-stat-card"><span>Total submissions</span><strong>{{ stats.totalSubmissions }}</strong></article>
-      <article class="admin-stat-card"><span>End-user surveys</span><strong>{{ stats.userSubmissions }}</strong></article>
-      <article class="admin-stat-card"><span>Provider surveys</span><strong>{{ stats.providerSubmissions }}</strong></article>
-      <article class="admin-stat-card"><span>Provider applications</span><strong>{{ providerApplications().length }}</strong></article>
-      <article class="admin-stat-card"><span>Community reports</span><strong>{{ communityReports().length }}</strong></article>
-      <article class="admin-stat-card"><span>Registered accounts</span><strong>{{ stats.totalUsers }}</strong><small>{{ stats.providerUsers }} providers - {{ stats.adminUsers }} admin</small></article>
-    </div>
-
-    <p class="admin-message" *ngIf="adminMessage()">{{ adminMessage() }}</p>
-
-    <div class="admin-toolbar" *ngIf="adminTab() === 'submissions'">
-      <div class="admin-filter-group" role="group" aria-label="Audience filter">
-        <button type="button" [class.active]="adminFilter() === 'all'" (click)="setAdminFilter('all')">All</button>
-        <button type="button" [class.active]="adminFilter() === 'user'" (click)="setAdminFilter('user')">End users</button>
-        <button type="button" [class.active]="adminFilter() === 'provider'" (click)="setAdminFilter('provider')">Providers</button>
-        <button type="button" [class.active]="adminFilter() === 'interest'" (click)="setAdminFilter('interest')">Interest</button>
+<!-- ===================== LOGIN ===================== -->
+<main class="wp-shell" *ngIf="!adminAuthed()">
+  <div class="wp-main">
+    <header class="wp-topbar">
+      <div class="wp-topbar-lead">
+        <a class="wp-side-brand" routerLink="/" style="padding: 0"><img src="/within-logo.png" alt="" /><span>Within</span></a>
       </div>
-      <button type="button" class="admin-refresh" (click)="loadAdminData()" [disabled]="adminLoading()">{{ adminLoading() ? 'Loading...' : 'Refresh' }}</button>
-    </div>
-
-    <div class="admin-grid" *ngIf="adminTab() === 'submissions'">
-      <aside class="admin-list" aria-label="Submissions list">
-        <p *ngIf="!adminFilteredSubmissions().length" class="admin-empty">No submissions yet for this filter.</p>
-        <button *ngFor="let submission of adminFilteredSubmissions()" type="button" class="admin-list-item" [class.active]="submission.id === adminSelectedId()" (click)="selectSubmission(submission.id)">
-          <span class="audience-tag" [attr.data-audience]="submission.audience">{{ formatAudience(submission.audience) }}</span>
-          <strong>{{ submission.name || '(no name)' }}</strong>
-          <span class="admin-contact">{{ submission.contact }}</span>
-          <span class="admin-created">{{ submission.createdUtc | date:'medium' }}</span>
-        </button>
-      </aside>
-      <article class="admin-detail" *ngIf="adminSelectedSubmission() as detail; else nothingSelected">
-        <header class="admin-detail-header">
-          <div><span class="audience-tag" [attr.data-audience]="detail.audience">{{ formatAudience(detail.audience) }}</span><h2>{{ detail.name || '(no name)' }}</h2><p class="admin-muted">{{ detail.contact }} - submitted {{ detail.createdUtc | date:'medium' }} - source: {{ detail.source }}</p></div>
-          <button type="button" class="admin-danger" (click)="deleteSubmission(detail.id)">Delete</button>
-        </header>
-        <dl class="admin-answer-list"><ng-container *ngFor="let entry of answerEntries(detail)"><dt>{{ entry.key }}</dt><dd><span>{{ entry.value }}</span><small *ngIf="entry.comment" class="admin-answer-comment">{{ entry.comment }}</small></dd></ng-container></dl>
-      </article>
-      <ng-template #nothingSelected><article class="admin-detail admin-empty-detail"><p>Select a submission to see the full answers.</p></article></ng-template>
-    </div>
-
-    <div class="admin-toolbar provider-admin-toolbar" *ngIf="adminTab() === 'providers'">
-      <div class="admin-filter-group" role="group" aria-label="Provider application filter">
-        <button type="button" *ngFor="let filter of providerStatusFilters" [class.active]="providerApplicationFilter() === filter.value" (click)="setProviderApplicationFilter(filter.value)">{{ filter.label }}</button>
-      </div>
-      <input class="admin-search" type="search" placeholder="Search providers" [ngModel]="providerApplicationSearch()" (ngModelChange)="providerApplicationSearch.set($event)" />
-      <button type="button" class="admin-refresh" (click)="loadAdminData()" [disabled]="adminLoading()">{{ adminLoading() ? 'Loading...' : 'Refresh' }}</button>
-    </div>
-
-    <div class="admin-grid provider-admin-grid" *ngIf="adminTab() === 'providers'">
-      <aside class="admin-list" aria-label="Provider applications list">
-        <p *ngIf="!filteredProviderApplications().length" class="admin-empty">No provider applications for this filter.</p>
-        <button *ngFor="let application of filteredProviderApplications()" type="button" class="admin-list-item provider-application-item" [class.active]="application.id === selectedProviderApplicationId()" (click)="selectProviderApplication(application.id)">
-          <span class="provider-status-pill" [attr.data-status]="application.status">{{ formatProviderStatus(application.status) }}</span>
-          <strong>{{ application.providerName }}</strong>
-          <span class="admin-contact">{{ application.contactEmail }}</span>
-          <span class="admin-created">{{ formatProviderCategory(application.providerCategory) }} - {{ application.location }}</span>
-        </button>
-      </aside>
-      <article class="admin-detail provider-application-detail" *ngIf="selectedProviderApplication() as application; else noProviderSelected">
-        <header class="admin-detail-header"><div><span class="provider-status-pill" [attr.data-status]="application.status">{{ formatProviderStatus(application.status) }}</span><h2>{{ application.providerName }}</h2><p class="admin-muted">{{ formatProviderCategory(application.providerCategory) }} - {{ application.primaryLens }} - submitted {{ application.submittedUtc | date:'medium' }}</p></div></header>
-        <section class="provider-review-panel">
-          <div class="provider-review-actions">
-            <button type="button" class="admin-refresh" (click)="updateProviderApplicationStatus('InReview')">Start review</button>
-            <button type="button" class="admin-refresh" (click)="updateProviderApplicationStatus('Approved')">Approve</button>
-            <button type="button" class="admin-refresh" (click)="updateProviderApplicationStatus('MoreInfoRequested')">Request info</button>
-            <button type="button" class="admin-danger" (click)="updateProviderApplicationStatus('Rejected')">Reject</button>
-          </div>
-          <label>Decision reason<textarea rows="3" [ngModel]="providerDecisionReason()" (ngModelChange)="providerDecisionReason.set($event)" placeholder="Required for more-info or rejected decisions"></textarea></label>
-          <p class="admin-muted" *ngIf="application.reviewDecisionReason">Latest reason: {{ application.reviewDecisionReason }}</p>
-          <button type="button" class="admin-danger" *ngIf="application.approvedProviderId" (click)="deleteProvider(application)">Delete linked provider</button>
-        </section>
-        <section class="provider-credential-panel" *ngIf="providerCredential() as credential">
-          <div>
-            <span class="section-eyebrow">Provider login</span>
-            <h3>Share this one-time credential with the provider.</h3>
-            <p>This password is only shown now. It will not be available after refresh.</p>
-          </div>
-          <dl>
-            <dt>Email</dt>
-            <dd>{{ credential.email }}</dd>
-            <dt>Temporary password</dt>
-            <dd class="credential-password">{{ credential.password }}</dd>
-          </dl>
-          <button type="button" class="admin-refresh" (click)="copyProviderCredential()">Copy credential</button>
-        </section>
-        <section class="provider-trust-checklist" aria-label="Trust checklist"><article *ngFor="let item of trustChecklist(application)" [class.ok]="item.ok"><span>{{ item.ok ? 'Yes' : 'No' }}</span><strong>{{ item.label }}</strong></article></section>
-        <section class="provider-notes-panel"><label>Internal admin notes<textarea rows="4" [ngModel]="providerAdminNotesDraft()" (ngModelChange)="providerAdminNotesDraft.set($event)"></textarea></label><button type="button" class="admin-refresh" (click)="saveProviderAdminNotes()">Save notes</button></section>
-        <dl class="admin-answer-list"><ng-container *ngFor="let entry of providerApplicationEntries(application)"><dt>{{ entry.key }}</dt><dd>{{ entry.value }}</dd></ng-container></dl>
-      </article>
-      <ng-template #noProviderSelected><article class="admin-detail admin-empty-detail"><p>Select a provider application to review.</p></article></ng-template>
-    </div>
-
-    <div class="admin-toolbar" *ngIf="adminTab() === 'moderation'">
-      <div class="admin-filter-group" role="group" aria-label="Moderation status">
-        <button type="button" class="active">All reports</button>
-      </div>
-      <button type="button" class="admin-refresh" (click)="loadAdminData()" [disabled]="adminLoading()">{{ adminLoading() ? 'Loading...' : 'Refresh' }}</button>
-    </div>
-
-    <div class="admin-grid" *ngIf="adminTab() === 'moderation'">
-      <aside class="admin-list" aria-label="Community reports list">
-        <p *ngIf="!communityReports().length" class="admin-empty">No community reports.</p>
-        <button *ngFor="let report of communityReports()" type="button" class="admin-list-item" [class.active]="report.id === selectedCommunityReportId()" (click)="selectCommunityReport(report.id)">
-          <span class="provider-status-pill" [attr.data-status]="report.status">{{ report.status }}</span>
-          <strong>{{ formatCommunityReportReason(report.reason) }}</strong>
-          <span class="admin-contact" *ngIf="report.circleName">{{ report.circleName }}</span>
-          <span class="admin-contact">{{ report.reporter.displayName }}</span>
-          <span class="admin-created">{{ report.createdAt | date:'medium' }}</span>
-        </button>
-      </aside>
-      <article class="admin-detail" *ngIf="selectedCommunityReport() as report; else noReportSelected">
-        <header class="admin-detail-header">
-          <div>
-            <span class="provider-status-pill" [attr.data-status]="report.status">{{ report.status }}</span>
-            <h2>{{ formatCommunityReportReason(report.reason) }}</h2>
-            <p class="admin-muted">Reported by {{ report.reporter.displayName }}<ng-container *ngIf="report.circleName"> in {{ report.circleName }}</ng-container> on {{ report.createdAt | date:'medium' }}</p>
-          </div>
-        </header>
-        <section class="provider-review-panel">
-          <div class="provider-review-actions">
-            <button type="button" class="admin-refresh" (click)="reviewCommunityReport('Reviewed')">Mark reviewed</button>
-            <button type="button" class="admin-refresh" (click)="reviewCommunityReport('Dismissed')">Dismiss</button>
-            <button type="button" class="admin-danger" (click)="removeReportedContent(report)">Remove content</button>
-          </div>
-          <p class="admin-muted" *ngIf="report.description">{{ report.description }}</p>
-        </section>
-        <section class="provider-notes-panel" *ngIf="report.thread || report.post">
-          <ng-container *ngIf="(report.thread || report.post) as thread">
-            <span class="section-eyebrow">Reported thread</span>
-            <h3>{{ thread.title }}</h3>
-            <p>{{ thread.body }}</p>
-            <p class="admin-muted">By {{ thread.author.displayName }} - {{ thread.createdAt | date:'medium' }}</p>
-          </ng-container>
-        </section>
-        <section class="provider-notes-panel" *ngIf="report.comment">
-          <span class="section-eyebrow">Reported comment</span>
-          <p>{{ report.comment.body }}</p>
-          <p class="admin-muted">By {{ report.comment.author.displayName }} - {{ report.comment.createdAt | date:'medium' }}</p>
-        </section>
-        <section class="provider-notes-panel" *ngIf="report.sharedEvent">
-          <span class="section-eyebrow">Reported shared event</span>
-          <h3>{{ report.sharedEvent.title }}</h3>
-          <p>{{ report.sharedEvent.description }}</p>
-          <p class="admin-muted">By {{ report.sharedEvent.providerName }} - {{ report.sharedEvent.startUtc | date:'medium' }}</p>
-        </section>
-      </article>
-      <ng-template #noReportSelected><article class="admin-detail admin-empty-detail"><p>Select a report to review.</p></article></ng-template>
-    </div>
-
-    <div class="admin-users" *ngIf="adminTab() === 'users'">
-      <p *ngIf="!adminUsers().length" class="admin-empty">No registered accounts.</p>
-      <table *ngIf="adminUsers().length" class="admin-users-table">
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th></tr></thead>
-        <tbody><tr *ngFor="let user of adminUsers()"><td>{{ user.displayName }}</td><td>{{ user.email }}</td><td><span class="admin-role-pill" [attr.data-role]="user.role">{{ user.role }}</span></td><td>{{ user.createdUtc | date:'medium' }}</td></tr></tbody>
-      </table>
-    </div>
-
-    <!-- Master data: habit templates -->
-    <div class="admin-masterdata" *ngIf="adminTab() === 'habits'">
-      <form class="admin-md-form" (ngSubmit)="saveHabit()">
-        <h3>{{ habitDraft.id ? 'Edit habit template' : 'New habit template' }}</h3>
-        <label>Name<input type="text" name="habitName" [(ngModel)]="habitDraft.name" maxlength="60" required /></label>
-        <label>Category
-          <select name="habitCategory" [(ngModel)]="habitDraft.category">
-            <option *ngFor="let category of habitCategoryOptions" [value]="category">{{ category }}</option>
-          </select>
-        </label>
-        <label>Description<input type="text" name="habitDescription" [(ngModel)]="habitDraft.description" maxlength="240" /></label>
-        <label>Icon key<input type="text" name="habitIcon" [(ngModel)]="habitDraft.iconKey" maxlength="48" /></label>
-        <label>Sort order<input type="number" name="habitSort" [(ngModel)]="habitDraft.sortOrder" /></label>
-        <label class="admin-md-check" *ngIf="habitDraft.id"><input type="checkbox" name="habitActive" [(ngModel)]="habitDraft.isActive" /> Active</label>
-        <div class="admin-md-actions">
-          <button type="submit">{{ habitDraft.id ? 'Save changes' : 'Add template' }}</button>
-          <button type="button" *ngIf="habitDraft.id" (click)="resetHabitDraft()">Cancel</button>
+    </header>
+    <section class="wp-auth">
+      <div class="wp-auth-grid">
+        <div class="wp-auth-context">
+          <span class="wp-eyebrow">Admin</span>
+          <h1>Sign in to manage submissions and provider applications.</h1>
+          <p>Only accounts with the Admin role can view submissions, provider applications, aggregate stats, moderation reports, and registered users.</p>
         </div>
-      </form>
-      <p *ngIf="!habitTemplates().length" class="admin-empty">No habit templates yet. Add one above.</p>
-      <table *ngIf="habitTemplates().length" class="admin-users-table">
-        <thead><tr><th>Name</th><th>Category</th><th>Description</th><th>Order</th><th>Status</th><th></th></tr></thead>
-        <tbody>
-          <tr *ngFor="let template of habitTemplates()">
-            <td>{{ template.name }}</td>
-            <td>{{ template.category }}</td>
-            <td>{{ template.description || '—' }}</td>
-            <td>{{ template.sortOrder }}</td>
-            <td>{{ template.isActive ? 'Active' : 'Inactive' }}</td>
-            <td>
-              <button type="button" (click)="editHabit(template)">Edit</button>
-              <button type="button" *ngIf="template.isActive" (click)="deactivateHabit(template)">Deactivate</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Master data: platform circles + guidelines -->
-    <div class="admin-masterdata" *ngIf="adminTab() === 'circles'">
-      <form class="admin-md-form" (ngSubmit)="saveCircle()">
-        <h3>{{ circleDraft.id ? 'Edit circle' : 'New platform circle' }}</h3>
-        <label>Name<input type="text" name="circleName" [(ngModel)]="circleDraft.name" maxlength="120" required /></label>
-        <label>Description<textarea name="circleDescription" [(ngModel)]="circleDraft.description" maxlength="600" required></textarea></label>
-        <label>Lens
-          <select name="circleLens" [(ngModel)]="circleDraft.lens">
-            <option *ngFor="let lens of lensOptions" [value]="lens">{{ lens }}</option>
-          </select>
-        </label>
-        <label>Visibility
-          <select name="circleVisibility" [(ngModel)]="circleDraft.visibility">
-            <option *ngFor="let visibility of circleVisibilityOptions" [value]="visibility">{{ visibility }}</option>
-          </select>
-        </label>
-        <label *ngIf="circleDraft.id">Status
-          <select name="circleStatus" [(ngModel)]="circleDraft.status">
-            <option *ngFor="let status of circleStatusOptions" [value]="status">{{ status }}</option>
-          </select>
-        </label>
-        <label>Rules<textarea name="circleRules" [(ngModel)]="circleDraft.rules" maxlength="2000"></textarea></label>
-        <div class="admin-md-actions">
-          <button type="submit">{{ circleDraft.id ? 'Save changes' : 'Add circle' }}</button>
-          <button type="button" *ngIf="circleDraft.id" (click)="resetCircleDraft()">New circle</button>
-        </div>
-      </form>
-
-      <p *ngIf="!circles().length" class="admin-empty">No platform circles yet. Add one above.</p>
-      <table *ngIf="circles().length" class="admin-users-table">
-        <thead><tr><th>Name</th><th>Lens</th><th>Visibility</th><th>Status</th><th>Members</th><th></th></tr></thead>
-        <tbody>
-          <tr *ngFor="let circle of circles()" [class.active]="selectedCircleId() === circle.id">
-            <td>{{ circle.name }}</td>
-            <td>{{ circle.lens }}</td>
-            <td>{{ circle.visibility }}</td>
-            <td>{{ circle.status }}</td>
-            <td>{{ circle.memberCount }}</td>
-            <td>
-              <button type="button" (click)="selectCircle(circle)">Edit / guidelines</button>
-              <button type="button" *ngIf="circle.status === 'Active'" (click)="archiveCircle(circle)">Archive</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="admin-md-guidelines" *ngIf="selectedCircleId()">
-        <h3>Guidelines for {{ circleDraft.name }}</h3>
-        <form class="admin-md-form" (ngSubmit)="saveGuideline()">
-          <label>Title<input type="text" name="guidelineTitle" [(ngModel)]="guidelineDraft.title" maxlength="120" required /></label>
-          <label>Body<textarea name="guidelineBody" [(ngModel)]="guidelineDraft.body" maxlength="1000" required></textarea></label>
-          <label>Sort order<input type="number" name="guidelineSort" [(ngModel)]="guidelineDraft.sortOrder" /></label>
-          <label class="admin-md-check" *ngIf="guidelineDraft.id"><input type="checkbox" name="guidelineActive" [(ngModel)]="guidelineDraft.isActive" /> Active</label>
-          <div class="admin-md-actions">
-            <button type="submit">{{ guidelineDraft.id ? 'Save guideline' : 'Add guideline' }}</button>
-            <button type="button" *ngIf="guidelineDraft.id" (click)="resetGuidelineDraft()">Cancel</button>
-          </div>
+        <form class="wp-auth-card" (ngSubmit)="adminLogin()">
+          <h2>Admin sign in</h2>
+          <label>Admin email<input name="adminEmail" type="email" autocomplete="username" [ngModel]="adminEmail()" (ngModelChange)="adminEmail.set($event)" /></label>
+          <label>Password<input name="adminPassword" type="password" autocomplete="current-password" [ngModel]="adminPassword()" (ngModelChange)="adminPassword.set($event)" /></label>
+          <button type="submit" class="primary-action" [disabled]="adminLoading()">{{ adminLoading() ? 'Signing in…' : 'Sign in' }}</button>
+          <p class="wp-msg" *ngIf="adminMessage()">{{ adminMessage() }}</p>
         </form>
-        <p *ngIf="!guidelines().length" class="admin-empty">No guidelines yet.</p>
-        <table *ngIf="guidelines().length" class="admin-users-table">
-          <thead><tr><th>Order</th><th>Title</th><th>Body</th><th>Status</th><th></th></tr></thead>
-          <tbody>
-            <tr *ngFor="let guideline of guidelines()">
-              <td>{{ guideline.sortOrder }}</td>
-              <td>{{ guideline.title }}</td>
-              <td>{{ guideline.body }}</td>
-              <td>{{ guideline.isActive ? 'Active' : 'Inactive' }}</td>
-              <td>
-                <button type="button" (click)="editGuideline(guideline)">Edit</button>
-                <button type="button" (click)="deleteGuideline(guideline)">Delete</button>
-              </td>
-            </tr>
-          </tbody>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ===================== DASHBOARD ===================== -->
+<main class="wp-shell" [class.nav-open]="navOpen()" *ngIf="adminAuthed()">
+  <div class="wp-scrim" (click)="navOpen.set(false)"></div>
+
+  <aside class="wp-side">
+    <a class="wp-side-brand" routerLink="/"><img src="/within-logo.png" alt="" /><span>Within</span></a>
+    <div class="wp-side-user">
+      <span class="wp-avatar">A</span>
+      <strong>Admin console</strong>
+      <span>Within platform</span>
+    </div>
+    <nav class="wp-nav">
+      <span class="wp-nav-label">Manage</span>
+      <button type="button" class="wp-nav-item" *ngFor="let item of navItems" [class.active]="adminTab() === item.id" (click)="setAdminTab(item.id)">
+        <span class="material-symbols-rounded">{{ item.icon }}</span>{{ item.label }}
+      </button>
+    </nav>
+    <div class="wp-nav-foot">
+      <button type="button" class="wp-nav-item" (click)="loadAdminData()" [disabled]="adminLoading()"><span class="material-symbols-rounded">refresh</span>{{ adminLoading() ? 'Loading…' : 'Refresh' }}</button>
+      <button type="button" class="wp-nav-item" (click)="adminLogout()"><span class="material-symbols-rounded">logout</span>Sign out</button>
+    </div>
+  </aside>
+
+  <div class="wp-main">
+    <header class="wp-topbar">
+      <div class="wp-topbar-lead">
+        <button type="button" class="wp-burger" (click)="navOpen.set(!navOpen())" aria-label="Menu"><span class="material-symbols-rounded">menu</span></button>
+        <div class="wp-topbar-title">
+          <span class="wp-eyebrow">Admin portal</span>
+          <h1>{{ sectionMeta[adminTab()].title }}</h1>
+        </div>
+      </div>
+      <div class="wp-topbar-actions">
+        <button type="button" class="admin-refresh" (click)="loadAdminData()" [disabled]="adminLoading()">{{ adminLoading() ? 'Loading…' : 'Refresh' }}</button>
+      </div>
+    </header>
+
+    <div class="wp-content">
+      <div class="wp-stats" *ngIf="adminStats() as stats">
+        <article class="wp-stat"><span class="wp-stat-ico"><span class="material-symbols-rounded">inbox</span></span><span>Total submissions</span><strong>{{ stats.totalSubmissions }}</strong></article>
+        <article class="wp-stat green"><span class="wp-stat-ico"><span class="material-symbols-rounded">person</span></span><span>End-user surveys</span><strong>{{ stats.userSubmissions }}</strong></article>
+        <article class="wp-stat"><span class="wp-stat-ico"><span class="material-symbols-rounded">storefront</span></span><span>Provider surveys</span><strong>{{ stats.providerSubmissions }}</strong></article>
+        <article class="wp-stat amber"><span class="wp-stat-ico"><span class="material-symbols-rounded">verified_user</span></span><span>Provider applications</span><strong>{{ providerApplications().length }}</strong></article>
+        <article class="wp-stat coral"><span class="wp-stat-ico"><span class="material-symbols-rounded">flag</span></span><span>Community reports</span><strong>{{ communityReports().length }}</strong></article>
+        <article class="wp-stat"><span class="wp-stat-ico"><span class="material-symbols-rounded">group</span></span><span>Registered accounts</span><strong>{{ stats.totalUsers }}</strong></article>
+      </div>
+
+      <p class="admin-message" *ngIf="adminMessage()">{{ adminMessage() }}</p>
+
+      <!-- ---- Submissions ---- -->
+      <div class="admin-toolbar" *ngIf="adminTab() === 'submissions'">
+        <div class="admin-filter-group" role="group" aria-label="Audience filter">
+          <button type="button" [class.active]="adminFilter() === 'all'" (click)="setAdminFilter('all')">All</button>
+          <button type="button" [class.active]="adminFilter() === 'user'" (click)="setAdminFilter('user')">End users</button>
+          <button type="button" [class.active]="adminFilter() === 'provider'" (click)="setAdminFilter('provider')">Providers</button>
+          <button type="button" [class.active]="adminFilter() === 'interest'" (click)="setAdminFilter('interest')">Interest</button>
+        </div>
+      </div>
+
+      <div class="admin-grid" *ngIf="adminTab() === 'submissions'">
+        <aside class="admin-list" aria-label="Submissions list">
+          <p *ngIf="!adminFilteredSubmissions().length" class="admin-empty">No submissions yet for this filter.</p>
+          <button *ngFor="let submission of adminFilteredSubmissions()" type="button" class="admin-list-item" [class.active]="submission.id === adminSelectedId()" (click)="selectSubmission(submission.id)">
+            <span class="audience-tag" [attr.data-audience]="submission.audience">{{ formatAudience(submission.audience) }}</span>
+            <strong>{{ submission.name || '(no name)' }}</strong>
+            <span class="admin-contact">{{ submission.contact }}</span>
+            <span class="admin-created">{{ submission.createdUtc | date:'medium' }}</span>
+          </button>
+        </aside>
+        <article class="admin-detail" *ngIf="adminSelectedSubmission() as detail; else nothingSelected">
+          <header class="admin-detail-header">
+            <div><span class="audience-tag" [attr.data-audience]="detail.audience">{{ formatAudience(detail.audience) }}</span><h2>{{ detail.name || '(no name)' }}</h2><p class="admin-muted">{{ detail.contact }} - submitted {{ detail.createdUtc | date:'medium' }} - source: {{ detail.source }}</p></div>
+            <button type="button" class="admin-danger" (click)="deleteSubmission(detail.id)">Delete</button>
+          </header>
+          <dl class="admin-answer-list"><ng-container *ngFor="let entry of answerEntries(detail)"><dt>{{ entry.key }}</dt><dd><span>{{ entry.value }}</span><small *ngIf="entry.comment" class="admin-answer-comment">{{ entry.comment }}</small></dd></ng-container></dl>
+        </article>
+        <ng-template #nothingSelected><article class="admin-detail admin-empty-detail"><p>Select a submission to see the full answers.</p></article></ng-template>
+      </div>
+
+      <!-- ---- Providers ---- -->
+      <div class="admin-toolbar provider-admin-toolbar" *ngIf="adminTab() === 'providers'">
+        <div class="admin-filter-group" role="group" aria-label="Provider application filter">
+          <button type="button" *ngFor="let filter of providerStatusFilters" [class.active]="providerApplicationFilter() === filter.value" (click)="setProviderApplicationFilter(filter.value)">{{ filter.label }}</button>
+        </div>
+        <input class="admin-search" type="search" placeholder="Search providers" [ngModel]="providerApplicationSearch()" (ngModelChange)="providerApplicationSearch.set($event)" />
+      </div>
+
+      <div class="admin-grid provider-admin-grid" *ngIf="adminTab() === 'providers'">
+        <aside class="admin-list" aria-label="Provider applications list">
+          <p *ngIf="!filteredProviderApplications().length" class="admin-empty">No provider applications for this filter.</p>
+          <button *ngFor="let application of filteredProviderApplications()" type="button" class="admin-list-item provider-application-item" [class.active]="application.id === selectedProviderApplicationId()" (click)="selectProviderApplication(application.id)">
+            <span class="provider-status-pill" [attr.data-status]="application.status">{{ formatProviderStatus(application.status) }}</span>
+            <strong>{{ application.providerName }}</strong>
+            <span class="admin-contact">{{ application.contactEmail }}</span>
+            <span class="admin-created">{{ formatProviderCategory(application.providerCategory) }} - {{ application.location }}</span>
+          </button>
+        </aside>
+        <article class="admin-detail provider-application-detail" *ngIf="selectedProviderApplication() as application; else noProviderSelected">
+          <header class="admin-detail-header"><div><span class="provider-status-pill" [attr.data-status]="application.status">{{ formatProviderStatus(application.status) }}</span><h2>{{ application.providerName }}</h2><p class="admin-muted">{{ formatProviderCategory(application.providerCategory) }} - {{ application.primaryLens }} - submitted {{ application.submittedUtc | date:'medium' }}</p></div></header>
+          <section class="provider-review-panel">
+            <div class="provider-review-actions">
+              <button type="button" class="admin-refresh" (click)="updateProviderApplicationStatus('InReview')">Start review</button>
+              <button type="button" class="admin-refresh" (click)="updateProviderApplicationStatus('Approved')">Approve</button>
+              <button type="button" class="admin-refresh" (click)="updateProviderApplicationStatus('MoreInfoRequested')">Request info</button>
+              <button type="button" class="admin-danger" (click)="updateProviderApplicationStatus('Rejected')">Reject</button>
+            </div>
+            <label>Decision reason<textarea rows="3" [ngModel]="providerDecisionReason()" (ngModelChange)="providerDecisionReason.set($event)" placeholder="Required for more-info or rejected decisions"></textarea></label>
+            <p class="admin-muted" *ngIf="application.reviewDecisionReason">Latest reason: {{ application.reviewDecisionReason }}</p>
+            <button type="button" class="admin-danger" *ngIf="application.approvedProviderId" (click)="deleteProvider(application)">Delete linked provider</button>
+          </section>
+          <section class="provider-credential-panel" *ngIf="providerCredential() as credential">
+            <div>
+              <span class="section-eyebrow">Provider login</span>
+              <h3>Share this one-time credential with the provider.</h3>
+              <p>This password is only shown now. It will not be available after refresh.</p>
+            </div>
+            <dl>
+              <dt>Email</dt>
+              <dd>{{ credential.email }}</dd>
+              <dt>Temporary password</dt>
+              <dd class="credential-password">{{ credential.password }}</dd>
+            </dl>
+            <button type="button" class="admin-refresh" (click)="copyProviderCredential()">Copy credential</button>
+          </section>
+          <section class="provider-trust-checklist" aria-label="Trust checklist"><article *ngFor="let item of trustChecklist(application)" [class.ok]="item.ok"><span>{{ item.ok ? 'Yes' : 'No' }}</span><strong>{{ item.label }}</strong></article></section>
+          <section class="provider-notes-panel"><label>Internal admin notes<textarea rows="4" [ngModel]="providerAdminNotesDraft()" (ngModelChange)="providerAdminNotesDraft.set($event)"></textarea></label><button type="button" class="admin-refresh" (click)="saveProviderAdminNotes()">Save notes</button></section>
+          <dl class="admin-answer-list"><ng-container *ngFor="let entry of providerApplicationEntries(application)"><dt>{{ entry.key }}</dt><dd>{{ entry.value }}</dd></ng-container></dl>
+        </article>
+        <ng-template #noProviderSelected><article class="admin-detail admin-empty-detail"><p>Select a provider application to review.</p></article></ng-template>
+      </div>
+
+      <!-- ---- Moderation ---- -->
+      <div class="admin-grid" *ngIf="adminTab() === 'moderation'">
+        <aside class="admin-list" aria-label="Community reports list">
+          <p *ngIf="!communityReports().length" class="admin-empty">No community reports.</p>
+          <button *ngFor="let report of communityReports()" type="button" class="admin-list-item" [class.active]="report.id === selectedCommunityReportId()" (click)="selectCommunityReport(report.id)">
+            <span class="provider-status-pill" [attr.data-status]="report.status">{{ report.status }}</span>
+            <strong>{{ formatCommunityReportReason(report.reason) }}</strong>
+            <span class="admin-contact" *ngIf="report.circleName">{{ report.circleName }}</span>
+            <span class="admin-contact">{{ report.reporter.displayName }}</span>
+            <span class="admin-created">{{ report.createdAt | date:'medium' }}</span>
+          </button>
+        </aside>
+        <article class="admin-detail" *ngIf="selectedCommunityReport() as report; else noReportSelected">
+          <header class="admin-detail-header">
+            <div>
+              <span class="provider-status-pill" [attr.data-status]="report.status">{{ report.status }}</span>
+              <h2>{{ formatCommunityReportReason(report.reason) }}</h2>
+              <p class="admin-muted">Reported by {{ report.reporter.displayName }}<ng-container *ngIf="report.circleName"> in {{ report.circleName }}</ng-container> on {{ report.createdAt | date:'medium' }}</p>
+            </div>
+          </header>
+          <section class="provider-review-panel">
+            <div class="provider-review-actions">
+              <button type="button" class="admin-refresh" (click)="reviewCommunityReport('Reviewed')">Mark reviewed</button>
+              <button type="button" class="admin-refresh" (click)="reviewCommunityReport('Dismissed')">Dismiss</button>
+              <button type="button" class="admin-danger" (click)="removeReportedContent(report)">Remove content</button>
+            </div>
+            <p class="admin-muted" *ngIf="report.description">{{ report.description }}</p>
+          </section>
+          <section class="provider-notes-panel" *ngIf="report.thread || report.post">
+            <ng-container *ngIf="(report.thread || report.post) as thread">
+              <span class="section-eyebrow">Reported thread</span>
+              <h3>{{ thread.title }}</h3>
+              <p>{{ thread.body }}</p>
+              <p class="admin-muted">By {{ thread.author.displayName }} - {{ thread.createdAt | date:'medium' }}</p>
+            </ng-container>
+          </section>
+          <section class="provider-notes-panel" *ngIf="report.comment">
+            <span class="section-eyebrow">Reported comment</span>
+            <p>{{ report.comment.body }}</p>
+            <p class="admin-muted">By {{ report.comment.author.displayName }} - {{ report.comment.createdAt | date:'medium' }}</p>
+          </section>
+          <section class="provider-notes-panel" *ngIf="report.sharedEvent">
+            <span class="section-eyebrow">Reported shared event</span>
+            <h3>{{ report.sharedEvent.title }}</h3>
+            <p>{{ report.sharedEvent.description }}</p>
+            <p class="admin-muted">By {{ report.sharedEvent.providerName }} - {{ report.sharedEvent.startUtc | date:'medium' }}</p>
+          </section>
+        </article>
+        <ng-template #noReportSelected><article class="admin-detail admin-empty-detail"><p>Select a report to review.</p></article></ng-template>
+      </div>
+
+      <!-- ---- Users ---- -->
+      <div class="admin-users" *ngIf="adminTab() === 'users'">
+        <p *ngIf="!adminUsers().length" class="admin-empty">No registered accounts.</p>
+        <table *ngIf="adminUsers().length" class="admin-users-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th></th></tr></thead>
+          <tbody><tr *ngFor="let user of adminUsers()"><td>{{ user.displayName }}</td><td>{{ user.email }}</td><td><span class="admin-role-pill" [attr.data-role]="user.role">{{ user.role }}</span></td><td>{{ user.createdUtc | date:'medium' }}</td><td><button type="button" *ngIf="!isTombstoneUser(user)" (click)="deleteUser(user)">Delete</button></td></tr></tbody>
         </table>
       </div>
+
+      <!-- ---- Master data: habit templates ---- -->
+      <div class="admin-masterdata" *ngIf="adminTab() === 'habits'">
+        <form class="admin-md-form" (ngSubmit)="saveHabit()">
+          <h3>{{ habitDraft.id ? 'Edit habit template' : 'New habit template' }}</h3>
+          <label>Name<input type="text" name="habitName" [(ngModel)]="habitDraft.name" maxlength="60" required /></label>
+          <label>Category
+            <select name="habitCategory" [(ngModel)]="habitDraft.category">
+              <option *ngFor="let category of habitCategoryOptions" [value]="category">{{ category }}</option>
+            </select>
+          </label>
+          <label>Description<input type="text" name="habitDescription" [(ngModel)]="habitDraft.description" maxlength="240" /></label>
+          <label>Icon key<input type="text" name="habitIcon" [(ngModel)]="habitDraft.iconKey" maxlength="48" /></label>
+          <label>Sort order<input type="number" name="habitSort" [(ngModel)]="habitDraft.sortOrder" /></label>
+          <label class="admin-md-check" *ngIf="habitDraft.id"><input type="checkbox" name="habitActive" [(ngModel)]="habitDraft.isActive" /> Active</label>
+          <div class="admin-md-actions">
+            <button type="submit">{{ habitDraft.id ? 'Save changes' : 'Add template' }}</button>
+            <button type="button" *ngIf="habitDraft.id" (click)="resetHabitDraft()">Cancel</button>
+          </div>
+        </form>
+        <p *ngIf="!habitTemplates().length" class="admin-empty">No habit templates yet. Add one above.</p>
+        <div class="admin-users" *ngIf="habitTemplates().length">
+          <table class="admin-users-table">
+            <thead><tr><th>Name</th><th>Category</th><th>Description</th><th>Order</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let template of habitTemplates()">
+                <td>{{ template.name }}</td>
+                <td>{{ template.category }}</td>
+                <td>{{ template.description || '—' }}</td>
+                <td>{{ template.sortOrder }}</td>
+                <td>{{ template.isActive ? 'Active' : 'Inactive' }}</td>
+                <td>
+                  <button type="button" (click)="editHabit(template)">Edit</button>
+                  <button type="button" *ngIf="template.isActive" (click)="deactivateHabit(template)">Deactivate</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ---- Master data: platform circles + guidelines ---- -->
+      <div class="admin-masterdata" *ngIf="adminTab() === 'circles'">
+        <form class="admin-md-form" (ngSubmit)="saveCircle()">
+          <h3>{{ circleDraft.id ? 'Edit circle' : 'New platform circle' }}</h3>
+          <label>Name<input type="text" name="circleName" [(ngModel)]="circleDraft.name" maxlength="120" required /></label>
+          <label>Description<textarea name="circleDescription" [(ngModel)]="circleDraft.description" maxlength="600" required></textarea></label>
+          <label>Lens
+            <select name="circleLens" [(ngModel)]="circleDraft.lens">
+              <option *ngFor="let lens of lensOptions" [value]="lens">{{ lens }}</option>
+            </select>
+          </label>
+          <label>Visibility
+            <select name="circleVisibility" [(ngModel)]="circleDraft.visibility">
+              <option *ngFor="let visibility of circleVisibilityOptions" [value]="visibility">{{ visibility }}</option>
+            </select>
+          </label>
+          <label *ngIf="circleDraft.id">Status
+            <select name="circleStatus" [(ngModel)]="circleDraft.status">
+              <option *ngFor="let status of circleStatusOptions" [value]="status">{{ status }}</option>
+            </select>
+          </label>
+          <label>Rules<textarea name="circleRules" [(ngModel)]="circleDraft.rules" maxlength="2000"></textarea></label>
+          <div class="admin-md-actions">
+            <button type="submit">{{ circleDraft.id ? 'Save changes' : 'Add circle' }}</button>
+            <button type="button" *ngIf="circleDraft.id" (click)="resetCircleDraft()">New circle</button>
+          </div>
+        </form>
+
+        <p *ngIf="!circles().length" class="admin-empty">No platform circles yet. Add one above.</p>
+        <div class="admin-users" *ngIf="circles().length">
+          <table class="admin-users-table">
+            <thead><tr><th>Name</th><th>Lens</th><th>Visibility</th><th>Status</th><th>Members</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let circle of circles()" [class.active]="selectedCircleId() === circle.id">
+                <td>{{ circle.name }}</td>
+                <td>{{ circle.lens }}</td>
+                <td>{{ circle.visibility }}</td>
+                <td>{{ circle.status }}</td>
+                <td>{{ circle.memberCount }}</td>
+                <td>
+                  <button type="button" (click)="selectCircle(circle)">Edit / guidelines</button>
+                  <button type="button" *ngIf="circle.status === 'Active'" (click)="archiveCircle(circle)">Archive</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="admin-md-guidelines" *ngIf="selectedCircleId()">
+          <h3>Guidelines for {{ circleDraft.name }}</h3>
+          <form class="admin-md-form" (ngSubmit)="saveGuideline()">
+            <label>Title<input type="text" name="guidelineTitle" [(ngModel)]="guidelineDraft.title" maxlength="120" required /></label>
+            <label>Body<textarea name="guidelineBody" [(ngModel)]="guidelineDraft.body" maxlength="1000" required></textarea></label>
+            <label>Sort order<input type="number" name="guidelineSort" [(ngModel)]="guidelineDraft.sortOrder" /></label>
+            <label class="admin-md-check" *ngIf="guidelineDraft.id"><input type="checkbox" name="guidelineActive" [(ngModel)]="guidelineDraft.isActive" /> Active</label>
+            <div class="admin-md-actions">
+              <button type="submit">{{ guidelineDraft.id ? 'Save guideline' : 'Add guideline' }}</button>
+              <button type="button" *ngIf="guidelineDraft.id" (click)="resetGuidelineDraft()">Cancel</button>
+            </div>
+          </form>
+          <p *ngIf="!guidelines().length" class="admin-empty">No guidelines yet.</p>
+          <div class="admin-users" *ngIf="guidelines().length">
+            <table class="admin-users-table">
+              <thead><tr><th>Order</th><th>Title</th><th>Body</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                <tr *ngFor="let guideline of guidelines()">
+                  <td>{{ guideline.sortOrder }}</td>
+                  <td>{{ guideline.title }}</td>
+                  <td>{{ guideline.body }}</td>
+                  <td>{{ guideline.isActive ? 'Active' : 'Inactive' }}</td>
+                  <td>
+                    <button type="button" (click)="editGuideline(guideline)">Edit</button>
+                    <button type="button" (click)="deleteGuideline(guideline)">Delete</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
-  </section>
+  </div>
 </main>

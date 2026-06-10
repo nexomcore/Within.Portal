@@ -1,20 +1,29 @@
-<main class="provider-portal-shell">
-  <header class="survey-topbar">
-    <a class="brand" routerLink="/"><img src="/within-logo.png" alt="" /><span>Within</span></a>
-    <a class="admin-signout" routerLink="/providers/onboard">Apply as provider</a>
-  </header>
+<main class="wp-shell">
+  <div class="wp-main">
+    <header class="wp-topbar">
+      <div class="wp-topbar-lead">
+        <a class="wp-side-brand" routerLink="/" style="padding: 0"><img src="/within-logo.png" alt="" /><span>Within</span></a>
+      </div>
+      <div class="wp-topbar-actions">
+        <a class="admin-signout" routerLink="/providers/onboard">Apply as provider</a>
+      </div>
+    </header>
 
-  <section class="admin-login-wrap provider-login-wrap">
-    <aside class="admin-login-context">
-      <span class="section-eyebrow">Provider portal</span>
-      <h1>Sign in to create and manage Within events.</h1>
-      <p>Approved providers can use the email from their application and the temporary password shared by the Within team.</p>
-    </aside>
-    <form class="admin-login-form" (ngSubmit)="login()">
-      <label>Email<input name="providerEmail" type="email" autocomplete="username" [ngModel]="email()" (ngModelChange)="email.set($event)" /></label>
-      <label>Password<input name="providerPassword" type="password" autocomplete="current-password" [ngModel]="password()" (ngModelChange)="password.set($event)" /></label>
-      <button type="submit" class="primary-action" [disabled]="loading()">{{ loading() ? 'Signing in...' : 'Sign in' }}</button>
-      <p class="admin-login-message">{{ message() }}</p>
-    </form>
-  </section>
+    <section class="wp-auth">
+      <div class="wp-auth-grid">
+        <div class="wp-auth-context">
+          <span class="wp-eyebrow">Provider portal</span>
+          <h1>Sign in to create and manage Within events.</h1>
+          <p>Approved providers can use the email from their application and the temporary password shared by the Within team.</p>
+        </div>
+        <form class="wp-auth-card" (ngSubmit)="login()">
+          <h2>Provider sign in</h2>
+          <label>Email<input name="providerEmail" type="email" autocomplete="username" [ngModel]="email()" (ngModelChange)="email.set($event)" /></label>
+          <label>Password<input name="providerPassword" type="password" autocomplete="current-password" [ngModel]="password()" (ngModelChange)="password.set($event)" /></label>
+          <button type="submit" class="primary-action" [disabled]="loading()">{{ loading() ? 'Signing in…' : 'Sign in' }}</button>
+          <p class="wp-msg">{{ message() }}</p>
+        </form>
+      </div>
+    </section>
+  </div>
 </main>

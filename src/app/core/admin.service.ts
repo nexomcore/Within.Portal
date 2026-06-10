@@ -64,6 +64,35 @@ export class AdminService {
     return this.adminFetch<void>(`/admin/providers/${id}`, 'DELETE');
   }
 
+  async deleteUser(id: string): Promise<void> {
+    const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+    if (!token) {
+      this.authed.set(false);
+      throw new Error('Your admin session has expired. Sign in again.');
+    }
+
+    const response = await fetch(`${API_BASE}/admin/users/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      this.logout();
+      throw new Error('Your admin session has expired. Sign in again.');
+    }
+
+    if (response.status === 204) return;
+
+    let message = 'Could not delete this user.';
+    try {
+      const body = await response.json() as { message?: string };
+      message = body.message ?? message;
+    } catch {
+      message = (await response.text()) || message;
+    }
+    throw new Error(message);
+  }
+
   updateProviderApplicationStatus(id: string, status: ProviderApplicationStatus, reason: string): Promise<ProviderApplication | null> {
     return this.adminPostProviderStatus(id, status, reason);
   }
