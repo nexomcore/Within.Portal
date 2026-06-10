@@ -406,3 +406,100 @@ export interface Option<T extends string = string> {
   value: T;
   label: string;
 }
+
+// ---- Admin-managed master data ----
+export type HabitCategory = 'Mind' | 'Body' | 'Lifestyle' | 'Social' | 'Nature';
+export type CircleType = 'Platform' | 'Provider' | 'EventCohort' | 'PrivateSupport';
+export type CircleVisibility = 'Public' | 'Private' | 'Hidden';
+export type CircleStatus = 'Active' | 'Archived';
+
+export interface CreateTopicPayload {
+  name: string;
+  description: string | null;
+}
+
+export interface UpdateTopicPayload {
+  name: string;
+  description: string | null;
+  isActive: boolean;
+}
+
+export interface AdminHabitTemplate {
+  id: string;
+  name: string;
+  category: HabitCategory;
+  description: string | null;
+  iconKey: string | null;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+export interface CreateHabitTemplatePayload {
+  name: string;
+  category: HabitCategory;
+  description: string | null;
+  iconKey: string | null;
+  sortOrder: number | null;
+}
+
+export interface UpdateHabitTemplatePayload {
+  name: string;
+  category: HabitCategory;
+  description: string | null;
+  iconKey: string | null;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+export interface AdminCircle {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  rules: string | null;
+  type: CircleType;
+  visibility: CircleVisibility;
+  status: CircleStatus;
+  lens: WithinLens;
+  memberCount: number;
+  threadCount: number;
+  eventCount: number;
+}
+
+export interface CreateCirclePayload {
+  name: string;
+  description: string;
+  lens: WithinLens;
+  visibility: CircleVisibility;
+  rules: string | null;
+}
+
+export interface UpdateCirclePayload {
+  name: string;
+  description: string;
+  lens: WithinLens;
+  visibility: CircleVisibility;
+  status: CircleStatus;
+  rules: string | null;
+}
+
+export interface AdminCircleGuideline {
+  id: string;
+  title: string;
+  body: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+export interface GuidelinePayload {
+  title: string;
+  body: string;
+  sortOrder: number;
+}
+
+export interface GuidelineUpdatePayload {
+  title: string;
+  body: string;
+  sortOrder: number;
+  isActive: boolean;
+}

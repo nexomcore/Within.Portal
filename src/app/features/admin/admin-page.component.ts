@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AdminService } from '../../core/admin.service';
 import { formatKey, formatProviderCategory, formatProviderStatus, formatValue, providerApplicationEntries, trustChecklist } from '../../core/formatters';
-import { AdminAnswerEntry, AdminAudienceFilter, AdminStats, AdminSubmission, AdminUserRecord, AdminProviderFilter, CommunityReport, CommunityReportStatus, ProviderApplication, ProviderApplicationStatus } from '../../core/within.models';
+import { AdminAnswerEntry, AdminAudienceFilter, AdminCircle, AdminCircleGuideline, AdminHabitTemplate, AdminStats, AdminSubmission, AdminUserRecord, AdminProviderFilter, CircleStatus, CircleVisibility, CommunityReport, CommunityReportStatus, CommunityTopic, HabitCategory, ProviderApplication, ProviderApplicationStatus, WithinLens } from '../../core/within.models';
 import { providerStatusFilters } from '../../core/within-options';
 
 @Component({
@@ -26,7 +26,7 @@ export class AdminPageComponent {
   protected readonly communityReports = signal<CommunityReport[]>([]);
   protected readonly adminFilter = signal<AdminAudienceFilter>('all');
   protected readonly adminSelectedId = signal<string | null>(null);
-  protected readonly adminTab = signal<'submissions' | 'providers' | 'users' | 'moderation'>('submissions');
+  protected readonly adminTab = signal<'submissions' | 'providers' | 'users' | 'moderation' | 'topics' | 'habits' | 'circles'>('submissions');
   protected readonly selectedCommunityReportId = signal<string | null>(null);
   protected readonly providerApplications = signal<ProviderApplication[]>([]);
   protected readonly providerApplicationFilter = signal<AdminProviderFilter>('all');
@@ -40,6 +40,28 @@ export class AdminPageComponent {
   protected readonly formatProviderStatus = formatProviderStatus;
   protected readonly providerApplicationEntries = providerApplicationEntries;
   protected readonly trustChecklist = trustChecklist;
+
+  // ---- Master data (admin-managed) ----
+  protected readonly habitCategoryOptions: HabitCategory[] = ['Mind', 'Body', 'Lifestyle', 'Social', 'Nature'];
+  protected readonly lensOptions: WithinLens[] = ['Move', 'Feel', 'Seek'];
+  protected readonly circleVisibilityOptions: CircleVisibility[] = ['Public', 'Private'];
+  protected readonly circleStatusOptions: CircleStatus[] = ['Active', 'Archived'];
+
+  protected readonly topics = signal<CommunityTopic[]>([]);
+  protected topicDraft: { id: string | null; name: string; description: string; isActive: boolean } =
+    { id: null, name: '', description: '', isActive: true };
+
+  protected readonly habitTemplates = signal<AdminHabitTemplate[]>([]);
+  protected habitDraft: { id: string | null; name: string; category: HabitCategory; description: string; iconKey: string; sortOrder: number; isActive: boolean } =
+    { id: null, name: '', category: 'Mind', description: '', iconKey: '', sortOrder: 0, isActive: true };
+
+  protected readonly circles = signal<AdminCircle[]>([]);
+  protected circleDraft: { id: string | null; name: string; description: string; lens: WithinLens; visibility: CircleVisibility; status: CircleStatus; rules: string } =
+    { id: null, name: '', description: '', lens: 'Feel', visibility: 'Public', status: 'Active', rules: '' };
+  protected readonly selectedCircleId = signal<string | null>(null);
+  protected readonly guidelines = signal<AdminCircleGuideline[]>([]);
+  protected guidelineDraft: { id: string | null; title: string; body: string; sortOrder: number; isActive: boolean } =
+    { id: null, title: '', body: '', sortOrder: 0, isActive: true };
 
   protected readonly adminFilteredSubmissions = computed(() => {
     const filter = this.adminFilter();
@@ -109,6 +131,14 @@ export class AdminPageComponent {
     this.selectedProviderApplicationId.set(null);
     this.selectedCommunityReportId.set(null);
     this.providerCredential.set(null);
+    this.topics.set([]);
+    this.habitTemplates.set([]);
+    this.circles.set([]);
+    this.guidelines.set([]);
+    this.selectedCircleId.set(null);
+    this.resetTopicDraft();
+    this.resetHabitDraft();
+    this.resetCircleDraft();
     this.adminMessage.set('Signed out.');
   }
 
@@ -135,6 +165,18 @@ export class AdminPageComponent {
     if (!this.adminSelectedId() && submissions.length) this.adminSelectedId.set(submissions[0].id);
     if (!this.selectedProviderApplicationId() && providerApplications.length) this.selectProviderApplication(providerApplications[0].id);
     if (!this.selectedCommunityReportId() && communityReports.length) this.selectedCommunityReportId.set(communityReports[0].id);
+    void this.loadMasterData();
+  }
+
+  protected async loadMasterData(): Promise<void> {
+    const [topics, habitTemplates, circles] = await Promise.all([
+      this.admin.listTopics(),
+      this.admin.listHabitTemplates(),
+      this.admin.listCircles(),
+    ]);
+    if (topics) this.topics.set(topics);
+    if (habitTemplates) this.habitTemplates.set(habitTemplates);
+    if (circles) this.circles.set(circles);
   }
 
   protected setAdminFilter(filter: AdminAudienceFilter): void {
@@ -143,7 +185,7 @@ export class AdminPageComponent {
     if (filtered.length && !filtered.some(item => item.id === this.adminSelectedId())) this.adminSelectedId.set(filtered[0].id);
   }
 
-  protected setAdminTab(tab: 'submissions' | 'providers' | 'users' | 'moderation'): void {
+  protected setAdminTab(tab: 'submissions' | 'providers' | 'users' | 'moderation' | 'topics' | 'habits' | 'circles'): void {
     this.adminTab.set(tab);
   }
 
@@ -299,6 +341,160 @@ export class AdminPageComponent {
 
   protected formatCommunityReportReason(reason: string): string {
     return reason.replace(/([A-Z])/g, ' $1').trim();
+  }
+
+  // ---- Master data: community topics ----
+  protected editTopic(topic: CommunityTopic): void {
+    this.topicDraft = { id: topic.id, name: topic.name, description: topic.description ?? '', isActive: topic.isActive };
+  }
+
+  protected resetTopicDraft(): void {
+    this.topicDraft = { id: null, name: '', description: '', isActive: true };
+  }
+
+  protected async saveTopic(): Promise<void> {
+    const name = this.topicDraft.name.trim();
+    if (!name) { this.adminMessage.set('Topic name is required.'); return; }
+    const description = this.topicDraft.description.trim() || null;
+    const result = this.topicDraft.id
+      ? await this.admin.updateTopic(this.topicDraft.id, { name, description, isActive: this.topicDraft.isActive })
+      : await this.admin.createTopic({ name, description });
+    if (!result) { this.adminMessage.set('Could not save topic.'); return; }
+    const topics = await this.admin.listTopics();
+    if (topics) this.topics.set(topics);
+    this.resetTopicDraft();
+    this.adminMessage.set('Topic saved.');
+  }
+
+  protected async deactivateTopic(topic: CommunityTopic): Promise<void> {
+    if (!confirm(`Deactivate "${topic.name}"? It will be hidden from users but can be reactivated.`)) return;
+    const ok = await this.admin.deactivateTopic(topic.id);
+    if (ok === null) { this.adminMessage.set('Could not deactivate topic.'); return; }
+    const topics = await this.admin.listTopics();
+    if (topics) this.topics.set(topics);
+    this.adminMessage.set('Topic deactivated.');
+  }
+
+  // ---- Master data: habit templates ----
+  protected editHabit(template: AdminHabitTemplate): void {
+    this.habitDraft = {
+      id: template.id, name: template.name, category: template.category,
+      description: template.description ?? '', iconKey: template.iconKey ?? '',
+      sortOrder: template.sortOrder, isActive: template.isActive,
+    };
+  }
+
+  protected resetHabitDraft(): void {
+    this.habitDraft = { id: null, name: '', category: 'Mind', description: '', iconKey: '', sortOrder: 0, isActive: true };
+  }
+
+  protected async saveHabit(): Promise<void> {
+    const name = this.habitDraft.name.trim();
+    if (!name) { this.adminMessage.set('Habit name is required.'); return; }
+    const description = this.habitDraft.description.trim() || null;
+    const iconKey = this.habitDraft.iconKey.trim() || null;
+    const sortOrder = Number(this.habitDraft.sortOrder) || 0;
+    const result = this.habitDraft.id
+      ? await this.admin.updateHabitTemplate(this.habitDraft.id, { name, category: this.habitDraft.category, description, iconKey, sortOrder, isActive: this.habitDraft.isActive })
+      : await this.admin.createHabitTemplate({ name, category: this.habitDraft.category, description, iconKey, sortOrder });
+    if (!result) { this.adminMessage.set('Could not save habit template (name may already exist).'); return; }
+    const habitTemplates = await this.admin.listHabitTemplates();
+    if (habitTemplates) this.habitTemplates.set(habitTemplates);
+    this.resetHabitDraft();
+    this.adminMessage.set('Habit template saved.');
+  }
+
+  protected async deactivateHabit(template: AdminHabitTemplate): Promise<void> {
+    if (!confirm(`Deactivate "${template.name}"? It will be hidden from users but can be reactivated.`)) return;
+    const ok = await this.admin.deactivateHabitTemplate(template.id);
+    if (ok === null) { this.adminMessage.set('Could not deactivate habit template.'); return; }
+    const habitTemplates = await this.admin.listHabitTemplates();
+    if (habitTemplates) this.habitTemplates.set(habitTemplates);
+    this.adminMessage.set('Habit template deactivated.');
+  }
+
+  // ---- Master data: platform circles + guidelines ----
+  protected async selectCircle(circle: AdminCircle): Promise<void> {
+    this.selectedCircleId.set(circle.id);
+    this.circleDraft = {
+      id: circle.id, name: circle.name, description: circle.description, lens: circle.lens,
+      visibility: circle.visibility === 'Hidden' ? 'Public' : circle.visibility, status: circle.status, rules: circle.rules ?? '',
+    };
+    this.resetGuidelineDraft();
+    const guidelines = await this.admin.listGuidelines(circle.id);
+    this.guidelines.set(guidelines ?? []);
+  }
+
+  protected resetCircleDraft(): void {
+    this.circleDraft = { id: null, name: '', description: '', lens: 'Feel', visibility: 'Public', status: 'Active', rules: '' };
+    this.selectedCircleId.set(null);
+    this.guidelines.set([]);
+    this.resetGuidelineDraft();
+  }
+
+  protected async saveCircle(): Promise<void> {
+    const name = this.circleDraft.name.trim();
+    const description = this.circleDraft.description.trim();
+    if (!name || !description) { this.adminMessage.set('Circle name and description are required.'); return; }
+    const rules = this.circleDraft.rules.trim() || null;
+    const result = this.circleDraft.id
+      ? await this.admin.updateCircle(this.circleDraft.id, { name, description, lens: this.circleDraft.lens, visibility: this.circleDraft.visibility, status: this.circleDraft.status, rules })
+      : await this.admin.createCircle({ name, description, lens: this.circleDraft.lens, visibility: this.circleDraft.visibility, rules });
+    if (!result) { this.adminMessage.set('Could not save circle.'); return; }
+    const circles = await this.admin.listCircles();
+    if (circles) this.circles.set(circles);
+    this.adminMessage.set('Circle saved.');
+    if (!this.circleDraft.id) {
+      this.resetCircleDraft();
+    } else {
+      await this.selectCircle(result);
+    }
+  }
+
+  protected async archiveCircle(circle: AdminCircle): Promise<void> {
+    if (!confirm(`Archive "${circle.name}"? It will be hidden but history is kept.`)) return;
+    const ok = await this.admin.archiveCircle(circle.id);
+    if (ok === null) { this.adminMessage.set('Could not archive circle.'); return; }
+    const circles = await this.admin.listCircles();
+    if (circles) this.circles.set(circles);
+    if (this.selectedCircleId() === circle.id) this.resetCircleDraft();
+    this.adminMessage.set('Circle archived.');
+  }
+
+  protected editGuideline(guideline: AdminCircleGuideline): void {
+    this.guidelineDraft = { id: guideline.id, title: guideline.title, body: guideline.body, sortOrder: guideline.sortOrder, isActive: guideline.isActive };
+  }
+
+  protected resetGuidelineDraft(): void {
+    this.guidelineDraft = { id: null, title: '', body: '', sortOrder: 0, isActive: true };
+  }
+
+  protected async saveGuideline(): Promise<void> {
+    const circleId = this.selectedCircleId();
+    if (!circleId) { this.adminMessage.set('Select a circle first.'); return; }
+    const title = this.guidelineDraft.title.trim();
+    const body = this.guidelineDraft.body.trim();
+    if (!title || !body) { this.adminMessage.set('Guideline title and body are required.'); return; }
+    const sortOrder = Number(this.guidelineDraft.sortOrder) || 0;
+    const result = this.guidelineDraft.id
+      ? await this.admin.updateGuideline(circleId, this.guidelineDraft.id, { title, body, sortOrder, isActive: this.guidelineDraft.isActive })
+      : await this.admin.createGuideline(circleId, { title, body, sortOrder });
+    if (!result) { this.adminMessage.set('Could not save guideline.'); return; }
+    const guidelines = await this.admin.listGuidelines(circleId);
+    this.guidelines.set(guidelines ?? []);
+    this.resetGuidelineDraft();
+    this.adminMessage.set('Guideline saved.');
+  }
+
+  protected async deleteGuideline(guideline: AdminCircleGuideline): Promise<void> {
+    const circleId = this.selectedCircleId();
+    if (!circleId) return;
+    if (!confirm(`Delete guideline "${guideline.title}"?`)) return;
+    const ok = await this.admin.deleteGuideline(circleId, guideline.id);
+    if (ok === null) { this.adminMessage.set('Could not delete guideline.'); return; }
+    const guidelines = await this.admin.listGuidelines(circleId);
+    this.guidelines.set(guidelines ?? []);
+    this.adminMessage.set('Guideline deleted.');
   }
 
   private replaceProviderApplication(updated: ProviderApplication): void {

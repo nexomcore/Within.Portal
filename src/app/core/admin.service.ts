@@ -1,6 +1,13 @@
 import { Injectable, signal } from '@angular/core';
 import { ADMIN_REFRESH_TOKEN_KEY, ADMIN_TOKEN_KEY, API_BASE } from './api.config';
-import { AdminStats, AdminSubmission, AdminUserRecord, CommunityReport, CommunityReportStatus, ProviderApplication, ProviderApplicationStatus } from './within.models';
+import {
+  AdminCircle, AdminCircleGuideline, AdminHabitTemplate, AdminStats, AdminSubmission, AdminUserRecord,
+  CommunityReport, CommunityReportStatus, CommunityTopic,
+  CreateCirclePayload, CreateHabitTemplatePayload, CreateTopicPayload,
+  GuidelinePayload, GuidelineUpdatePayload,
+  ProviderApplication, ProviderApplicationStatus,
+  UpdateCirclePayload, UpdateHabitTemplatePayload, UpdateTopicPayload,
+} from './within.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -81,7 +88,74 @@ export class AdminService {
     return this.adminFetch<void>(`/admin/circles/events/${id}/remove`, 'POST');
   }
 
-  private async adminFetch<T>(path: string, method: 'GET' | 'DELETE' | 'POST' = 'GET', body?: Record<string, unknown>): Promise<T | null> {
+  // ---- Master data: community topics ----
+  listTopics(): Promise<CommunityTopic[] | null> {
+    return this.adminFetch<CommunityTopic[]>('/admin/community/topics');
+  }
+
+  createTopic(payload: CreateTopicPayload): Promise<CommunityTopic | null> {
+    return this.adminFetch<CommunityTopic>('/admin/community/topics', 'POST', payload);
+  }
+
+  updateTopic(id: string, payload: UpdateTopicPayload): Promise<CommunityTopic | null> {
+    return this.adminFetch<CommunityTopic>(`/admin/community/topics/${id}`, 'PUT', payload);
+  }
+
+  deactivateTopic(id: string): Promise<void | null> {
+    return this.adminFetch<void>(`/admin/community/topics/${id}`, 'DELETE');
+  }
+
+  // ---- Master data: habit templates ----
+  listHabitTemplates(): Promise<AdminHabitTemplate[] | null> {
+    return this.adminFetch<AdminHabitTemplate[]>('/admin/habits/templates');
+  }
+
+  createHabitTemplate(payload: CreateHabitTemplatePayload): Promise<AdminHabitTemplate | null> {
+    return this.adminFetch<AdminHabitTemplate>('/admin/habits/templates', 'POST', payload);
+  }
+
+  updateHabitTemplate(id: string, payload: UpdateHabitTemplatePayload): Promise<AdminHabitTemplate | null> {
+    return this.adminFetch<AdminHabitTemplate>(`/admin/habits/templates/${id}`, 'PUT', payload);
+  }
+
+  deactivateHabitTemplate(id: string): Promise<void | null> {
+    return this.adminFetch<void>(`/admin/habits/templates/${id}`, 'DELETE');
+  }
+
+  // ---- Master data: platform circles + guidelines ----
+  listCircles(): Promise<AdminCircle[] | null> {
+    return this.adminFetch<AdminCircle[]>('/admin/circles');
+  }
+
+  createCircle(payload: CreateCirclePayload): Promise<AdminCircle | null> {
+    return this.adminFetch<AdminCircle>('/admin/circles', 'POST', payload);
+  }
+
+  updateCircle(id: string, payload: UpdateCirclePayload): Promise<AdminCircle | null> {
+    return this.adminFetch<AdminCircle>(`/admin/circles/${id}`, 'PUT', payload);
+  }
+
+  archiveCircle(id: string): Promise<void | null> {
+    return this.adminFetch<void>(`/admin/circles/${id}`, 'DELETE');
+  }
+
+  listGuidelines(circleId: string): Promise<AdminCircleGuideline[] | null> {
+    return this.adminFetch<AdminCircleGuideline[]>(`/admin/circles/${circleId}/guidelines`);
+  }
+
+  createGuideline(circleId: string, payload: GuidelinePayload): Promise<AdminCircleGuideline | null> {
+    return this.adminFetch<AdminCircleGuideline>(`/admin/circles/${circleId}/guidelines`, 'POST', payload);
+  }
+
+  updateGuideline(circleId: string, guidelineId: string, payload: GuidelineUpdatePayload): Promise<AdminCircleGuideline | null> {
+    return this.adminFetch<AdminCircleGuideline>(`/admin/circles/${circleId}/guidelines/${guidelineId}`, 'PUT', payload);
+  }
+
+  deleteGuideline(circleId: string, guidelineId: string): Promise<void | null> {
+    return this.adminFetch<void>(`/admin/circles/${circleId}/guidelines/${guidelineId}`, 'DELETE');
+  }
+
+  private async adminFetch<T>(path: string, method: 'GET' | 'DELETE' | 'POST' | 'PUT' = 'GET', body?: unknown): Promise<T | null> {
     const token = localStorage.getItem(ADMIN_TOKEN_KEY);
     if (!token) {
       this.authed.set(false);

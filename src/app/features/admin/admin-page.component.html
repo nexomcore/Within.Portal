@@ -6,6 +6,9 @@
       <button type="button" class="admin-tab" [class.active]="adminTab() === 'providers'" (click)="setAdminTab('providers')" *ngIf="adminAuthed()">Providers</button>
       <button type="button" class="admin-tab" [class.active]="adminTab() === 'moderation'" (click)="setAdminTab('moderation')" *ngIf="adminAuthed()">Moderation</button>
       <button type="button" class="admin-tab" [class.active]="adminTab() === 'users'" (click)="setAdminTab('users')" *ngIf="adminAuthed()">Users</button>
+      <button type="button" class="admin-tab" [class.active]="adminTab() === 'topics'" (click)="setAdminTab('topics')" *ngIf="adminAuthed()">Topics</button>
+      <button type="button" class="admin-tab" [class.active]="adminTab() === 'habits'" (click)="setAdminTab('habits')" *ngIf="adminAuthed()">Habits</button>
+      <button type="button" class="admin-tab" [class.active]="adminTab() === 'circles'" (click)="setAdminTab('circles')" *ngIf="adminAuthed()">Circles</button>
       <button type="button" class="admin-signout" *ngIf="adminAuthed()" (click)="adminLogout()">Sign out</button>
     </div>
   </header>
@@ -181,6 +184,151 @@
         <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th></tr></thead>
         <tbody><tr *ngFor="let user of adminUsers()"><td>{{ user.displayName }}</td><td>{{ user.email }}</td><td><span class="admin-role-pill" [attr.data-role]="user.role">{{ user.role }}</span></td><td>{{ user.createdUtc | date:'medium' }}</td></tr></tbody>
       </table>
+    </div>
+
+    <!-- Master data: community topics -->
+    <div class="admin-masterdata" *ngIf="adminTab() === 'topics'">
+      <form class="admin-md-form" (ngSubmit)="saveTopic()">
+        <h3>{{ topicDraft.id ? 'Edit topic' : 'New topic' }}</h3>
+        <label>Name<input type="text" name="topicName" [(ngModel)]="topicDraft.name" maxlength="80" required /></label>
+        <label>Description<input type="text" name="topicDescription" [(ngModel)]="topicDraft.description" maxlength="240" /></label>
+        <label class="admin-md-check" *ngIf="topicDraft.id"><input type="checkbox" name="topicActive" [(ngModel)]="topicDraft.isActive" /> Active</label>
+        <div class="admin-md-actions">
+          <button type="submit">{{ topicDraft.id ? 'Save changes' : 'Add topic' }}</button>
+          <button type="button" *ngIf="topicDraft.id" (click)="resetTopicDraft()">Cancel</button>
+        </div>
+      </form>
+      <p *ngIf="!topics().length" class="admin-empty">No topics yet. Add one above.</p>
+      <table *ngIf="topics().length" class="admin-users-table">
+        <thead><tr><th>Name</th><th>Slug</th><th>Description</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let topic of topics()">
+            <td>{{ topic.name }}</td>
+            <td>{{ topic.slug }}</td>
+            <td>{{ topic.description || '—' }}</td>
+            <td>{{ topic.isActive ? 'Active' : 'Inactive' }}</td>
+            <td>
+              <button type="button" (click)="editTopic(topic)">Edit</button>
+              <button type="button" *ngIf="topic.isActive" (click)="deactivateTopic(topic)">Deactivate</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Master data: habit templates -->
+    <div class="admin-masterdata" *ngIf="adminTab() === 'habits'">
+      <form class="admin-md-form" (ngSubmit)="saveHabit()">
+        <h3>{{ habitDraft.id ? 'Edit habit template' : 'New habit template' }}</h3>
+        <label>Name<input type="text" name="habitName" [(ngModel)]="habitDraft.name" maxlength="60" required /></label>
+        <label>Category
+          <select name="habitCategory" [(ngModel)]="habitDraft.category">
+            <option *ngFor="let category of habitCategoryOptions" [value]="category">{{ category }}</option>
+          </select>
+        </label>
+        <label>Description<input type="text" name="habitDescription" [(ngModel)]="habitDraft.description" maxlength="240" /></label>
+        <label>Icon key<input type="text" name="habitIcon" [(ngModel)]="habitDraft.iconKey" maxlength="48" /></label>
+        <label>Sort order<input type="number" name="habitSort" [(ngModel)]="habitDraft.sortOrder" /></label>
+        <label class="admin-md-check" *ngIf="habitDraft.id"><input type="checkbox" name="habitActive" [(ngModel)]="habitDraft.isActive" /> Active</label>
+        <div class="admin-md-actions">
+          <button type="submit">{{ habitDraft.id ? 'Save changes' : 'Add template' }}</button>
+          <button type="button" *ngIf="habitDraft.id" (click)="resetHabitDraft()">Cancel</button>
+        </div>
+      </form>
+      <p *ngIf="!habitTemplates().length" class="admin-empty">No habit templates yet. Add one above.</p>
+      <table *ngIf="habitTemplates().length" class="admin-users-table">
+        <thead><tr><th>Name</th><th>Category</th><th>Description</th><th>Order</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let template of habitTemplates()">
+            <td>{{ template.name }}</td>
+            <td>{{ template.category }}</td>
+            <td>{{ template.description || '—' }}</td>
+            <td>{{ template.sortOrder }}</td>
+            <td>{{ template.isActive ? 'Active' : 'Inactive' }}</td>
+            <td>
+              <button type="button" (click)="editHabit(template)">Edit</button>
+              <button type="button" *ngIf="template.isActive" (click)="deactivateHabit(template)">Deactivate</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Master data: platform circles + guidelines -->
+    <div class="admin-masterdata" *ngIf="adminTab() === 'circles'">
+      <form class="admin-md-form" (ngSubmit)="saveCircle()">
+        <h3>{{ circleDraft.id ? 'Edit circle' : 'New platform circle' }}</h3>
+        <label>Name<input type="text" name="circleName" [(ngModel)]="circleDraft.name" maxlength="120" required /></label>
+        <label>Description<textarea name="circleDescription" [(ngModel)]="circleDraft.description" maxlength="600" required></textarea></label>
+        <label>Lens
+          <select name="circleLens" [(ngModel)]="circleDraft.lens">
+            <option *ngFor="let lens of lensOptions" [value]="lens">{{ lens }}</option>
+          </select>
+        </label>
+        <label>Visibility
+          <select name="circleVisibility" [(ngModel)]="circleDraft.visibility">
+            <option *ngFor="let visibility of circleVisibilityOptions" [value]="visibility">{{ visibility }}</option>
+          </select>
+        </label>
+        <label *ngIf="circleDraft.id">Status
+          <select name="circleStatus" [(ngModel)]="circleDraft.status">
+            <option *ngFor="let status of circleStatusOptions" [value]="status">{{ status }}</option>
+          </select>
+        </label>
+        <label>Rules<textarea name="circleRules" [(ngModel)]="circleDraft.rules" maxlength="2000"></textarea></label>
+        <div class="admin-md-actions">
+          <button type="submit">{{ circleDraft.id ? 'Save changes' : 'Add circle' }}</button>
+          <button type="button" *ngIf="circleDraft.id" (click)="resetCircleDraft()">New circle</button>
+        </div>
+      </form>
+
+      <p *ngIf="!circles().length" class="admin-empty">No platform circles yet. Add one above.</p>
+      <table *ngIf="circles().length" class="admin-users-table">
+        <thead><tr><th>Name</th><th>Lens</th><th>Visibility</th><th>Status</th><th>Members</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let circle of circles()" [class.active]="selectedCircleId() === circle.id">
+            <td>{{ circle.name }}</td>
+            <td>{{ circle.lens }}</td>
+            <td>{{ circle.visibility }}</td>
+            <td>{{ circle.status }}</td>
+            <td>{{ circle.memberCount }}</td>
+            <td>
+              <button type="button" (click)="selectCircle(circle)">Edit / guidelines</button>
+              <button type="button" *ngIf="circle.status === 'Active'" (click)="archiveCircle(circle)">Archive</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="admin-md-guidelines" *ngIf="selectedCircleId()">
+        <h3>Guidelines for {{ circleDraft.name }}</h3>
+        <form class="admin-md-form" (ngSubmit)="saveGuideline()">
+          <label>Title<input type="text" name="guidelineTitle" [(ngModel)]="guidelineDraft.title" maxlength="120" required /></label>
+          <label>Body<textarea name="guidelineBody" [(ngModel)]="guidelineDraft.body" maxlength="1000" required></textarea></label>
+          <label>Sort order<input type="number" name="guidelineSort" [(ngModel)]="guidelineDraft.sortOrder" /></label>
+          <label class="admin-md-check" *ngIf="guidelineDraft.id"><input type="checkbox" name="guidelineActive" [(ngModel)]="guidelineDraft.isActive" /> Active</label>
+          <div class="admin-md-actions">
+            <button type="submit">{{ guidelineDraft.id ? 'Save guideline' : 'Add guideline' }}</button>
+            <button type="button" *ngIf="guidelineDraft.id" (click)="resetGuidelineDraft()">Cancel</button>
+          </div>
+        </form>
+        <p *ngIf="!guidelines().length" class="admin-empty">No guidelines yet.</p>
+        <table *ngIf="guidelines().length" class="admin-users-table">
+          <thead><tr><th>Order</th><th>Title</th><th>Body</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let guideline of guidelines()">
+              <td>{{ guideline.sortOrder }}</td>
+              <td>{{ guideline.title }}</td>
+              <td>{{ guideline.body }}</td>
+              <td>{{ guideline.isActive ? 'Active' : 'Inactive' }}</td>
+              <td>
+                <button type="button" (click)="editGuideline(guideline)">Edit</button>
+                <button type="button" (click)="deleteGuideline(guideline)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 </main>
