@@ -15,7 +15,7 @@ export class ProviderLoginPageComponent {
 
   protected readonly email = signal('');
   protected readonly password = signal('');
-  protected readonly message = signal('Sign in with the provider credentials issued after approval.');
+  protected readonly message = signal('');
   protected readonly loading = signal(false);
 
   protected async login(): Promise<void> {

@@ -4795,3 +4795,408 @@ app-root {
     grid-template-columns: 1fr;
   }
 }
+
+// ==================================================================
+// Within Portal v2.1 — blue/white refresh
+// Stronger blue+white theme, 3D gradient tiles, zebra rows,
+// enhanced 3D buttons. Additive overrides scoped to .wp-shell.
+// ==================================================================
+:root,
+app-root {
+  // Brighter, more saturated blue for the portal accent
+  --wp-accent: #2f7fe0;
+  --wp-accent-ink: #1c5fb8;
+  --wp-accent-soft: #e8f1fd;
+
+  // Reusable gradients + layered "tile" shadows
+  --wp-grad-blue: linear-gradient(135deg, #56a0ee 0%, #2f7fe0 52%, #2667c2 100%);
+  --wp-grad-blue-hover: linear-gradient(135deg, #62a9f1 0%, #3a89e6 52%, #2c6fcc 100%);
+  --wp-grad-surface: linear-gradient(180deg, #ffffff 0%, #f4f9ff 100%);
+  --wp-grad-surface-soft: linear-gradient(180deg, #f3f8ff 0%, #e9f2fd 100%);
+  --wp-zebra: #f1f7fe;
+  --wp-tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --wp-e-tile: var(--wp-tile-edge), 0 2px 6px -2px rgba(16, 35, 63, 0.12), 0 14px 30px -16px rgba(16, 35, 63, 0.3);
+  --wp-e-tile-hover: var(--wp-tile-edge), 0 6px 14px -4px rgba(16, 35, 63, 0.16), 0 26px 50px -18px rgba(31, 95, 184, 0.4);
+  --wp-e-btn: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 3px 6px -2px rgba(16, 35, 63, 0.2), 0 12px 22px -10px rgba(38, 103, 194, 0.6);
+  --wp-e-btn-hover: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 12px -3px rgba(16, 35, 63, 0.24), 0 20px 34px -10px rgba(38, 103, 194, 0.62);
+  --wp-e-btn-active: inset 0 2px 4px rgba(16, 35, 63, 0.28), 0 4px 10px -6px rgba(38, 103, 194, 0.5);
+}
+
+// ---- Shell: cooler blue-white wash --------------------------------
+.wp-shell {
+  background:
+    radial-gradient(1000px 560px at 100% -180px, rgba(47, 127, 224, 0.14), transparent 64%),
+    radial-gradient(860px 540px at -10% 280px, rgba(47, 127, 224, 0.08), transparent 70%),
+    linear-gradient(180deg, #ffffff 0%, #eef5fe 60%, #ffffff 100%);
+}
+
+.wp-side {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+// ---- 3D gradient cards & stat tiles -------------------------------
+.wp-card {
+  background: var(--wp-grad-surface);
+  box-shadow: var(--wp-e-tile);
+}
+
+.wp-stat,
+.wp-quick-btn {
+  background: var(--wp-grad-surface);
+  box-shadow: var(--wp-e-tile);
+}
+
+.wp-stat:hover,
+.wp-quick-btn:hover {
+  box-shadow: var(--wp-e-tile-hover);
+  transform: translateY(-3px);
+}
+
+// Stat / quick-action icon chips: glossy blue by default
+.wp-stat-ico {
+  background: var(--wp-grad-blue);
+  box-shadow: var(--wp-tile-edge), 0 8px 16px -8px rgba(38, 103, 194, 0.65);
+  color: #fff;
+}
+
+.wp-stat strong {
+  color: var(--wp-accent-ink);
+}
+
+// Keep the coloured-variant stat icons readable (override gradient)
+.wp-stat.green .wp-stat-ico {
+  background: linear-gradient(135deg, #4fb89c, #2f9a80);
+  color: #fff;
+}
+
+.wp-stat.coral .wp-stat-ico {
+  background: linear-gradient(135deg, #f0876f, #d8593f);
+  color: #fff;
+}
+
+.wp-stat.amber .wp-stat-ico {
+  background: linear-gradient(135deg, #f3c265, #d99a26);
+  color: #fff;
+}
+
+.wp-stat.green strong { color: #20826a; }
+.wp-stat.coral strong { color: #c0432d; }
+.wp-stat.amber strong { color: #9a6a13; }
+
+// Provider response stat tiles get the same 3D gradient treatment
+.wp-shell .provider-response-stats article {
+  background: var(--wp-grad-surface);
+  border: 1px solid var(--wp-line);
+  box-shadow: var(--wp-e-tile);
+}
+
+.wp-shell .provider-response-stats strong {
+  color: var(--wp-accent-ink);
+}
+
+// ---- Zebra striping: data tables ----------------------------------
+.wp-shell .admin-users-table tbody tr:nth-child(even) {
+  background: var(--wp-zebra);
+}
+
+.wp-shell .admin-users-table tbody tr:hover {
+  background: var(--wp-accent-soft);
+}
+
+.wp-shell .admin-users-table tbody tr.active {
+  background: var(--wp-accent-soft);
+  box-shadow: inset 3px 0 0 var(--wp-accent);
+}
+
+.wp-shell .admin-users-table tbody td {
+  border-bottom-color: var(--wp-line);
+}
+
+// ---- Zebra striping: card-style row lists -------------------------
+.wp-shell .wp-list .wp-row:nth-child(even) {
+  background: var(--wp-zebra);
+}
+
+.wp-shell .wp-list .wp-row:hover,
+.wp-shell .wp-list .wp-row.active {
+  background: var(--wp-surface);
+  border-color: var(--wp-accent);
+  box-shadow: var(--wp-e2);
+  transform: translateY(-1px);
+}
+
+.wp-shell .admin-list .admin-list-item:nth-child(even) {
+  background: var(--wp-zebra);
+}
+
+.wp-shell .admin-list .admin-list-item:hover {
+  background: var(--wp-accent-soft);
+}
+
+.wp-shell .admin-list .admin-list-item.active {
+  background: var(--wp-surface);
+  border-color: var(--wp-accent);
+  box-shadow: var(--wp-e2);
+}
+
+// Attendee / person row lists alternate too
+.wp-shell .provider-response-group .provider-person-row:nth-child(even) {
+  background: var(--wp-zebra);
+}
+
+// ---- Enhanced 3D buttons ------------------------------------------
+// Filled / primary — glossy blue with raised shadow + press feedback
+.wp-shell .primary-action,
+.wp-btn.filled {
+  background: var(--wp-grad-blue);
+  box-shadow: var(--wp-e-btn);
+}
+
+.wp-shell .primary-action:hover,
+.wp-btn.filled:hover {
+  background: var(--wp-grad-blue-hover);
+  box-shadow: var(--wp-e-btn-hover);
+  transform: translateY(-2px);
+}
+
+.wp-shell .primary-action:active,
+.wp-btn.filled:active {
+  box-shadow: var(--wp-e-btn-active);
+  transform: translateY(0);
+}
+
+// Tonal (refresh / view-all) — light blue, subtle lift
+.wp-shell .admin-refresh,
+.wp-btn.tonal {
+  background: linear-gradient(180deg, #eaf2fd, #d9e9fb);
+  box-shadow: var(--wp-tile-edge), 0 6px 14px -8px rgba(38, 103, 194, 0.4);
+}
+
+.wp-shell .admin-refresh:hover,
+.wp-btn.tonal:hover {
+  background: linear-gradient(180deg, #e0ecfc, #cbe0f9);
+  box-shadow: var(--wp-tile-edge), 0 12px 22px -8px rgba(38, 103, 194, 0.46);
+  transform: translateY(-2px);
+}
+
+.wp-shell .admin-refresh:active,
+.wp-btn.tonal:active {
+  box-shadow: inset 0 2px 4px rgba(38, 103, 194, 0.22);
+  transform: translateY(0);
+}
+
+// Text / outline (sign out / clear) — white, raised
+.wp-shell .admin-signout,
+.wp-btn.text {
+  background: var(--wp-grad-surface);
+  box-shadow: var(--wp-tile-edge), 0 4px 12px -6px rgba(16, 35, 63, 0.2);
+}
+
+.wp-shell .admin-signout:hover,
+.wp-btn.text:hover {
+  border-color: var(--wp-accent);
+  box-shadow: var(--wp-tile-edge), 0 10px 20px -8px rgba(16, 35, 63, 0.24);
+  transform: translateY(-2px);
+}
+
+.wp-shell .admin-signout:active,
+.wp-btn.text:active {
+  box-shadow: inset 0 2px 4px rgba(16, 35, 63, 0.14);
+  transform: translateY(0);
+}
+
+// Danger — coral, raised
+.wp-shell .admin-danger,
+.wp-btn.danger {
+  background: linear-gradient(180deg, #ffe6df, #ffd3c8);
+  box-shadow: var(--wp-tile-edge), 0 6px 14px -8px rgba(192, 67, 45, 0.4);
+}
+
+.wp-shell .admin-danger:hover,
+.wp-btn.danger:hover {
+  background: linear-gradient(180deg, #ffdacf, #ffc4b5);
+  box-shadow: var(--wp-tile-edge), 0 12px 22px -8px rgba(192, 67, 45, 0.46);
+  transform: translateY(-2px);
+}
+
+.wp-shell .admin-danger:active,
+.wp-btn.danger:active {
+  box-shadow: inset 0 2px 4px rgba(192, 67, 45, 0.22);
+  transform: translateY(0);
+}
+
+// Small table / master-data buttons — subtle 3D + lift
+.wp-shell .admin-users-table button,
+.wp-shell .admin-md-actions button {
+  background: var(--wp-grad-surface);
+  box-shadow: var(--wp-tile-edge), 0 3px 8px -5px rgba(16, 35, 63, 0.22);
+  transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.wp-shell .admin-users-table button:hover,
+.wp-shell .admin-md-actions button:hover {
+  box-shadow: var(--wp-tile-edge), 0 8px 16px -6px rgba(38, 103, 194, 0.34);
+  transform: translateY(-1px);
+}
+
+.wp-shell .admin-md-actions button[type="submit"] {
+  background: var(--wp-grad-blue);
+  box-shadow: var(--wp-e-btn);
+  color: #fff;
+}
+
+.wp-shell .admin-md-actions button[type="submit"]:hover {
+  background: var(--wp-grad-blue-hover);
+  box-shadow: var(--wp-e-btn-hover);
+}
+
+// Segmented filter group — glossy active pill
+.wp-shell .admin-filter-group button.active {
+  background: var(--wp-grad-blue);
+  box-shadow: var(--wp-tile-edge), 0 6px 14px -8px rgba(38, 103, 194, 0.55);
+  color: #fff;
+}
+
+// Topbar "New event" / primary action already covered by primary-action.
+// Quick-action icon chip keeps the blue gradient + a touch more depth.
+.wp-quick-btn .wp-stat-ico {
+  background: var(--wp-grad-blue);
+  box-shadow: var(--wp-tile-edge), 0 8px 16px -8px rgba(38, 103, 194, 0.6);
+}
+
+// Sidebar active item: a little more presence in the new blue
+.wp-nav-item.active {
+  box-shadow: var(--wp-tile-edge), 0 6px 14px -10px rgba(38, 103, 194, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wp-shell .primary-action,
+  .wp-shell .admin-refresh,
+  .wp-shell .admin-signout,
+  .wp-shell .admin-danger,
+  .wp-btn,
+  .wp-stat,
+  .wp-quick-btn,
+  .wp-row {
+    transform: none !important;
+  }
+}
+
+// ==================================================================
+// Within Portal v2.2 — "Elite" palette
+// Dark navy sidebar + deep blue + green accent + cool-grey canvas.
+// Pure colour retheme — tile/card/button shapes and depth unchanged.
+// ==================================================================
+:root,
+app-root {
+  // Deep classic blue (hero band / charts / buttons)
+  --wp-accent: #3066c4;
+  --wp-accent-ink: #244e9c;
+  --wp-accent-soft: #e7eefb;
+
+  // Green action accent
+  --wp-green: #33a06b;
+  --portal-green-soft: #e3f4ec;
+
+  // Navy sidebar palette
+  --wp-navy: #1f2940;
+  --wp-navy-raised: rgba(255, 255, 255, 0.06);
+  --wp-navy-line: rgba(255, 255, 255, 0.1);
+  --wp-on-navy: #ced6e4;
+  --wp-on-navy-muted: rgba(255, 255, 255, 0.5);
+
+  // Cool light-grey canvas + cleaner lines
+  --wp-bg: #edf0f6;
+  --wp-line: #e3e7f0;
+  --wp-surface-soft: #f3f5fa;
+  --wp-zebra: #f3f6fb;
+
+  // Recolour the shared gradients to the deep blue / Elite green
+  --wp-grad-blue: linear-gradient(135deg, #4178cf 0%, #3066c4 55%, #274f9c 100%);
+  --wp-grad-blue-hover: linear-gradient(135deg, #4a82d6 0%, #3a70cd 55%, #2c579f 100%);
+  --wp-grad-surface: linear-gradient(180deg, #ffffff 0%, #f7f9fd 100%);
+}
+
+// ---- Flat cool-grey canvas (drop the blue wash) -------------------
+.wp-shell {
+  background: var(--wp-bg);
+}
+
+.wp-topbar {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+// ---- Dark navy sidebar --------------------------------------------
+.wp-side {
+  background: var(--wp-navy);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-right: 1px solid var(--wp-navy-line);
+}
+
+.wp-side-brand {
+  color: #ffffff;
+}
+
+.wp-side-user {
+  background: var(--wp-navy-raised);
+  border-color: var(--wp-navy-line);
+}
+
+.wp-side-user strong {
+  color: #ffffff;
+}
+
+.wp-side-user span {
+  color: var(--wp-on-navy-muted);
+}
+
+.wp-nav-label {
+  color: var(--wp-on-navy-muted);
+}
+
+.wp-nav-item {
+  color: var(--wp-on-navy);
+}
+
+.wp-nav-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.wp-nav-item.active {
+  background: rgba(48, 102, 196, 0.32);
+  box-shadow: none;
+  color: #ffffff;
+}
+
+.wp-nav-item.active .material-symbols-rounded {
+  color: #ffffff;
+}
+
+.wp-nav-item.active::before {
+  background: var(--wp-accent);
+}
+
+.wp-nav-foot {
+  border-top-color: var(--wp-navy-line);
+}
+
+// ---- Elite-green positive stat tile -------------------------------
+.wp-stat.green .wp-stat-ico {
+  background: linear-gradient(135deg, #43b07e, #2f9462);
+}
+
+.wp-stat.green strong {
+  color: #228257;
+}
+
+// ---- Auth shells have no sidebar: use the full viewport width -----
+// The login pages render only .wp-main (no .wp-side), so the default
+// two-column shell grid would trap content in the 268px sidebar
+// column on desktop. Collapse to a single full-width column so the
+// top bar stretches edge-to-edge and the auth grid (its own 1000px
+// max-width) centres on screen.
+.wp-shell.wp-shell-auth {
+  display: block;
+}
