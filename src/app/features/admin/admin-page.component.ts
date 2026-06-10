@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AdminService } from '../../core/admin.service';
 import { formatKey, formatProviderCategory, formatProviderStatus, formatValue, providerApplicationEntries, trustChecklist } from '../../core/formatters';
-import { AdminAnswerEntry, AdminAudienceFilter, AdminCircle, AdminCircleGuideline, AdminHabitTemplate, AdminStats, AdminSubmission, AdminUserRecord, AdminProviderFilter, CircleStatus, CircleVisibility, CommunityReport, CommunityReportStatus, CommunityTopic, HabitCategory, ProviderApplication, ProviderApplicationStatus, WithinLens } from '../../core/within.models';
+import { AdminAnswerEntry, AdminAudienceFilter, AdminCircle, AdminCircleGuideline, AdminHabitTemplate, AdminStats, AdminSubmission, AdminUserRecord, AdminProviderFilter, CircleStatus, CircleVisibility, CommunityReport, CommunityReportStatus, HabitCategory, ProviderApplication, ProviderApplicationStatus, WithinLens } from '../../core/within.models';
 import { providerStatusFilters } from '../../core/within-options';
 
 @Component({
@@ -26,7 +26,7 @@ export class AdminPageComponent {
   protected readonly communityReports = signal<CommunityReport[]>([]);
   protected readonly adminFilter = signal<AdminAudienceFilter>('all');
   protected readonly adminSelectedId = signal<string | null>(null);
-  protected readonly adminTab = signal<'submissions' | 'providers' | 'users' | 'moderation' | 'topics' | 'habits' | 'circles'>('submissions');
+  protected readonly adminTab = signal<'submissions' | 'providers' | 'users' | 'moderation' | 'habits' | 'circles'>('submissions');
   protected readonly selectedCommunityReportId = signal<string | null>(null);
   protected readonly providerApplications = signal<ProviderApplication[]>([]);
   protected readonly providerApplicationFilter = signal<AdminProviderFilter>('all');
@@ -46,10 +46,6 @@ export class AdminPageComponent {
   protected readonly lensOptions: WithinLens[] = ['Move', 'Feel', 'Seek'];
   protected readonly circleVisibilityOptions: CircleVisibility[] = ['Public', 'Private'];
   protected readonly circleStatusOptions: CircleStatus[] = ['Active', 'Archived'];
-
-  protected readonly topics = signal<CommunityTopic[]>([]);
-  protected topicDraft: { id: string | null; name: string; description: string; isActive: boolean } =
-    { id: null, name: '', description: '', isActive: true };
 
   protected readonly habitTemplates = signal<AdminHabitTemplate[]>([]);
   protected habitDraft: { id: string | null; name: string; category: HabitCategory; description: string; iconKey: string; sortOrder: number; isActive: boolean } =
@@ -131,12 +127,10 @@ export class AdminPageComponent {
     this.selectedProviderApplicationId.set(null);
     this.selectedCommunityReportId.set(null);
     this.providerCredential.set(null);
-    this.topics.set([]);
     this.habitTemplates.set([]);
     this.circles.set([]);
     this.guidelines.set([]);
     this.selectedCircleId.set(null);
-    this.resetTopicDraft();
     this.resetHabitDraft();
     this.resetCircleDraft();
     this.adminMessage.set('Signed out.');
@@ -169,12 +163,10 @@ export class AdminPageComponent {
   }
 
   protected async loadMasterData(): Promise<void> {
-    const [topics, habitTemplates, circles] = await Promise.all([
-      this.admin.listTopics(),
+    const [habitTemplates, circles] = await Promise.all([
       this.admin.listHabitTemplates(),
       this.admin.listCircles(),
     ]);
-    if (topics) this.topics.set(topics);
     if (habitTemplates) this.habitTemplates.set(habitTemplates);
     if (circles) this.circles.set(circles);
   }
@@ -185,7 +177,7 @@ export class AdminPageComponent {
     if (filtered.length && !filtered.some(item => item.id === this.adminSelectedId())) this.adminSelectedId.set(filtered[0].id);
   }
 
-  protected setAdminTab(tab: 'submissions' | 'providers' | 'users' | 'moderation' | 'topics' | 'habits' | 'circles'): void {
+  protected setAdminTab(tab: 'submissions' | 'providers' | 'users' | 'moderation' | 'habits' | 'circles'): void {
     this.adminTab.set(tab);
   }
 
@@ -341,38 +333,6 @@ export class AdminPageComponent {
 
   protected formatCommunityReportReason(reason: string): string {
     return reason.replace(/([A-Z])/g, ' $1').trim();
-  }
-
-  // ---- Master data: community topics ----
-  protected editTopic(topic: CommunityTopic): void {
-    this.topicDraft = { id: topic.id, name: topic.name, description: topic.description ?? '', isActive: topic.isActive };
-  }
-
-  protected resetTopicDraft(): void {
-    this.topicDraft = { id: null, name: '', description: '', isActive: true };
-  }
-
-  protected async saveTopic(): Promise<void> {
-    const name = this.topicDraft.name.trim();
-    if (!name) { this.adminMessage.set('Topic name is required.'); return; }
-    const description = this.topicDraft.description.trim() || null;
-    const result = this.topicDraft.id
-      ? await this.admin.updateTopic(this.topicDraft.id, { name, description, isActive: this.topicDraft.isActive })
-      : await this.admin.createTopic({ name, description });
-    if (!result) { this.adminMessage.set('Could not save topic.'); return; }
-    const topics = await this.admin.listTopics();
-    if (topics) this.topics.set(topics);
-    this.resetTopicDraft();
-    this.adminMessage.set('Topic saved.');
-  }
-
-  protected async deactivateTopic(topic: CommunityTopic): Promise<void> {
-    if (!confirm(`Deactivate "${topic.name}"? It will be hidden from users but can be reactivated.`)) return;
-    const ok = await this.admin.deactivateTopic(topic.id);
-    if (ok === null) { this.adminMessage.set('Could not deactivate topic.'); return; }
-    const topics = await this.admin.listTopics();
-    if (topics) this.topics.set(topics);
-    this.adminMessage.set('Topic deactivated.');
   }
 
   // ---- Master data: habit templates ----

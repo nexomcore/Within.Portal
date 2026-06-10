@@ -2,11 +2,11 @@ import { Injectable, signal } from '@angular/core';
 import { ADMIN_REFRESH_TOKEN_KEY, ADMIN_TOKEN_KEY, API_BASE } from './api.config';
 import {
   AdminCircle, AdminCircleGuideline, AdminHabitTemplate, AdminStats, AdminSubmission, AdminUserRecord,
-  CommunityReport, CommunityReportStatus, CommunityTopic,
-  CreateCirclePayload, CreateHabitTemplatePayload, CreateTopicPayload,
+  CommunityReport, CommunityReportStatus,
+  CreateCirclePayload, CreateHabitTemplatePayload,
   GuidelinePayload, GuidelineUpdatePayload,
   ProviderApplication, ProviderApplicationStatus,
-  UpdateCirclePayload, UpdateHabitTemplatePayload, UpdateTopicPayload,
+  UpdateCirclePayload, UpdateHabitTemplatePayload,
 } from './within.models';
 
 @Injectable({ providedIn: 'root' })
@@ -86,23 +86,6 @@ export class AdminService {
 
   removeCircleEventShare(id: string): Promise<void | null> {
     return this.adminFetch<void>(`/admin/circles/events/${id}/remove`, 'POST');
-  }
-
-  // ---- Master data: community topics ----
-  listTopics(): Promise<CommunityTopic[] | null> {
-    return this.adminFetch<CommunityTopic[]>('/admin/community/topics');
-  }
-
-  createTopic(payload: CreateTopicPayload): Promise<CommunityTopic | null> {
-    return this.adminFetch<CommunityTopic>('/admin/community/topics', 'POST', payload);
-  }
-
-  updateTopic(id: string, payload: UpdateTopicPayload): Promise<CommunityTopic | null> {
-    return this.adminFetch<CommunityTopic>(`/admin/community/topics/${id}`, 'PUT', payload);
-  }
-
-  deactivateTopic(id: string): Promise<void | null> {
-    return this.adminFetch<void>(`/admin/community/topics/${id}`, 'DELETE');
   }
 
   // ---- Master data: habit templates ----

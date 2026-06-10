@@ -6,7 +6,6 @@
       <button type="button" class="admin-tab" [class.active]="adminTab() === 'providers'" (click)="setAdminTab('providers')" *ngIf="adminAuthed()">Providers</button>
       <button type="button" class="admin-tab" [class.active]="adminTab() === 'moderation'" (click)="setAdminTab('moderation')" *ngIf="adminAuthed()">Moderation</button>
       <button type="button" class="admin-tab" [class.active]="adminTab() === 'users'" (click)="setAdminTab('users')" *ngIf="adminAuthed()">Users</button>
-      <button type="button" class="admin-tab" [class.active]="adminTab() === 'topics'" (click)="setAdminTab('topics')" *ngIf="adminAuthed()">Topics</button>
       <button type="button" class="admin-tab" [class.active]="adminTab() === 'habits'" (click)="setAdminTab('habits')" *ngIf="adminAuthed()">Habits</button>
       <button type="button" class="admin-tab" [class.active]="adminTab() === 'circles'" (click)="setAdminTab('circles')" *ngIf="adminAuthed()">Circles</button>
       <button type="button" class="admin-signout" *ngIf="adminAuthed()" (click)="adminLogout()">Sign out</button>
@@ -183,36 +182,6 @@
       <table *ngIf="adminUsers().length" class="admin-users-table">
         <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th></tr></thead>
         <tbody><tr *ngFor="let user of adminUsers()"><td>{{ user.displayName }}</td><td>{{ user.email }}</td><td><span class="admin-role-pill" [attr.data-role]="user.role">{{ user.role }}</span></td><td>{{ user.createdUtc | date:'medium' }}</td></tr></tbody>
-      </table>
-    </div>
-
-    <!-- Master data: community topics -->
-    <div class="admin-masterdata" *ngIf="adminTab() === 'topics'">
-      <form class="admin-md-form" (ngSubmit)="saveTopic()">
-        <h3>{{ topicDraft.id ? 'Edit topic' : 'New topic' }}</h3>
-        <label>Name<input type="text" name="topicName" [(ngModel)]="topicDraft.name" maxlength="80" required /></label>
-        <label>Description<input type="text" name="topicDescription" [(ngModel)]="topicDraft.description" maxlength="240" /></label>
-        <label class="admin-md-check" *ngIf="topicDraft.id"><input type="checkbox" name="topicActive" [(ngModel)]="topicDraft.isActive" /> Active</label>
-        <div class="admin-md-actions">
-          <button type="submit">{{ topicDraft.id ? 'Save changes' : 'Add topic' }}</button>
-          <button type="button" *ngIf="topicDraft.id" (click)="resetTopicDraft()">Cancel</button>
-        </div>
-      </form>
-      <p *ngIf="!topics().length" class="admin-empty">No topics yet. Add one above.</p>
-      <table *ngIf="topics().length" class="admin-users-table">
-        <thead><tr><th>Name</th><th>Slug</th><th>Description</th><th>Status</th><th></th></tr></thead>
-        <tbody>
-          <tr *ngFor="let topic of topics()">
-            <td>{{ topic.name }}</td>
-            <td>{{ topic.slug }}</td>
-            <td>{{ topic.description || '—' }}</td>
-            <td>{{ topic.isActive ? 'Active' : 'Inactive' }}</td>
-            <td>
-              <button type="button" (click)="editTopic(topic)">Edit</button>
-              <button type="button" *ngIf="topic.isActive" (click)="deactivateTopic(topic)">Deactivate</button>
-            </td>
-          </tr>
-        </tbody>
       </table>
     </div>
 

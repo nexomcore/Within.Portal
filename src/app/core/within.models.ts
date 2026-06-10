@@ -413,17 +413,6 @@ export type CircleType = 'Platform' | 'Provider' | 'EventCohort' | 'PrivateSuppo
 export type CircleVisibility = 'Public' | 'Private' | 'Hidden';
 export type CircleStatus = 'Active' | 'Archived';
 
-export interface CreateTopicPayload {
-  name: string;
-  description: string | null;
-}
-
-export interface UpdateTopicPayload {
-  name: string;
-  description: string | null;
-  isActive: boolean;
-}
-
 export interface AdminHabitTemplate {
   id: string;
   name: string;
