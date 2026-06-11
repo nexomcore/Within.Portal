@@ -15,6 +15,9 @@ export type EventJoinState = 'Interested' | 'Going' | 'Attended' | 'Declined';
 export type EventIntensity = 'low' | 'medium' | 'high';
 export type EventExperienceLevel = 'beginner_friendly' | 'some_experience_recommended' | 'experienced_participants_only';
 export type EventAgeRestriction = 'all_ages' | '13_plus' | '16_plus' | '18_plus' | 'seniors_focused' | 'family_kids_friendly';
+export type EventType = 'class' | 'workshop' | 'meetup' | 'meditation' | 'yoga' | 'fitness' | 'sound_healing' | 'hiking' | 'retreat' | 'festival' | 'other';
+export type RetreatFocus = 'meditation' | 'yoga' | 'spiritual' | 'wellness' | 'fitness' | 'detox' | 'mens_retreat' | 'womens_retreat' | 'corporate_wellness' | 'nature' | 'mindfulness';
+export type RetreatDifficulty = 'beginner' | 'intermediate' | 'advanced' | 'all_levels';
 export type CommunityPostType = 'AskCommunity' | 'ShareExperience' | 'FindBuddy' | 'LocalRecommendation' | 'Reflection';
 export type CommunityContentStatus = 'Active' | 'Hidden' | 'Removed' | 'UnderReview';
 export type CommunityReportReason = 'SpamOrPromotion' | 'HarassmentOrAbuse' | 'MedicalMisinformation' | 'InappropriateContent' | 'SafetyConcern' | 'Other';
@@ -248,6 +251,7 @@ export interface EventItem {
   providerService: ProviderService | null;
   title: string;
   description: string;
+  eventType: EventType;
   lens: WithinLens;
   locationName: string;
   isOnline: boolean;
@@ -278,11 +282,21 @@ export interface EventItem {
   foodNotes: string | null;
   ageRestriction: EventAgeRestriction | null;
   safetyNotes: string | null;
+  retreatDuration: string | null;
+  accommodationIncluded: boolean;
+  mealsIncluded: boolean;
+  transportIncluded: boolean;
+  retreatFocus: RetreatFocus | null;
+  difficultyLevel: RetreatDifficulty | null;
+  whatsIncluded: string | null;
+  whatToBring: string | null;
+  facilitiesAvailable: string[];
 }
 
 export interface UpsertEventPayload {
   title: string;
   description: string;
+  eventType: EventType;
   lens: WithinLens;
   locationName: string;
   isOnline: boolean;
@@ -310,6 +324,15 @@ export interface UpsertEventPayload {
   foodNotes: string | null;
   ageRestriction: EventAgeRestriction | null;
   safetyNotes: string | null;
+  retreatDuration: string | null;
+  accommodationIncluded: boolean;
+  mealsIncluded: boolean;
+  transportIncluded: boolean;
+  retreatFocus: RetreatFocus | null;
+  difficultyLevel: RetreatDifficulty | null;
+  whatsIncluded: string | null;
+  whatToBring: string | null;
+  facilitiesAvailable: string[];
 }
 
 export interface ProviderEventParticipant {

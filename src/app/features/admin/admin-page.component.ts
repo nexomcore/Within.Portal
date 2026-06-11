@@ -331,6 +331,20 @@ export class AdminPageComponent {
     }
   }
 
+  protected async hardDeleteUser(user: AdminUserRecord): Promise<void> {
+    if (!this.isTombstoneUser(user)) return;
+    if (!confirm(`Permanently purge this deleted account (${user.email})?\n\nThis erases the account row and ALL of its remaining content — threads, comments, reactions, reviews, RSVPs and reports. Anything others added to those threads is removed too. This cannot be undone.`)) {
+      return;
+    }
+    try {
+      await this.admin.hardDeleteUser(user.id);
+      this.adminUsers.set(this.adminUsers().filter(item => item.id !== user.id));
+      this.adminMessage.set('The deleted account was permanently purged.');
+    } catch (error) {
+      this.adminMessage.set(error instanceof Error ? error.message : 'Could not purge this account.');
+    }
+  }
+
   protected async deleteProvider(application: ProviderApplication): Promise<void> {
     if (!application.approvedProviderId) {
       this.adminMessage.set('This application does not have a linked provider to delete.');

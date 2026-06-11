@@ -1,4 +1,52 @@
-import { AdminProviderFilter, Option, ProviderCategory, ProviderPriceType, ProviderServiceDeliveryMode, ProviderType, WithinLens } from './within.models';
+import { AdminProviderFilter, EventType, Option, ProviderCategory, ProviderPriceType, ProviderServiceDeliveryMode, ProviderType, RetreatDifficulty, RetreatFocus, WithinLens } from './within.models';
+
+export const eventTypeOptions: Option<EventType>[] = [
+  { value: 'class', label: 'Class' },
+  { value: 'workshop', label: 'Workshop' },
+  { value: 'meetup', label: 'Meetup' },
+  { value: 'meditation', label: 'Meditation' },
+  { value: 'yoga', label: 'Yoga' },
+  { value: 'fitness', label: 'Fitness' },
+  { value: 'sound_healing', label: 'Sound Healing' },
+  { value: 'hiking', label: 'Hiking' },
+  { value: 'retreat', label: 'Retreat' },
+  { value: 'festival', label: 'Festival' },
+  { value: 'other', label: 'Other' },
+];
+
+export const retreatFocusOptions: Option<RetreatFocus>[] = [
+  { value: 'meditation', label: 'Meditation' },
+  { value: 'yoga', label: 'Yoga' },
+  { value: 'spiritual', label: 'Spiritual' },
+  { value: 'wellness', label: 'Wellness' },
+  { value: 'fitness', label: 'Fitness' },
+  { value: 'detox', label: 'Detox' },
+  { value: 'mens_retreat', label: "Men's Retreat" },
+  { value: 'womens_retreat', label: "Women's Retreat" },
+  { value: 'corporate_wellness', label: 'Corporate Wellness' },
+  { value: 'nature', label: 'Nature' },
+  { value: 'mindfulness', label: 'Mindfulness' },
+];
+
+export const retreatDifficultyOptions: Option<RetreatDifficulty>[] = [
+  { value: 'beginner', label: 'Beginner' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced', label: 'Advanced' },
+  { value: 'all_levels', label: 'All Levels' },
+];
+
+export const retreatFacilityOptions: Option[] = [
+  { value: 'parking', label: 'Parking' },
+  { value: 'wheelchair_access', label: 'Wheelchair Access' },
+  { value: 'showers', label: 'Showers' },
+  { value: 'wifi', label: 'WiFi' },
+  { value: 'vegan_meals', label: 'Vegan Meals' },
+  { value: 'vegetarian_meals', label: 'Vegetarian Meals' },
+  { value: 'private_rooms', label: 'Private Rooms' },
+  { value: 'shared_rooms', label: 'Shared Rooms' },
+  { value: 'accessible_toilets', label: 'Accessible Toilets' },
+  { value: 'first_aid', label: 'First Aid' },
+];
 
 export const unifiedProviderTypeOptions: Option<ProviderType>[] = [
   { value: 'Individual', label: 'Individual Practitioner' },

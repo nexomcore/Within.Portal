@@ -64,14 +64,22 @@ export class AdminService {
     return this.adminFetch<void>(`/admin/providers/${id}`, 'DELETE');
   }
 
-  async deleteUser(id: string): Promise<void> {
+  deleteUser(id: string): Promise<void> {
+    return this.sendUserDelete(`/admin/users/${id}`, 'Could not delete this user.');
+  }
+
+  hardDeleteUser(id: string): Promise<void> {
+    return this.sendUserDelete(`/admin/users/${id}/purge`, 'Could not purge this account.');
+  }
+
+  private async sendUserDelete(path: string, fallbackMessage: string): Promise<void> {
     const token = localStorage.getItem(ADMIN_TOKEN_KEY);
     if (!token) {
       this.authed.set(false);
       throw new Error('Your admin session has expired. Sign in again.');
     }
 
-    const response = await fetch(`${API_BASE}/admin/users/${id}`, {
+    const response = await fetch(`${API_BASE}${path}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -83,7 +91,7 @@ export class AdminService {
 
     if (response.status === 204) return;
 
-    let message = 'Could not delete this user.';
+    let message = fallbackMessage;
     try {
       const body = await response.json() as { message?: string };
       message = body.message ?? message;

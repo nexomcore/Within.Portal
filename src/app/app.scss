@@ -2453,6 +2453,39 @@ h4 {
   outline: none;
 }
 
+.provider-retreat-section {
+  background: linear-gradient(180deg, rgba(124, 92, 200, 0.08), rgba(124, 92, 200, 0.02));
+  border: 1px solid rgba(124, 92, 200, 0.35);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.provider-retreat-head {
+  padding: 16px 18px 0;
+}
+
+.provider-retreat-head h3 {
+  margin: 4px 0 2px;
+}
+
+.provider-retreat-head p {
+  color: var(--muted, #6b7280);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.provider-retreat-pill {
+  align-self: center;
+  background: rgba(124, 92, 200, 0.16);
+  border-radius: 999px;
+  color: #5b3fa0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 3px 9px;
+  text-transform: uppercase;
+}
+
 .provider-metadata-section {
   background: #ffffff;
   border: 1px solid var(--portal-line, var(--line));
@@ -5189,6 +5222,21 @@ app-root {
 
 .wp-stat.green strong {
   color: #228257;
+}
+
+// ---- Hard-delete (purge) button in the users table ----------------
+.wp-shell .admin-users-table button.admin-hard-delete {
+  background: linear-gradient(180deg, #ffe6df, #ffd3c8);
+  border-color: rgba(192, 67, 45, 0.28);
+  box-shadow: var(--wp-tile-edge), 0 3px 8px -5px rgba(192, 67, 45, 0.4);
+  color: #b23a23;
+}
+
+.wp-shell .admin-users-table button.admin-hard-delete:hover {
+  background: linear-gradient(180deg, #ffdacf, #ffc4b5);
+  border-color: rgba(192, 67, 45, 0.5);
+  box-shadow: var(--wp-tile-edge), 0 8px 16px -6px rgba(192, 67, 45, 0.46);
+  color: #9e3019;
 }
 
 // ---- Auth shells have no sidebar: use the full viewport width -----

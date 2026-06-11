@@ -212,7 +212,7 @@
         <p *ngIf="!adminUsers().length" class="admin-empty">No registered accounts.</p>
         <table *ngIf="adminUsers().length" class="admin-users-table">
           <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th></th></tr></thead>
-          <tbody><tr *ngFor="let user of adminUsers()"><td>{{ user.displayName }}</td><td>{{ user.email }}</td><td><span class="admin-role-pill" [attr.data-role]="user.role">{{ user.role }}</span></td><td>{{ user.createdUtc | date:'medium' }}</td><td><button type="button" *ngIf="!isTombstoneUser(user)" (click)="deleteUser(user)">Delete</button></td></tr></tbody>
+          <tbody><tr *ngFor="let user of adminUsers()"><td>{{ user.displayName }}</td><td>{{ user.email }}</td><td><span class="admin-role-pill" [attr.data-role]="user.role">{{ user.role }}</span></td><td>{{ user.createdUtc | date:'medium' }}</td><td><button type="button" *ngIf="!isTombstoneUser(user)" (click)="deleteUser(user)">Delete</button><button type="button" class="admin-hard-delete" *ngIf="isTombstoneUser(user)" (click)="hardDeleteUser(user)">Hard delete</button></td></tr></tbody>
         </table>
       </div>
 

@@ -3,8 +3,8 @@ import { Component, WritableSignal, computed, inject, signal } from '@angular/co
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ProviderPortalService } from '../../core/provider-portal.service';
-import { EventAgeRestriction, EventExperienceLevel, EventIntensity, EventItem, Option, Provider, ProviderEventEngagement, ProviderEventParticipant, ProviderPriceType, ProviderService, ProviderServiceDeliveryMode, SignupType, UpsertEventPayload, UpsertProviderPayload, UpsertProviderServicePayload, WithinLens } from '../../core/within.models';
-import { lensOptions, providerPriceTypeOptions, providerServiceDeliveryModeOptions } from '../../core/within-options';
+import { EventAgeRestriction, EventExperienceLevel, EventIntensity, EventItem, EventType, Option, Provider, ProviderEventEngagement, ProviderEventParticipant, ProviderPriceType, ProviderService, ProviderServiceDeliveryMode, RetreatDifficulty, RetreatFocus, SignupType, UpsertEventPayload, UpsertProviderPayload, UpsertProviderServicePayload, WithinLens } from '../../core/within.models';
+import { eventTypeOptions, lensOptions, providerPriceTypeOptions, providerServiceDeliveryModeOptions, retreatDifficultyOptions, retreatFacilityOptions, retreatFocusOptions } from '../../core/within-options';
 
 type ProviderSection = 'overview' | 'events' | 'services' | 'profile';
 
@@ -18,6 +18,10 @@ export class ProviderDashboardPageComponent {
   private readonly router = inject(Router);
 
   protected readonly lensOptions = lensOptions;
+  protected readonly eventTypeOptions = eventTypeOptions;
+  protected readonly retreatFocusOptions = retreatFocusOptions;
+  protected readonly retreatDifficultyOptions = retreatDifficultyOptions;
+  protected readonly retreatFacilityOptions = retreatFacilityOptions;
   protected readonly signupTypes: SignupType[] = ['Internal', 'External'];
   protected readonly priceTypeOptions = providerPriceTypeOptions;
   protected readonly serviceDeliveryModeOptions = providerServiceDeliveryModeOptions;
@@ -145,6 +149,7 @@ export class ProviderDashboardPageComponent {
 
   protected readonly title = signal('');
   protected readonly description = signal('');
+  protected readonly eventType = signal<EventType>('class');
   protected readonly lens = signal<WithinLens>('Move');
   protected readonly locationName = signal('');
   protected readonly isOnline = signal(false);
@@ -172,6 +177,17 @@ export class ProviderDashboardPageComponent {
   protected readonly foodNotes = signal('');
   protected readonly ageRestriction = signal<EventAgeRestriction | ''>('');
   protected readonly safetyNotes = signal('');
+  // Retreat-specific fields (only used/validated when eventType === 'retreat').
+  protected readonly retreatDuration = signal('');
+  protected readonly accommodationIncluded = signal(false);
+  protected readonly mealsIncluded = signal(false);
+  protected readonly transportIncluded = signal(false);
+  protected readonly retreatFocus = signal<RetreatFocus | ''>('');
+  protected readonly difficultyLevel = signal<RetreatDifficulty | ''>('');
+  protected readonly whatsIncluded = signal('');
+  protected readonly whatToBring = signal('');
+  protected readonly facilitiesAvailable = signal<string[]>([]);
+  protected readonly isRetreat = computed(() => this.eventType() === 'retreat');
   protected readonly profileName = signal('');
   protected readonly profileBio = signal('');
   protected readonly profileLocation = signal('');
@@ -274,6 +290,7 @@ export class ProviderDashboardPageComponent {
     this.selectedEventId.set(event.id);
     this.title.set(event.title);
     this.description.set(event.description);
+    this.eventType.set(event.eventType ?? 'class');
     this.lens.set(event.lens);
     this.locationName.set(event.locationName);
     this.isOnline.set(event.isOnline);
@@ -301,6 +318,15 @@ export class ProviderDashboardPageComponent {
     this.foodNotes.set(event.foodNotes ?? '');
     this.ageRestriction.set(event.ageRestriction ?? '');
     this.safetyNotes.set(event.safetyNotes ?? '');
+    this.retreatDuration.set(event.retreatDuration ?? '');
+    this.accommodationIncluded.set(event.accommodationIncluded ?? false);
+    this.mealsIncluded.set(event.mealsIncluded ?? false);
+    this.transportIncluded.set(event.transportIncluded ?? false);
+    this.retreatFocus.set(event.retreatFocus ?? '');
+    this.difficultyLevel.set(event.difficultyLevel ?? '');
+    this.whatsIncluded.set(event.whatsIncluded ?? '');
+    this.whatToBring.set(event.whatToBring ?? '');
+    this.facilitiesAvailable.set(event.facilitiesAvailable ?? []);
     this.message.set(`Editing ${event.title}.`);
     await this.loadEngagement(event.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -311,6 +337,7 @@ export class ProviderDashboardPageComponent {
     this.engagement.set(null);
     this.title.set('');
     this.description.set('');
+    this.eventType.set('class');
     this.lens.set(this.provider()?.lens ?? 'Move');
     this.locationName.set('');
     this.isOnline.set(false);
@@ -338,6 +365,15 @@ export class ProviderDashboardPageComponent {
     this.foodNotes.set('');
     this.ageRestriction.set('');
     this.safetyNotes.set('');
+    this.retreatDuration.set('');
+    this.accommodationIncluded.set(false);
+    this.mealsIncluded.set(false);
+    this.transportIncluded.set(false);
+    this.retreatFocus.set('');
+    this.difficultyLevel.set('');
+    this.whatsIncluded.set('');
+    this.whatToBring.set('');
+    this.facilitiesAvailable.set([]);
     this.message.set('Ready for a new event.');
   }
 
@@ -552,9 +588,18 @@ export class ProviderDashboardPageComponent {
       return null;
     }
 
+    const isRetreat = this.eventType() === 'retreat';
+    if (isRetreat) {
+      if (!this.retreatDuration().trim() || !this.retreatFocus() || !this.difficultyLevel() || !this.whatsIncluded().trim() || !this.whatToBring().trim()) {
+        this.message.set('Retreats need a duration, focus, difficulty level, what’s included, and what to bring.');
+        return null;
+      }
+    }
+
     return {
       title: this.title().trim(),
       description: this.description().trim(),
+      eventType: this.eventType(),
       lens: this.lens(),
       locationName: this.locationName().trim(),
       isOnline: this.isOnline(),
@@ -582,6 +627,15 @@ export class ProviderDashboardPageComponent {
       foodNotes: this.foodNotes().trim() || null,
       ageRestriction: this.ageRestriction() || null,
       safetyNotes: this.safetyNotes().trim() || null,
+      retreatDuration: isRetreat ? (this.retreatDuration().trim() || null) : null,
+      accommodationIncluded: isRetreat && this.accommodationIncluded(),
+      mealsIncluded: isRetreat && this.mealsIncluded(),
+      transportIncluded: isRetreat && this.transportIncluded(),
+      retreatFocus: isRetreat ? (this.retreatFocus() || null) : null,
+      difficultyLevel: isRetreat ? (this.difficultyLevel() || null) : null,
+      whatsIncluded: isRetreat ? (this.whatsIncluded().trim() || null) : null,
+      whatToBring: isRetreat ? (this.whatToBring().trim() || null) : null,
+      facilitiesAvailable: isRetreat ? this.facilitiesAvailable() : [],
     };
   }
 

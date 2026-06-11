@@ -78,6 +78,7 @@
               <p class="wp-empty" *ngIf="!recentEvents().length">No events yet. Create your first event to get started.</p>
               <button type="button" class="wp-row" *ngFor="let event of recentEvents()" (click)="editEvent(event); setSection('events')">
                 <span class="provider-status-pill" [attr.data-status]="event.status">{{ event.status }}</span>
+                <span class="provider-retreat-pill" *ngIf="event.eventType === 'retreat'">Retreat</span>
                 <span class="wp-row-title">{{ event.title }}</span>
                 <span class="wp-row-meta">{{ eventTime(event) }} · {{ event.locationName }}</span>
                 <span class="wp-row-num">{{ event.goingCount }}/{{ event.capacity }}</span>
@@ -114,6 +115,7 @@
             <div class="provider-form-grid">
               <label class="full-width">Title<input name="title" type="text" [ngModel]="title()" (ngModelChange)="title.set($event)" /></label>
               <label class="full-width">Description<textarea name="description" rows="4" [ngModel]="description()" (ngModelChange)="description.set($event)"></textarea></label>
+              <label>Event type<select name="eventType" [ngModel]="eventType()" (ngModelChange)="eventType.set($event)"><option *ngFor="let option of eventTypeOptions" [value]="option.value">{{ option.label }}</option></select></label>
               <label>Lens<select name="lens" [ngModel]="lens()" (ngModelChange)="lens.set($event)"><option *ngFor="let option of lensOptions" [value]="option">{{ option }}</option></select></label>
               <label>Location<input name="locationName" type="text" [ngModel]="locationName()" (ngModelChange)="locationName.set($event)" /></label>
               <label>Start<input name="startLocal" type="datetime-local" [ngModel]="startLocal()" (ngModelChange)="startLocal.set($event)" /></label>
@@ -128,6 +130,33 @@
               <label class="full-width">Image URL<input name="imageUrl" type="url" [ngModel]="imageUrl()" (ngModelChange)="imageUrl.set($event)" /></label>
               <label class="full-width">Tags<input name="tagsText" type="text" placeholder="breathwork, beginners, perth" [ngModel]="tagsText()" (ngModelChange)="tagsText.set($event)" /></label>
             </div>
+
+            <section class="provider-retreat-section" *ngIf="isRetreat()">
+              <div class="provider-retreat-head">
+                <span class="wp-eyebrow">Retreat details</span>
+                <h3>Make this retreat feel special</h3>
+                <p>These details only appear for retreats and help members understand the full experience.</p>
+              </div>
+              <div class="provider-metadata-grid">
+                <label>Duration<input name="retreatDuration" type="text" placeholder="3 days / 2 nights" [ngModel]="retreatDuration()" (ngModelChange)="retreatDuration.set($event)" /></label>
+                <label>Focus<select name="retreatFocus" [ngModel]="retreatFocus()" (ngModelChange)="retreatFocus.set($event)"><option value="">Select focus</option><option *ngFor="let option of retreatFocusOptions" [value]="option.value">{{ option.label }}</option></select></label>
+                <label>Difficulty level<select name="difficultyLevel" [ngModel]="difficultyLevel()" (ngModelChange)="difficultyLevel.set($event)"><option value="">Select level</option><option *ngFor="let option of retreatDifficultyOptions" [value]="option.value">{{ option.label }}</option></select></label>
+                <label class="check-option provider-online-option"><input type="checkbox" [checked]="accommodationIncluded()" (change)="accommodationIncluded.set($any($event.target).checked)" /><span>Accommodation included</span></label>
+                <label class="check-option provider-online-option"><input type="checkbox" [checked]="mealsIncluded()" (change)="mealsIncluded.set($any($event.target).checked)" /><span>Meals included</span></label>
+                <label class="check-option provider-online-option"><input type="checkbox" [checked]="transportIncluded()" (change)="transportIncluded.set($any($event.target).checked)" /><span>Transport included</span></label>
+                <label class="full-width">What’s included<textarea name="whatsIncluded" rows="3" placeholder="Accommodation, meals, sessions, materials…" [ngModel]="whatsIncluded()" (ngModelChange)="whatsIncluded.set($event)"></textarea></label>
+                <label class="full-width">What to bring<textarea name="whatToBring" rows="3" placeholder="Clothing, personal items, documents…" [ngModel]="whatToBring()" (ngModelChange)="whatToBring.set($event)"></textarea></label>
+                <fieldset class="full-width">
+                  <legend>Facilities available</legend>
+                  <div class="provider-chip-grid">
+                    <label class="check-option" *ngFor="let option of retreatFacilityOptions">
+                      <input type="checkbox" [checked]="facilitiesAvailable().includes(option.value)" (change)="toggle(facilitiesAvailable, option.value, $event)" />
+                      <span>{{ option.label }}</span>
+                    </label>
+                  </div>
+                </fieldset>
+              </div>
+            </section>
 
             <details class="provider-metadata-section">
               <summary>Preparation and facilities</summary>
@@ -216,6 +245,7 @@
               <p class="wp-empty" *ngIf="!events().length">No events yet. Create your first event with the form.</p>
               <button type="button" class="wp-row" *ngFor="let event of events()" [class.active]="event.id === selectedEventId()" (click)="editEvent(event)">
                 <span class="provider-status-pill" [attr.data-status]="event.status">{{ event.status }}</span>
+                <span class="provider-retreat-pill" *ngIf="event.eventType === 'retreat'">Retreat</span>
                 <span class="wp-row-title">{{ event.title }}</span>
                 <span class="wp-row-meta">{{ eventTime(event) }} · {{ event.locationName }}</span>
                 <span class="wp-row-num">{{ event.goingCount }}/{{ event.capacity }}</span>
