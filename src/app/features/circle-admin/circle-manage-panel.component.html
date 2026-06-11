@@ -1,0 +1,90 @@
+<div class="wp-card">
+  <p class="admin-message" *ngIf="message()">{{ message() }}</p>
+  <nav class="ca-tabs">
+    <button type="button" [class.active]="section() === 'overview'" (click)="setSection('overview')">Engagement</button>
+    <button type="button" [class.active]="section() === 'members'" (click)="setSection('members')">Members &amp; approvals</button>
+    <button type="button" [class.active]="section() === 'engage'" (click)="setSection('engage')">Announcements &amp; polls</button>
+    <button type="button" [class.active]="section() === 'events'" (click)="setSection('events')">Share events</button>
+  </nav>
+</div>
+
+<!-- Engagement dashboard -->
+<section class="wp-card" *ngIf="section() === 'overview'">
+  <div class="wp-card-head"><div><span class="wp-eyebrow">Engagement dashboard</span><h3>How the circle is doing</h3></div></div>
+  <div class="provider-response-stats" *ngIf="insights() as stats">
+    <article><span>Members</span><strong>{{ stats.memberCount }}</strong></article>
+    <article><span>New (14d)</span><strong>{{ stats.newMembers14d }}</strong></article>
+    <article><span>Active (30d)</span><strong>{{ stats.activeMembers30d }}</strong></article>
+    <article><span>Pending approvals</span><strong>{{ stats.pendingJoinRequests }}</strong></article>
+    <article><span>Posts</span><strong>{{ stats.threadCount }}</strong></article>
+    <article><span>Comments</span><strong>{{ stats.totalComments }}</strong></article>
+    <article><span>Reactions</span><strong>{{ stats.totalReactions }}</strong></article>
+    <article><span>Helpful</span><strong>{{ stats.totalHelpful }}</strong></article>
+    <article><span>Poll votes</span><strong>{{ stats.pollVotes }}</strong></article>
+  </div>
+  <ng-container *ngIf="insights() as stats">
+    <div class="ca-block" *ngIf="stats.latestCheckIn as mood">
+      <h4>Latest check-in mood ({{ mood.total }} responses)</h4>
+      <div class="provider-chip-grid">
+        <span class="metadata-chip">Great {{ mood.great }}</span>
+        <span class="metadata-chip">Good {{ mood.good }}</span>
+        <span class="metadata-chip">Okay {{ mood.okay }}</span>
+        <span class="metadata-chip">Struggling {{ mood.struggling }}</span>
+      </div>
+    </div>
+    <div class="ca-block" *ngIf="stats.topContributors.length">
+      <h4>Top contributors</h4>
+      <article class="provider-person-row" *ngFor="let person of stats.topContributors"><strong>{{ person.displayName }}</strong><span>{{ person.contributions }} posts &amp; comments</span></article>
+    </div>
+  </ng-container>
+</section>
+
+<!-- Members & approvals -->
+<section class="wp-card" *ngIf="section() === 'members'">
+  <div class="wp-card-head"><div><span class="wp-eyebrow">Pending approvals</span><h3>Requests to join</h3></div><span class="admin-pill" *ngIf="joinRequests().length">{{ joinRequests().length }} waiting</span></div>
+  <p class="wp-empty" *ngIf="!joinRequests().length">No one is waiting for approval.</p>
+  <article class="provider-person-row" *ngFor="let request of joinRequests()">
+    <strong>{{ request.user.displayName }}</strong>
+    <span>
+      <button type="button" class="admin-signout" (click)="approveRequest(request)">Approve</button>
+      <button type="button" class="admin-signout" (click)="rejectRequest(request)">Decline</button>
+    </span>
+  </article>
+  <div class="wp-card-head" style="margin-top: 18px"><div><span class="wp-eyebrow">Members</span><h3>Roster</h3></div><span class="wp-row-num">{{ members().length }}</span></div>
+  <article class="provider-person-row" *ngFor="let member of members()"><strong>{{ member.displayName }}</strong><span>{{ member.role }}</span></article>
+</section>
+
+<!-- Announcements & polls -->
+<section class="wp-card" *ngIf="section() === 'engage'">
+  <div class="ca-block">
+    <h4>Post an announcement</h4>
+    <textarea rows="3" placeholder="Share news, a welcome, or a call to action…" [ngModel]="announcementBody()" (ngModelChange)="announcementBody.set($event)" name="announcementBody"></textarea>
+    <label class="check-option provider-online-option"><input type="checkbox" [checked]="announcementPinned()" (change)="announcementPinned.set($any($event.target).checked)" /><span>Pin to top</span></label>
+    <button type="button" class="primary-action" [disabled]="saving()" (click)="postAnnouncement()">Post announcement</button>
+  </div>
+  <div class="ca-block">
+    <h4>Start a discussion prompt</h4>
+    <input type="text" placeholder="Prompt title" [ngModel]="promptTitle()" (ngModelChange)="promptTitle.set($event)" name="promptTitle" />
+    <textarea rows="3" placeholder="Ask a question to spark conversation…" [ngModel]="promptBody()" (ngModelChange)="promptBody.set($event)" name="promptBody"></textarea>
+    <button type="button" class="primary-action" [disabled]="saving()" (click)="postPrompt()">Post prompt</button>
+  </div>
+  <div class="ca-block">
+    <h4>Create a poll</h4>
+    <input type="text" placeholder="Poll question" [ngModel]="pollQuestion()" (ngModelChange)="pollQuestion.set($event)" name="pollQuestion" />
+    <textarea rows="4" placeholder="One option per line" [ngModel]="pollOptionsText()" (ngModelChange)="pollOptionsText.set($event)" name="pollOptionsText"></textarea>
+    <button type="button" class="primary-action" [disabled]="saving()" (click)="postPoll()">Post poll</button>
+  </div>
+</section>
+
+<!-- Share events -->
+<section class="wp-card" *ngIf="section() === 'events'">
+  <div class="ca-block">
+    <h4>Share an event into the circle</h4>
+    <select [ngModel]="shareEventId()" (ngModelChange)="shareEventId.set($event)" name="shareEventId">
+      <option value="">Select an event…</option>
+      <option *ngFor="let event of events()" [value]="event.id">{{ event.title }}</option>
+    </select>
+    <textarea rows="2" placeholder="Optional note for members" [ngModel]="shareNote()" (ngModelChange)="shareNote.set($event)" name="shareNote"></textarea>
+    <button type="button" class="primary-action" [disabled]="saving()" (click)="shareEvent()">Share event</button>
+  </div>
+</section>

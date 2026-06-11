@@ -3,13 +3,15 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AdminService } from '../../core/admin.service';
+import { CircleAdminDashboardPageComponent } from '../circle-admin/circle-admin-dashboard-page.component';
+import { CircleManagePanelComponent } from '../circle-admin/circle-manage-panel.component';
 import { formatKey, formatProviderCategory, formatProviderStatus, formatValue, providerApplicationEntries, trustChecklist } from '../../core/formatters';
-import { AdminAnswerEntry, AdminAudienceFilter, AdminCircle, AdminCircleGuideline, AdminCircleJoinRequest, AdminHabitTemplate, AdminStats, AdminSubmission, AdminUserRecord, AdminProviderFilter, CircleStatus, CircleVisibility, CommunityReport, CommunityReportStatus, HabitCategory, ProviderApplication, ProviderApplicationStatus, WithinLens } from '../../core/within.models';
+import { AdminAnswerEntry, AdminAudienceFilter, AdminCircle, AdminCircleGuideline, AdminCircleJoinRequest, AdminHabitTemplate, AdminStats, AdminSubmission, AdminUserRecord, AdminProviderFilter, CircleStatus, CircleVisibility, CommunityReport, CommunityReportStatus, HabitCategory, ProviderApplication, ProviderApplicationStatus, WithinLens, WithinRole } from '../../core/within.models';
 import { providerStatusFilters } from '../../core/within-options';
 
 @Component({
   selector: 'app-admin-page',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, CircleAdminDashboardPageComponent, CircleManagePanelComponent],
   templateUrl: './admin-page.component.html',
 })
 export class AdminPageComponent {
@@ -23,6 +25,8 @@ export class AdminPageComponent {
   protected readonly adminSubmissions = signal<AdminSubmission[]>([]);
   protected readonly adminStats = signal<AdminStats | null>(null);
   protected readonly adminUsers = signal<AdminUserRecord[]>([]);
+  protected readonly roleOptions: WithinRole[] = ['User', 'CircleAdmin', 'Admin'];
+  protected circleAdminUserId = '';
   protected readonly communityReports = signal<CommunityReport[]>([]);
   protected readonly adminFilter = signal<AdminAudienceFilter>('all');
   protected readonly adminSelectedId = signal<string | null>(null);
@@ -53,6 +57,7 @@ export class AdminPageComponent {
   protected readonly providerAdminNotesDraft = signal('');
   protected readonly providerCredential = signal<{ email: string; password: string } | null>(null);
   protected readonly adminAuthed = this.admin.authed;
+  protected readonly isCircleAdmin = computed(() => this.admin.role() === 'CircleAdmin');
   protected readonly formatProviderCategory = formatProviderCategory;
   protected readonly formatProviderStatus = formatProviderStatus;
   protected readonly providerApplicationEntries = providerApplicationEntries;
@@ -109,7 +114,8 @@ export class AdminPageComponent {
   );
 
   constructor() {
-    if (this.adminAuthed()) void this.loadAdminData();
+    // Circle Admins share this page but only see the circle dashboard, which loads its own data.
+    if (this.adminAuthed() && !this.isCircleAdmin()) void this.loadAdminData();
   }
 
   protected async adminLogin(): Promise<void> {
@@ -125,7 +131,7 @@ export class AdminPageComponent {
       const displayName = await this.admin.login(email, password);
       this.adminPassword.set('');
       this.adminMessage.set(`Signed in as ${displayName}.`);
-      await this.loadAdminData();
+      if (!this.isCircleAdmin()) await this.loadAdminData();
     } catch (error) {
       this.adminMessage.set(error instanceof Error ? error.message : 'Login failed.');
     } finally {
@@ -341,6 +347,35 @@ export class AdminPageComponent {
 
   protected isTombstoneUser(user: AdminUserRecord): boolean {
     return user.email.endsWith('@deleted.invalid');
+  }
+
+  protected async changeUserRole(user: AdminUserRecord, role: WithinRole): Promise<void> {
+    if (user.role === role) return;
+    try {
+      const updated = await this.admin.updateUserRole(user.id, role);
+      if (!updated) { this.adminMessage.set('Could not update the role.'); return; }
+      this.adminUsers.set(this.adminUsers().map(item => item.id === user.id ? updated : item));
+      this.adminMessage.set(`${updated.displayName} is now ${role}.`);
+    } catch (error) {
+      this.adminMessage.set(error instanceof Error ? error.message : 'Could not update the role.');
+    }
+  }
+
+  protected async assignCircleAdmin(): Promise<void> {
+    const circleId = this.selectedCircleId();
+    if (!circleId) return;
+    if (!this.circleAdminUserId) { this.adminMessage.set('Pick a user to set as circle admin.'); return; }
+    try {
+      const result = await this.admin.setCircleAdmin(circleId, this.circleAdminUserId);
+      if (result === null) { this.adminMessage.set('Could not set the circle admin.'); return; }
+      this.adminMessage.set('Circle admin assigned. They can now manage this circle from the circle portal.');
+      this.circleAdminUserId = '';
+      const [circles, users] = await Promise.all([this.admin.listCircles(), this.admin.getUsers()]);
+      if (circles) this.circles.set(circles);
+      if (users) this.adminUsers.set(users);
+    } catch (error) {
+      this.adminMessage.set(error instanceof Error ? error.message : 'Could not set the circle admin.');
+    }
   }
 
   protected async deleteUser(user: AdminUserRecord): Promise<void> {

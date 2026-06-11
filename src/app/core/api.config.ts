@@ -2,6 +2,8 @@ export const ADMIN_TOKEN_KEY = 'within.admin.accessToken';
 export const ADMIN_REFRESH_TOKEN_KEY = 'within.admin.refreshToken';
 export const PROVIDER_TOKEN_KEY = 'within.provider.accessToken';
 export const PROVIDER_REFRESH_TOKEN_KEY = 'within.provider.refreshToken';
+export const CIRCLE_ADMIN_TOKEN_KEY = 'within.circleAdmin.accessToken';
+export const CIRCLE_ADMIN_REFRESH_TOKEN_KEY = 'within.circleAdmin.refreshToken';
 export const API_TARGET_KEY = 'within.api.target';
 export const CUSTOM_API_BASE_KEY = 'within.api.customBaseUrl';
 

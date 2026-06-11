@@ -4692,6 +4692,61 @@ app-root {
   padding: 22px;
 }
 
+.wp-shell .admin-md-engagement {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.wp-shell .admin-md-engagement > h3 {
+  margin: 0;
+}
+
+.wp-shell .ca-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.wp-shell .ca-tabs button {
+  background: var(--wp-surface-soft, #f4f5f7);
+  border: 1px solid var(--wp-line, var(--line));
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 8px 14px;
+}
+
+.wp-shell .ca-tabs button.active {
+  background: var(--ink, #243049);
+  border-color: var(--ink, #243049);
+  color: #fff;
+}
+
+.wp-shell .ca-block {
+  border-top: 1px solid var(--wp-line, var(--line));
+  display: grid;
+  gap: 10px;
+  padding: 16px 0;
+}
+
+.wp-shell .ca-block:first-child {
+  border-top: 0;
+}
+
+.wp-shell .ca-block h4 {
+  margin: 0;
+}
+
+.wp-shell .metadata-chip {
+  background: var(--wp-surface-soft, #f4f5f7);
+  border: 1px solid var(--wp-line, var(--line));
+  border-radius: 999px;
+  font-size: 0.82rem;
+  padding: 5px 11px;
+}
+
 .wp-shell .admin-md-approvals {
   background: var(--wp-surface-soft);
   border: 1px solid var(--wp-line);

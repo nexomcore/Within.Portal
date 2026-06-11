@@ -9,9 +9,9 @@
     <section class="wp-auth">
       <div class="wp-auth-grid">
         <div class="wp-auth-context">
-          <span class="wp-eyebrow">Admin</span>
-          <h1>Sign in to manage submissions and provider applications.</h1>
-          <p>Only accounts with the Admin role can view submissions, provider applications, aggregate stats, moderation reports, and registered users.</p>
+          <span class="wp-eyebrow">Admin &amp; Circle portal</span>
+          <h1>Sign in to manage the platform or your circles.</h1>
+          <p>Admins manage submissions, providers, users, moderation and circles. Circle Admins sign in here too and land straight on their circle dashboard.</p>
         </div>
         <form class="wp-auth-card" (ngSubmit)="adminLogin()">
           <h2>Admin sign in</h2>
@@ -25,8 +25,11 @@
   </div>
 </main>
 
-<!-- ===================== DASHBOARD ===================== -->
-<main class="wp-shell" [class.nav-open]="navOpen()" *ngIf="adminAuthed()">
+<!-- ===================== CIRCLE ADMIN (role-gated) ===================== -->
+<app-circle-admin-dashboard-page *ngIf="adminAuthed() && isCircleAdmin()"></app-circle-admin-dashboard-page>
+
+<!-- ===================== DASHBOARD (platform admin) ===================== -->
+<main class="wp-shell" [class.nav-open]="navOpen()" *ngIf="adminAuthed() && !isCircleAdmin()">
   <div class="wp-scrim" (click)="navOpen.set(false)"></div>
 
   <aside class="wp-side">
@@ -212,7 +215,7 @@
         <p *ngIf="!adminUsers().length" class="admin-empty">No registered accounts.</p>
         <table *ngIf="adminUsers().length" class="admin-users-table">
           <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th></th></tr></thead>
-          <tbody><tr *ngFor="let user of adminUsers()"><td>{{ user.displayName }}</td><td>{{ user.email }}</td><td><span class="admin-role-pill" [attr.data-role]="user.role">{{ user.role }}</span></td><td>{{ user.createdUtc | date:'medium' }}</td><td><button type="button" *ngIf="!isTombstoneUser(user)" (click)="deleteUser(user)">Delete</button><button type="button" class="admin-hard-delete" *ngIf="isTombstoneUser(user)" (click)="hardDeleteUser(user)">Hard delete</button></td></tr></tbody>
+          <tbody><tr *ngFor="let user of adminUsers()"><td>{{ user.displayName }}</td><td>{{ user.email }}</td><td><span class="admin-role-pill" [attr.data-role]="user.role">{{ user.role }}</span><select *ngIf="!isTombstoneUser(user)" [ngModel]="user.role" (ngModelChange)="changeUserRole(user, $event)" [name]="'role-' + user.id" class="admin-role-select"><option *ngFor="let r of roleOptions" [value]="r">{{ r }}</option></select></td><td>{{ user.createdUtc | date:'medium' }}</td><td><button type="button" *ngIf="!isTombstoneUser(user)" (click)="deleteUser(user)">Delete</button><button type="button" class="admin-hard-delete" *ngIf="isTombstoneUser(user)" (click)="hardDeleteUser(user)">Hard delete</button></td></tr></tbody>
         </table>
       </div>
 
@@ -321,6 +324,23 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <div class="admin-md-engagement" *ngIf="selectedCircleId() as activeCircleId">
+          <h3>Manage &amp; engage: {{ circleDraft.name }}</h3>
+          <app-circle-manage [circleId]="activeCircleId"></app-circle-manage>
+        </div>
+
+        <div class="admin-md-guidelines" *ngIf="selectedCircleId()">
+          <h3>Circle admin for {{ circleDraft.name }}</h3>
+          <p class="admin-muted">Assign or transfer who runs this circle. They get the Circle Admin role and manage it from the circle portal.</p>
+          <div class="admin-md-actions">
+            <select name="circleAdminUser" [(ngModel)]="circleAdminUserId">
+              <option value="">Select a user…</option>
+              <option *ngFor="let user of adminUsers()" [value]="user.id">{{ user.displayName }} ({{ user.email }})</option>
+            </select>
+            <button type="button" (click)="assignCircleAdmin()">Set circle admin</button>
+          </div>
         </div>
 
         <div class="admin-md-guidelines" *ngIf="selectedCircleId()">

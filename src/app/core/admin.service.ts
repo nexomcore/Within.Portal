@@ -2,16 +2,19 @@ import { Injectable, signal } from '@angular/core';
 import { ADMIN_REFRESH_TOKEN_KEY, ADMIN_TOKEN_KEY, API_BASE } from './api.config';
 import {
   AdminCircle, AdminCircleGuideline, AdminCircleJoinRequest, AdminHabitTemplate, AdminStats, AdminSubmission, AdminUserRecord,
-  CommunityReport, CommunityReportStatus,
-  CreateCirclePayload, CreateHabitTemplatePayload,
+  CircleAdminMember, CircleInsights, CirclePostType, CommunityPostType, CommunityReport, CommunityReportStatus,
+  CreateCirclePayload, CreateHabitTemplatePayload, EventItem,
   GuidelinePayload, GuidelineUpdatePayload,
   ProviderApplication, ProviderApplicationStatus,
-  UpdateCirclePayload, UpdateHabitTemplatePayload,
+  UpdateCirclePayload, UpdateHabitTemplatePayload, WithinRole,
 } from './within.models';
+
+const ADMIN_ROLE_KEY = 'within.admin.role';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   readonly authed = signal(!!localStorage.getItem(ADMIN_TOKEN_KEY));
+  readonly role = signal<WithinRole | null>((localStorage.getItem(ADMIN_ROLE_KEY) as WithinRole | null) ?? null);
 
   async login(email: string, password: string): Promise<string> {
     const response = await fetch(`${API_BASE}/admin/login`, {
@@ -20,20 +23,79 @@ export class AdminService {
       body: JSON.stringify({ email: email.trim(), password }),
     });
 
-    if (response.status === 403) throw new Error('That account is not an admin.');
+    if (response.status === 403) throw new Error('Admin or Circle Admin access required for this portal.');
     if (!response.ok) throw new Error('Login failed. Check the credentials and that the API is running.');
 
-    const body = await response.json() as { accessToken: string; refreshToken: string; user: { displayName: string } };
+    const body = await response.json() as { accessToken: string; refreshToken: string; user: { displayName: string; role: WithinRole } };
     localStorage.setItem(ADMIN_TOKEN_KEY, body.accessToken);
     localStorage.setItem(ADMIN_REFRESH_TOKEN_KEY, body.refreshToken);
+    localStorage.setItem(ADMIN_ROLE_KEY, body.user.role);
     this.authed.set(true);
+    this.role.set(body.user.role);
     return body.user.displayName;
   }
 
   logout(): void {
     localStorage.removeItem(ADMIN_TOKEN_KEY);
     localStorage.removeItem(ADMIN_REFRESH_TOKEN_KEY);
+    localStorage.removeItem(ADMIN_ROLE_KEY);
     this.authed.set(false);
+    this.role.set(null);
+  }
+
+  // ---- Circle Admin portal: circles owned by the signed-in circle admin ----
+  getMyCircles(): Promise<AdminCircle[] | null> {
+    return this.adminFetch<AdminCircle[]>('/circle-admin/circles');
+  }
+
+  createMyCircle(payload: CreateCirclePayload): Promise<AdminCircle | null> {
+    return this.adminFetch<AdminCircle>('/circle-admin/circles', 'POST', payload);
+  }
+
+  updateMyCircle(id: string, payload: UpdateCirclePayload): Promise<AdminCircle | null> {
+    return this.adminFetch<AdminCircle>(`/circle-admin/circles/${id}`, 'PUT', payload);
+  }
+
+  getCircleInsights(circleId: string): Promise<CircleInsights | null> {
+    return this.adminFetch<CircleInsights>(`/circle-admin/circles/${circleId}/insights`);
+  }
+
+  getCircleMembers(circleId: string): Promise<CircleAdminMember[] | null> {
+    return this.adminFetch<CircleAdminMember[]>(`/circles/${circleId}/members`);
+  }
+
+  getCircleJoinRequests(circleId: string): Promise<AdminCircleJoinRequest[] | null> {
+    return this.adminFetch<AdminCircleJoinRequest[]>(`/circles/${circleId}/join-requests`);
+  }
+
+  approveOwnedCircleJoinRequest(circleId: string, requestId: string): Promise<void | null> {
+    return this.adminFetch<void>(`/circles/${circleId}/join-requests/${requestId}/approve`, 'POST');
+  }
+
+  rejectOwnedCircleJoinRequest(circleId: string, requestId: string): Promise<void | null> {
+    return this.adminFetch<void>(`/circles/${circleId}/join-requests/${requestId}/reject`, 'POST');
+  }
+
+  postCircleAnnouncement(circleId: string, body: string, isPinned: boolean): Promise<unknown> {
+    return this.adminFetch(`/circles/${circleId}/announcements`, 'POST', { body, isPinned });
+  }
+
+  postCircleThread(circleId: string, payload: {
+    threadType: CommunityPostType;
+    title: string;
+    body: string;
+    postType?: CirclePostType;
+    poll?: { question: string; options: string[] };
+  }): Promise<unknown> {
+    return this.adminFetch(`/circles/${circleId}/threads`, 'POST', payload);
+  }
+
+  getPublishedEvents(): Promise<EventItem[] | null> {
+    return this.adminFetch<EventItem[]>('/events');
+  }
+
+  shareCircleEvent(circleId: string, eventId: string, optionalNote: string | null): Promise<unknown> {
+    return this.adminFetch(`/circles/${circleId}/events`, 'POST', { eventId, optionalNote });
   }
 
   getSubmissions(): Promise<AdminSubmission[] | null> {
@@ -46,6 +108,14 @@ export class AdminService {
 
   getUsers(): Promise<AdminUserRecord[] | null> {
     return this.adminFetch<AdminUserRecord[]>('/admin/users');
+  }
+
+  updateUserRole(id: string, role: WithinRole): Promise<AdminUserRecord | null> {
+    return this.adminFetch<AdminUserRecord>(`/admin/users/${id}/role`, 'PUT', { role });
+  }
+
+  setCircleAdmin(circleId: string, userId: string): Promise<void | null> {
+    return this.adminFetch<void>(`/admin/circles/${circleId}/admin`, 'PUT', { userId });
   }
 
   getProviderApplications(): Promise<ProviderApplication[] | null> {

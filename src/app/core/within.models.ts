@@ -8,7 +8,7 @@ export type ProviderPriceType = 'Free' | 'Fixed' | 'FromPrice' | 'ContactProvide
 export type ProviderServiceDeliveryMode = 'InPerson' | 'Online' | 'Hybrid';
 export type WithinLens = 'Move' | 'Feel' | 'Seek';
 export type AdminProviderFilter = 'all' | ProviderApplicationStatus;
-export type WithinRole = 'User' | 'Provider' | 'Admin';
+export type WithinRole = 'User' | 'Provider' | 'Admin' | 'CircleAdmin';
 export type SignupType = 'Internal' | 'External';
 export type EventStatus = 'Draft' | 'Published' | 'Cancelled';
 export type EventJoinState = 'Interested' | 'Going' | 'Attended' | 'Declined';
@@ -435,6 +435,46 @@ export type HabitCategory = 'Mind' | 'Body' | 'Lifestyle' | 'Social' | 'Nature';
 export type CircleType = 'Platform' | 'Provider' | 'EventCohort' | 'PrivateSupport';
 export type CircleVisibility = 'Public' | 'Private' | 'Hidden';
 export type CircleStatus = 'Active' | 'Archived';
+export type CirclePostType = 'Standard' | 'System' | 'Announcement' | 'EventShare' | 'WeeklyCheckIn' | 'Poll';
+export type CircleMemberRole = 'Admin' | 'Moderator' | 'Member';
+export type CircleMemberStatus = 'Active' | 'Left' | 'Removed' | 'Pending' | 'Rejected' | 'Blocked';
+
+export interface CircleAdminMember {
+  userId: string | null;
+  displayName: string;
+  role: CircleMemberRole;
+  status: CircleMemberStatus;
+  joinedAt: string;
+  badges?: string[] | null;
+}
+
+export interface CircleMoodSplit {
+  great: number;
+  good: number;
+  okay: number;
+  struggling: number;
+  total: number;
+}
+
+export interface CircleTopContributor {
+  userId: string;
+  displayName: string;
+  contributions: number;
+}
+
+export interface CircleInsights {
+  memberCount: number;
+  newMembers14d: number;
+  activeMembers30d: number;
+  pendingJoinRequests: number;
+  threadCount: number;
+  totalComments: number;
+  totalReactions: number;
+  totalHelpful: number;
+  pollVotes: number;
+  latestCheckIn: CircleMoodSplit | null;
+  topContributors: CircleTopContributor[];
+}
 
 export interface AdminHabitTemplate {
   id: string;
