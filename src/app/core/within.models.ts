@@ -473,9 +473,23 @@ export interface AdminCircle {
   visibility: CircleVisibility;
   status: CircleStatus;
   lens: WithinLens;
+  requiresApproval: boolean;
   memberCount: number;
   threadCount: number;
   eventCount: number;
+}
+
+export type CircleJoinRequestStatus = 'Pending' | 'Approved' | 'Rejected';
+
+export interface AdminCircleJoinRequest {
+  id: string;
+  circleId: string;
+  circleName: string;
+  user: CommunityAuthor;
+  status: CircleJoinRequestStatus;
+  requestedAt: string;
+  reviewedBy: CommunityAuthor | null;
+  reviewedAt: string | null;
 }
 
 export interface CreateCirclePayload {
@@ -484,6 +498,7 @@ export interface CreateCirclePayload {
   lens: WithinLens;
   visibility: CircleVisibility;
   rules: string | null;
+  requiresApproval: boolean;
 }
 
 export interface UpdateCirclePayload {
@@ -493,6 +508,7 @@ export interface UpdateCirclePayload {
   visibility: CircleVisibility;
   status: CircleStatus;
   rules: string | null;
+  requiresApproval: boolean;
 }
 
 export interface AdminCircleGuideline {

@@ -267,16 +267,12 @@
               <option *ngFor="let lens of lensOptions" [value]="lens">{{ lens }}</option>
             </select>
           </label>
-          <label>Visibility
-            <select name="circleVisibility" [(ngModel)]="circleDraft.visibility">
-              <option *ngFor="let visibility of circleVisibilityOptions" [value]="visibility">{{ visibility }}</option>
-            </select>
-          </label>
           <label *ngIf="circleDraft.id">Status
             <select name="circleStatus" [(ngModel)]="circleDraft.status">
               <option *ngFor="let status of circleStatusOptions" [value]="status">{{ status }}</option>
             </select>
           </label>
+          <label class="admin-md-check"><input type="checkbox" name="circleRequiresApproval" [(ngModel)]="circleDraft.requiresApproval" /> Require admin approval to join</label>
           <label>Rules<textarea name="circleRules" [(ngModel)]="circleDraft.rules" maxlength="2000"></textarea></label>
           <div class="admin-md-actions">
             <button type="submit">{{ circleDraft.id ? 'Save changes' : 'Add circle' }}</button>
@@ -284,15 +280,38 @@
           </div>
         </form>
 
+        <div class="admin-md-approvals">
+          <div class="admin-md-approvals-head">
+            <h3>Pending join approvals</h3>
+            <span class="admin-pill" *ngIf="circleJoinRequests().length">{{ circleJoinRequests().length }} waiting</span>
+            <button type="button" (click)="reloadCircleJoinRequests()">Refresh</button>
+          </div>
+          <p *ngIf="!circleJoinRequests().length" class="admin-empty">No circles are waiting on approval.</p>
+          <table class="admin-users-table" *ngIf="circleJoinRequests().length">
+            <thead><tr><th>Member</th><th>Circle</th><th>Requested</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let request of circleJoinRequests()">
+                <td>{{ request.user.displayName }}</td>
+                <td>{{ request.circleName }}</td>
+                <td>{{ request.requestedAt | date:'medium' }}</td>
+                <td>
+                  <button type="button" (click)="approveCircleJoinRequest(request)">Approve</button>
+                  <button type="button" (click)="rejectCircleJoinRequest(request)">Decline</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <p *ngIf="!circles().length" class="admin-empty">No platform circles yet. Add one above.</p>
         <div class="admin-users" *ngIf="circles().length">
           <table class="admin-users-table">
-            <thead><tr><th>Name</th><th>Lens</th><th>Visibility</th><th>Status</th><th>Members</th><th></th></tr></thead>
+            <thead><tr><th>Name</th><th>Lens</th><th>Approval</th><th>Status</th><th>Members</th><th></th></tr></thead>
             <tbody>
               <tr *ngFor="let circle of circles()" [class.active]="selectedCircleId() === circle.id">
                 <td>{{ circle.name }}</td>
                 <td>{{ circle.lens }}</td>
-                <td>{{ circle.visibility }}</td>
+                <td>{{ circle.requiresApproval ? 'Required' : 'Open' }}</td>
                 <td>{{ circle.status }}</td>
                 <td>{{ circle.memberCount }}</td>
                 <td>

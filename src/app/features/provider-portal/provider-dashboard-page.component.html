@@ -76,7 +76,7 @@
             </div>
             <div class="wp-list">
               <p class="wp-empty" *ngIf="!recentEvents().length">No events yet. Create your first event to get started.</p>
-              <button type="button" class="wp-row" *ngFor="let event of recentEvents()" (click)="editEvent(event); setSection('events')">
+              <button type="button" class="wp-row" *ngFor="let event of recentEvents()" (click)="editEvent(event)">
                 <span class="provider-status-pill" [attr.data-status]="event.status">{{ event.status }}</span>
                 <span class="provider-retreat-pill" *ngIf="event.eventType === 'retreat'">Retreat</span>
                 <span class="wp-row-title">{{ event.title }}</span>
@@ -102,7 +102,33 @@
 
       <!-- ===================== EVENTS ===================== -->
       <ng-container *ngIf="section() === 'events'">
-        <div class="wp-grid-2">
+        <!-- Event library grid (default view) -->
+        <section class="wp-card" *ngIf="!editorOpen()">
+          <div class="wp-card-head">
+            <div><span class="wp-eyebrow">Event library</span><h3>Your events</h3></div>
+            <button type="button" class="primary-action" (click)="goCreateEvent()"><span class="material-symbols-rounded">add</span>Create event</button>
+          </div>
+          <p class="wp-empty" *ngIf="!events().length">No events yet. Create your first event to get started.</p>
+          <div class="provider-event-grid">
+            <button type="button" class="provider-event-card" *ngFor="let event of events()" (click)="editEvent(event)">
+              <span class="provider-event-card-media" *ngIf="event.imageUrl" [style.background-image]="'url(' + event.imageUrl + ')'"></span>
+              <span class="provider-event-card-body">
+                <span class="provider-event-card-pills">
+                  <span class="provider-status-pill" [attr.data-status]="event.status">{{ event.status }}</span>
+                  <span class="provider-retreat-pill" *ngIf="event.eventType === 'retreat'">Retreat</span>
+                </span>
+                <span class="provider-event-card-title">{{ event.title }}</span>
+                <span class="provider-event-card-meta">{{ eventTime(event) }}</span>
+                <span class="provider-event-card-meta">{{ event.locationName }}</span>
+                <span class="provider-event-card-foot">{{ event.goingCount }}/{{ event.capacity }} going</span>
+              </span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Event editor (opens on create / edit) -->
+        <div class="provider-event-editor" *ngIf="editorOpen()">
+          <button type="button" class="admin-signout provider-editor-back" (click)="closeEditor()"><span class="material-symbols-rounded">arrow_back</span>Back to events</button>
           <form class="wp-card" (ngSubmit)="saveEvent()">
             <div class="wp-section-head">
               <div>
@@ -235,26 +261,9 @@
               <button type="button" class="admin-signout" (click)="newEvent()">Clear</button>
             </div>
           </form>
-
-          <section class="wp-card">
-            <div class="wp-card-head">
-              <div><span class="wp-eyebrow">Event library</span><h3>Your events</h3></div>
-              <span class="wp-row-num">{{ events().length }} total</span>
-            </div>
-            <div class="wp-list">
-              <p class="wp-empty" *ngIf="!events().length">No events yet. Create your first event with the form.</p>
-              <button type="button" class="wp-row" *ngFor="let event of events()" [class.active]="event.id === selectedEventId()" (click)="editEvent(event)">
-                <span class="provider-status-pill" [attr.data-status]="event.status">{{ event.status }}</span>
-                <span class="provider-retreat-pill" *ngIf="event.eventType === 'retreat'">Retreat</span>
-                <span class="wp-row-title">{{ event.title }}</span>
-                <span class="wp-row-meta">{{ eventTime(event) }} · {{ event.locationName }}</span>
-                <span class="wp-row-num">{{ event.goingCount }}/{{ event.capacity }}</span>
-              </button>
-            </div>
-          </section>
         </div>
 
-        <section class="wp-card" *ngIf="selectedEvent() as event">
+        <section class="wp-card" *ngIf="editorOpen() && selectedEvent() as event">
           <div class="wp-card-head">
             <div><span class="wp-eyebrow">Event responses</span><h3>{{ engagement()?.eventTitle || event.title }}</h3></div>
             <button type="button" class="admin-refresh" (click)="loadEngagement()" [disabled]="engagementLoading()">{{ engagementLoading() ? 'Loading…' : 'Refresh responses' }}</button>

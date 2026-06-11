@@ -126,6 +126,8 @@ export class ProviderDashboardPageComponent {
 
   // ---- Dashboard navigation ----
   protected readonly section = signal<ProviderSection>('overview');
+  // The event editor (create/edit form) is hidden until the provider creates or edits an event.
+  protected readonly editorOpen = signal(false);
   protected readonly navOpen = signal(false);
   protected readonly navItems: { id: ProviderSection; label: string; icon: string }[] = [
     { id: 'overview', label: 'Overview', icon: 'dashboard' },
@@ -274,11 +276,19 @@ export class ProviderDashboardPageComponent {
   protected setSection(section: ProviderSection): void {
     this.section.set(section);
     this.navOpen.set(false);
+    this.editorOpen.set(false);
   }
 
   protected goCreateEvent(): void {
     this.newEvent();
     this.setSection('events');
+    this.editorOpen.set(true);
+  }
+
+  protected closeEditor(): void {
+    this.editorOpen.set(false);
+    this.selectedEventId.set(null);
+    this.engagement.set(null);
   }
 
   protected goAddService(): void {
@@ -287,6 +297,8 @@ export class ProviderDashboardPageComponent {
   }
 
   protected async editEvent(event: EventItem): Promise<void> {
+    this.setSection('events');
+    this.editorOpen.set(true);
     this.selectedEventId.set(event.id);
     this.title.set(event.title);
     this.description.set(event.description);

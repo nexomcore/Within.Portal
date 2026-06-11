@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { ADMIN_REFRESH_TOKEN_KEY, ADMIN_TOKEN_KEY, API_BASE } from './api.config';
 import {
-  AdminCircle, AdminCircleGuideline, AdminHabitTemplate, AdminStats, AdminSubmission, AdminUserRecord,
+  AdminCircle, AdminCircleGuideline, AdminCircleJoinRequest, AdminHabitTemplate, AdminStats, AdminSubmission, AdminUserRecord,
   CommunityReport, CommunityReportStatus,
   CreateCirclePayload, CreateHabitTemplatePayload,
   GuidelinePayload, GuidelineUpdatePayload,
@@ -157,6 +157,18 @@ export class AdminService {
 
   archiveCircle(id: string): Promise<void | null> {
     return this.adminFetch<void>(`/admin/circles/${id}`, 'DELETE');
+  }
+
+  listCircleJoinRequests(): Promise<AdminCircleJoinRequest[] | null> {
+    return this.adminFetch<AdminCircleJoinRequest[]>('/admin/circles/join-requests');
+  }
+
+  approveCircleJoinRequest(circleId: string, requestId: string): Promise<void | null> {
+    return this.adminFetch<void>(`/admin/circles/${circleId}/join-requests/${requestId}/approve`, 'POST');
+  }
+
+  rejectCircleJoinRequest(circleId: string, requestId: string): Promise<void | null> {
+    return this.adminFetch<void>(`/admin/circles/${circleId}/join-requests/${requestId}/reject`, 'POST');
   }
 
   listGuidelines(circleId: string): Promise<AdminCircleGuideline[] | null> {

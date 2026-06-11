@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AdminService } from '../../core/admin.service';
 import { formatKey, formatProviderCategory, formatProviderStatus, formatValue, providerApplicationEntries, trustChecklist } from '../../core/formatters';
-import { AdminAnswerEntry, AdminAudienceFilter, AdminCircle, AdminCircleGuideline, AdminHabitTemplate, AdminStats, AdminSubmission, AdminUserRecord, AdminProviderFilter, CircleStatus, CircleVisibility, CommunityReport, CommunityReportStatus, HabitCategory, ProviderApplication, ProviderApplicationStatus, WithinLens } from '../../core/within.models';
+import { AdminAnswerEntry, AdminAudienceFilter, AdminCircle, AdminCircleGuideline, AdminCircleJoinRequest, AdminHabitTemplate, AdminStats, AdminSubmission, AdminUserRecord, AdminProviderFilter, CircleStatus, CircleVisibility, CommunityReport, CommunityReportStatus, HabitCategory, ProviderApplication, ProviderApplicationStatus, WithinLens } from '../../core/within.models';
 import { providerStatusFilters } from '../../core/within-options';
 
 @Component({
@@ -61,7 +61,6 @@ export class AdminPageComponent {
   // ---- Master data (admin-managed) ----
   protected readonly habitCategoryOptions: HabitCategory[] = ['Mind', 'Body', 'Lifestyle', 'Social', 'Nature'];
   protected readonly lensOptions: WithinLens[] = ['Move', 'Feel', 'Seek'];
-  protected readonly circleVisibilityOptions: CircleVisibility[] = ['Public', 'Private'];
   protected readonly circleStatusOptions: CircleStatus[] = ['Active', 'Archived'];
 
   protected readonly habitTemplates = signal<AdminHabitTemplate[]>([]);
@@ -69,8 +68,9 @@ export class AdminPageComponent {
     { id: null, name: '', category: 'Mind', description: '', iconKey: '', sortOrder: 0, isActive: true };
 
   protected readonly circles = signal<AdminCircle[]>([]);
-  protected circleDraft: { id: string | null; name: string; description: string; lens: WithinLens; visibility: CircleVisibility; status: CircleStatus; rules: string } =
-    { id: null, name: '', description: '', lens: 'Feel', visibility: 'Public', status: 'Active', rules: '' };
+  protected readonly circleJoinRequests = signal<AdminCircleJoinRequest[]>([]);
+  protected circleDraft: { id: string | null; name: string; description: string; lens: WithinLens; visibility: CircleVisibility; status: CircleStatus; rules: string; requiresApproval: boolean } =
+    { id: null, name: '', description: '', lens: 'Feel', visibility: 'Public', status: 'Active', rules: '', requiresApproval: false };
   protected readonly selectedCircleId = signal<string | null>(null);
   protected readonly guidelines = signal<AdminCircleGuideline[]>([]);
   protected guidelineDraft: { id: string | null; title: string; body: string; sortOrder: number; isActive: boolean } =
@@ -180,11 +180,37 @@ export class AdminPageComponent {
   }
 
   protected async loadMasterData(): Promise<void> {
-    const [habitTemplates, circles] = await Promise.all([
+    const [habitTemplates, circles, joinRequests] = await Promise.all([
       this.admin.listHabitTemplates(),
       this.admin.listCircles(),
+      this.admin.listCircleJoinRequests(),
     ]);
     if (habitTemplates) this.habitTemplates.set(habitTemplates);
+    if (circles) this.circles.set(circles);
+    if (joinRequests) this.circleJoinRequests.set(joinRequests);
+  }
+
+  protected async reloadCircleJoinRequests(): Promise<void> {
+    const joinRequests = await this.admin.listCircleJoinRequests();
+    if (joinRequests) this.circleJoinRequests.set(joinRequests);
+  }
+
+  protected async approveCircleJoinRequest(request: AdminCircleJoinRequest): Promise<void> {
+    const result = await this.admin.approveCircleJoinRequest(request.circleId, request.id);
+    if (result === null) { this.adminMessage.set('Could not approve the request.'); return; }
+    this.adminMessage.set(`Approved ${request.user.displayName} for ${request.circleName}.`);
+    await Promise.all([this.reloadCircleJoinRequests(), this.refreshCirclesList()]);
+  }
+
+  protected async rejectCircleJoinRequest(request: AdminCircleJoinRequest): Promise<void> {
+    const result = await this.admin.rejectCircleJoinRequest(request.circleId, request.id);
+    if (result === null) { this.adminMessage.set('Could not reject the request.'); return; }
+    this.adminMessage.set(`Declined ${request.user.displayName} for ${request.circleName}.`);
+    await this.reloadCircleJoinRequests();
+  }
+
+  private async refreshCirclesList(): Promise<void> {
+    const circles = await this.admin.listCircles();
     if (circles) this.circles.set(circles);
   }
 
@@ -429,6 +455,7 @@ export class AdminPageComponent {
     this.circleDraft = {
       id: circle.id, name: circle.name, description: circle.description, lens: circle.lens,
       visibility: circle.visibility === 'Hidden' ? 'Public' : circle.visibility, status: circle.status, rules: circle.rules ?? '',
+      requiresApproval: circle.requiresApproval,
     };
     this.resetGuidelineDraft();
     const guidelines = await this.admin.listGuidelines(circle.id);
@@ -436,7 +463,7 @@ export class AdminPageComponent {
   }
 
   protected resetCircleDraft(): void {
-    this.circleDraft = { id: null, name: '', description: '', lens: 'Feel', visibility: 'Public', status: 'Active', rules: '' };
+    this.circleDraft = { id: null, name: '', description: '', lens: 'Feel', visibility: 'Public', status: 'Active', rules: '', requiresApproval: false };
     this.selectedCircleId.set(null);
     this.guidelines.set([]);
     this.resetGuidelineDraft();
@@ -447,9 +474,10 @@ export class AdminPageComponent {
     const description = this.circleDraft.description.trim();
     if (!name || !description) { this.adminMessage.set('Circle name and description are required.'); return; }
     const rules = this.circleDraft.rules.trim() || null;
+    const requiresApproval = this.circleDraft.requiresApproval;
     const result = this.circleDraft.id
-      ? await this.admin.updateCircle(this.circleDraft.id, { name, description, lens: this.circleDraft.lens, visibility: this.circleDraft.visibility, status: this.circleDraft.status, rules })
-      : await this.admin.createCircle({ name, description, lens: this.circleDraft.lens, visibility: this.circleDraft.visibility, rules });
+      ? await this.admin.updateCircle(this.circleDraft.id, { name, description, lens: this.circleDraft.lens, visibility: this.circleDraft.visibility, status: this.circleDraft.status, rules, requiresApproval })
+      : await this.admin.createCircle({ name, description, lens: this.circleDraft.lens, visibility: this.circleDraft.visibility, rules, requiresApproval });
     if (!result) { this.adminMessage.set('Could not save circle.'); return; }
     const circles = await this.admin.listCircles();
     if (circles) this.circles.set(circles);
