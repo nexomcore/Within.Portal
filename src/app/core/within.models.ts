@@ -22,6 +22,10 @@ export type CommunityPostType = 'AskCommunity' | 'ShareExperience' | 'FindBuddy'
 export type CommunityContentStatus = 'Active' | 'Hidden' | 'Removed' | 'UnderReview';
 export type CommunityReportReason = 'SpamOrPromotion' | 'HarassmentOrAbuse' | 'MedicalMisinformation' | 'InappropriateContent' | 'SafetyConcern' | 'Other';
 export type CommunityReportStatus = 'Pending' | 'Reviewed' | 'ActionTaken' | 'Dismissed';
+export type ProgramCategory = 'Fitness' | 'Nutrition' | 'Yoga' | 'Meditation' | 'Mindfulness' | 'SpiritualGrowth' | 'GeneralWellbeing';
+export type ProgramTaskType = 'Exercise' | 'Meal' | 'YogaPose' | 'Meditation' | 'Reflection' | 'Reading' | 'Habit' | 'Custom';
+export type AssignedProgramStatus = 'Draft' | 'Active' | 'Paused' | 'Completed' | 'Cancelled';
+export type AssignedProgramTaskStatus = 'Pending' | 'Completed' | 'Skipped';
 
 export interface AdminSubmission {
   id: string;
@@ -352,6 +356,142 @@ export interface ProviderEventEngagement {
   interested: ProviderEventParticipant[];
   declined: ProviderEventParticipant[];
   saved: ProviderEventParticipant[];
+}
+
+export interface ProgramTemplateTask {
+  id: string;
+  taskType: ProgramTaskType;
+  title: string;
+  description: string | null;
+  instructions: string | null;
+  durationMinutes: number | null;
+  sets: number | null;
+  reps: string | null;
+  weight: number | null;
+  distance: number | null;
+  calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
+  attachmentUrl: string | null;
+  sortOrder: number;
+}
+
+export interface ProgramTemplateDay {
+  id: string;
+  dayNumber: number;
+  title: string;
+  description: string | null;
+  tasks: ProgramTemplateTask[];
+}
+
+export interface ProgramTemplateWeek {
+  id: string;
+  weekNumber: number;
+  title: string;
+  description: string | null;
+  days: ProgramTemplateDay[];
+}
+
+export interface ProgramTemplate {
+  id: string;
+  providerId: string;
+  title: string;
+  description: string;
+  category: ProgramCategory;
+  durationWeeks: number;
+  difficultyLevel: string;
+  goal: string;
+  isPublicTemplate: boolean;
+  weeks: ProgramTemplateWeek[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ProgramTemplatePayload = Omit<ProgramTemplate, 'id' | 'providerId' | 'createdAt' | 'updatedAt'>;
+
+export interface AssignedProgramTask {
+  id: string;
+  assignedProgramId: string;
+  weekNumber: number;
+  dayNumber: number;
+  taskType: ProgramTaskType;
+  title: string;
+  description: string | null;
+  instructions: string | null;
+  durationMinutes: number | null;
+  sets: number | null;
+  reps: string | null;
+  weight: number | null;
+  distance: number | null;
+  calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
+  attachmentUrl: string | null;
+  scheduledDate: string;
+  status: AssignedProgramTaskStatus;
+  clientNotes: string | null;
+  providerFeedback: string | null;
+  completedAt: string | null;
+  sortOrder: number;
+}
+
+export interface AssignedProgram {
+  id: string;
+  programTemplateId: string;
+  providerId: string;
+  providerName: string;
+  clientUserId: string;
+  clientName: string;
+  title: string;
+  description: string;
+  category: ProgramCategory;
+  startDate: string;
+  endDate: string;
+  status: AssignedProgramStatus;
+  providerNotes: string | null;
+  progressPercent: number;
+  completedTasks: number;
+  skippedTasks: number;
+  pendingTasks: number;
+  currentStreakDays: number;
+  tasks: AssignedProgramTask[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AssignProgramPayload {
+  programTemplateId: string;
+  clientUserId: string;
+  startDate: string;
+  title: string | null;
+  providerNotes: string | null;
+}
+
+export interface ProviderProgramClient {
+  userId: string;
+  displayName: string;
+  activeProgramCount: number;
+  lastActiveUtc: string | null;
+}
+
+export interface ClientCheckIn {
+  id: string;
+  assignedProgramId: string;
+  clientUserId: string;
+  providerId: string;
+  checkInDate: string;
+  weight: number | null;
+  energyLevel: number | null;
+  stressLevel: number | null;
+  sleepQuality: number | null;
+  mood: string | null;
+  complianceScore: number | null;
+  clientNotes: string | null;
+  providerFeedback: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CommunityAuthor {

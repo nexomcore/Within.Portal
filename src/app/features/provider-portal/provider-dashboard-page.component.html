@@ -63,6 +63,7 @@
           <div class="wp-quick">
             <button type="button" class="wp-quick-btn" (click)="goCreateEvent()"><span class="wp-stat-ico"><span class="material-symbols-rounded">add</span></span><strong>Create event</strong><span>Publish a new Within event</span></button>
             <button type="button" class="wp-quick-btn" (click)="goAddService()"><span class="wp-stat-ico"><span class="material-symbols-rounded">design_services</span></span><strong>Add service</strong><span>Grow your catalogue</span></button>
+            <button type="button" class="wp-quick-btn" (click)="goPrograms()"><span class="wp-stat-ico"><span class="material-symbols-rounded">assignment</span></span><strong>Client program</strong><span>Assign plans and review progress</span></button>
             <button type="button" class="wp-quick-btn" (click)="setSection('profile')"><span class="wp-stat-ico"><span class="material-symbols-rounded">storefront</span></span><strong>Edit profile</strong><span>Update your public details</span></button>
             <button type="button" class="wp-quick-btn" (click)="setSection('events')"><span class="wp-stat-ico"><span class="material-symbols-rounded">insights</span></span><strong>View responses</strong><span>See who's coming along</span></button>
           </div>
@@ -349,6 +350,127 @@
             </div>
           </section>
         </div>
+      </ng-container>
+
+      <!-- ===================== CLIENT PROGRAMS ===================== -->
+      <ng-container *ngIf="section() === 'programs'">
+        <div class="wp-grid-2">
+          <form class="wp-card" (ngSubmit)="saveProgramTemplate()">
+            <div class="wp-section-head">
+              <div>
+                <span class="wp-eyebrow">Program templates</span>
+                <h2>Create reusable template</h2>
+                <p>Start with one week, one day and one task. You can expand the assigned program per client after assignment.</p>
+              </div>
+            </div>
+            <div class="provider-form-grid">
+              <label>Title<input name="programTitle" type="text" [ngModel]="programTitle()" (ngModelChange)="programTitle.set($event)" /></label>
+              <label>Category<select name="programCategory" [ngModel]="programCategory()" (ngModelChange)="programCategory.set($event)"><option *ngFor="let option of programCategoryOptions" [value]="option">{{ option }}</option></select></label>
+              <label>Goal<input name="programGoal" type="text" [ngModel]="programGoal()" (ngModelChange)="programGoal.set($event)" /></label>
+              <label>Duration weeks<input name="programDurationWeeks" type="number" min="1" max="52" [ngModel]="programDurationWeeks()" (ngModelChange)="programDurationWeeks.set(+$event)" /></label>
+              <label>Difficulty<input name="programDifficulty" type="text" [ngModel]="programDifficulty()" (ngModelChange)="programDifficulty.set($event)" /></label>
+              <label class="full-width">Description<textarea name="programDescription" rows="3" [ngModel]="programDescription()" (ngModelChange)="programDescription.set($event)"></textarea></label>
+              <label>Week title<input name="programWeekTitle" type="text" [ngModel]="programWeekTitle()" (ngModelChange)="programWeekTitle.set($event)" /></label>
+              <label>Day title<input name="programDayTitle" type="text" [ngModel]="programDayTitle()" (ngModelChange)="programDayTitle.set($event)" /></label>
+              <label>Task type<select name="programTaskType" [ngModel]="programTaskType()" (ngModelChange)="programTaskType.set($event)"><option *ngFor="let option of programTaskTypeOptions" [value]="option">{{ option }}</option></select></label>
+              <label>Task duration<input name="programTaskDuration" type="number" min="0" [ngModel]="programTaskDuration()" (ngModelChange)="programTaskDuration.set($event === '' ? null : +$event)" /></label>
+              <label class="full-width">Task title<input name="programTaskTitle" type="text" [ngModel]="programTaskTitle()" (ngModelChange)="programTaskTitle.set($event)" /></label>
+              <label class="full-width">Instructions<textarea name="programTaskInstructions" rows="3" [ngModel]="programTaskInstructions()" (ngModelChange)="programTaskInstructions.set($event)"></textarea></label>
+            </div>
+            <div class="provider-form-actions">
+              <button type="submit" class="primary-action" [disabled]="saving()">Create template</button>
+            </div>
+          </form>
+
+          <form class="wp-card" (ngSubmit)="assignProgram()">
+            <div class="wp-section-head">
+              <div>
+                <span class="wp-eyebrow">Assign program</span>
+                <h2>Client-specific plan</h2>
+                <p>Assignment copies the template into independent tasks for this client.</p>
+              </div>
+            </div>
+            <div class="provider-form-grid">
+              <label class="full-width">Template<select name="assignTemplateId" [ngModel]="assignTemplateId()" (ngModelChange)="assignTemplateId.set($event)"><option value="">Select template</option><option *ngFor="let template of programTemplates()" [value]="template.id">{{ template.title }}</option></select></label>
+              <label class="full-width">Known clients<select name="knownClient" [ngModel]="assignClientUserId()" (ngModelChange)="assignClientUserId.set($event)"><option value="">Enter manually or choose existing</option><option *ngFor="let client of programClients()" [value]="client.userId">{{ client.displayName }}</option></select></label>
+              <label class="full-width">Client user id<input name="assignClientUserId" type="text" [ngModel]="assignClientUserId()" (ngModelChange)="assignClientUserId.set($event)" /></label>
+              <label>Start date<input name="assignStartDate" type="date" [ngModel]="assignStartDate()" (ngModelChange)="assignStartDate.set($event)" /></label>
+              <label>Custom title<input name="assignTitle" type="text" [ngModel]="assignTitle()" (ngModelChange)="assignTitle.set($event)" /></label>
+              <label class="full-width">Provider notes<textarea name="assignNotes" rows="3" [ngModel]="assignNotes()" (ngModelChange)="assignNotes.set($event)"></textarea></label>
+            </div>
+            <div class="provider-form-actions">
+              <button type="submit" class="primary-action" [disabled]="saving()">Assign program</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="wp-grid-2">
+          <section class="wp-card">
+            <div class="wp-card-head">
+              <div><span class="wp-eyebrow">Templates</span><h3>Your reusable programs</h3></div>
+              <span class="wp-row-num">{{ programTemplates().length }} total</span>
+            </div>
+            <div class="wp-list">
+              <p class="wp-empty" *ngIf="!programTemplates().length">No templates yet. Create one with the builder.</p>
+              <article class="wp-row" *ngFor="let template of programTemplates()">
+                <span class="provider-status-pill">{{ template.category }}</span>
+                <span class="wp-row-title">{{ template.title }}</span>
+                <span class="wp-row-meta">{{ template.goal }} Â· {{ template.durationWeeks }} weeks Â· {{ template.difficultyLevel }}</span>
+                <span class="wp-row-num">{{ template.weeks.length }} weeks</span>
+              </article>
+            </div>
+          </section>
+
+          <section class="wp-card">
+            <div class="wp-card-head">
+              <div><span class="wp-eyebrow">Assigned programs</span><h3>Client progress</h3></div>
+              <span class="wp-row-num">{{ activeAssignedPrograms().length }} active</span>
+            </div>
+            <div class="wp-list">
+              <p class="wp-empty" *ngIf="!assignedPrograms().length">No assigned programs yet.</p>
+              <button type="button" class="wp-row" *ngFor="let program of assignedPrograms()" [class.active]="program.id === selectedProgramId()" (click)="loadProgramCheckIns(program)">
+                <span class="provider-status-pill" [attr.data-status]="program.status">{{ program.status }}</span>
+                <span class="wp-row-title">{{ program.title }}</span>
+                <span class="wp-row-meta">{{ program.clientName }} Â· {{ program.category }} Â· {{ program.completedTasks }}/{{ program.tasks.length }} tasks</span>
+                <span class="wp-row-num">{{ program.progressPercent }}%</span>
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <section class="wp-card" *ngIf="selectedProgram() as program">
+          <div class="wp-section-head">
+            <div>
+              <span class="wp-eyebrow">Progress review</span>
+              <h2>{{ program.title }}</h2>
+              <p>{{ program.clientName }} Â· {{ program.completedTasks }} completed, {{ program.skippedTasks }} skipped, {{ program.pendingTasks }} pending Â· {{ program.currentStreakDays }} day streak</p>
+            </div>
+            <span class="provider-status-pill" [attr.data-status]="program.status">{{ program.progressPercent }}%</span>
+          </div>
+
+          <div class="provider-response-grid">
+            <section class="provider-response-group">
+              <h3>Tasks</h3>
+              <article class="provider-person-row" *ngFor="let task of program.tasks">
+                <strong>{{ task.scheduledDate }} · {{ task.title }}</strong>
+                <span>{{ task.taskType }} · {{ task.status }} <ng-container *ngIf="task.clientNotes">· {{ task.clientNotes }}</ng-container></span>
+                <textarea rows="2" placeholder="Feedback for this task" [ngModel]="taskFeedback()" (ngModelChange)="taskFeedback.set($event)" [ngModelOptions]="{standalone: true}"></textarea>
+                <button type="button" class="admin-refresh" (click)="saveTaskFeedback(task.id)">Send feedback</button>
+              </article>
+            </section>
+            <section class="provider-response-group">
+              <h3>Check-ins</h3>
+              <p class="wp-empty" *ngIf="!programCheckIns().length">No check-ins submitted yet.</p>
+              <article class="provider-person-row" *ngFor="let checkIn of programCheckIns()">
+                <strong>{{ checkIn.checkInDate }} · {{ checkIn.mood || 'Mood not set' }}</strong>
+                <span>Energy {{ checkIn.energyLevel || '-' }} · Stress {{ checkIn.stressLevel || '-' }} · Compliance {{ checkIn.complianceScore || '-' }}</span>
+                <span *ngIf="checkIn.clientNotes">{{ checkIn.clientNotes }}</span>
+                <textarea rows="2" placeholder="Feedback for this check-in" [ngModel]="checkInFeedback()" (ngModelChange)="checkInFeedback.set($event)" [ngModelOptions]="{standalone: true}"></textarea>
+                <button type="button" class="admin-refresh" (click)="saveCheckInFeedback(checkIn.id)">Send feedback</button>
+              </article>
+            </section>
+          </div>
+        </section>
       </ng-container>
 
       <!-- ===================== PROFILE ===================== -->

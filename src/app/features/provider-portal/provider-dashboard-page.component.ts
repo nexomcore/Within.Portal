@@ -3,10 +3,10 @@ import { Component, WritableSignal, computed, inject, signal } from '@angular/co
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ProviderPortalService } from '../../core/provider-portal.service';
-import { EventAgeRestriction, EventExperienceLevel, EventIntensity, EventItem, EventType, Option, Provider, ProviderEventEngagement, ProviderEventParticipant, ProviderPriceType, ProviderService, ProviderServiceDeliveryMode, RetreatDifficulty, RetreatFocus, SignupType, UpsertEventPayload, UpsertProviderPayload, UpsertProviderServicePayload, WithinLens } from '../../core/within.models';
+import { AssignedProgram, ClientCheckIn, EventAgeRestriction, EventExperienceLevel, EventIntensity, EventItem, EventType, Option, ProgramCategory, ProgramTaskType, ProgramTemplate, ProgramTemplatePayload, Provider, ProviderEventEngagement, ProviderEventParticipant, ProviderPriceType, ProviderProgramClient, ProviderService, ProviderServiceDeliveryMode, RetreatDifficulty, RetreatFocus, SignupType, UpsertEventPayload, UpsertProviderPayload, UpsertProviderServicePayload, WithinLens } from '../../core/within.models';
 import { eventTypeOptions, lensOptions, providerPriceTypeOptions, providerServiceDeliveryModeOptions, retreatDifficultyOptions, retreatFacilityOptions, retreatFocusOptions } from '../../core/within-options';
 
-type ProviderSection = 'overview' | 'events' | 'services' | 'profile';
+type ProviderSection = 'overview' | 'events' | 'services' | 'programs' | 'profile';
 
 @Component({
   selector: 'app-provider-dashboard-page',
@@ -115,6 +115,11 @@ export class ProviderDashboardPageComponent {
   protected readonly provider = signal<Provider | null>(null);
   protected readonly services = signal<ProviderService[]>([]);
   protected readonly events = signal<EventItem[]>([]);
+  protected readonly programTemplates = signal<ProgramTemplate[]>([]);
+  protected readonly assignedPrograms = signal<AssignedProgram[]>([]);
+  protected readonly programClients = signal<ProviderProgramClient[]>([]);
+  protected readonly selectedProgramId = signal<string | null>(null);
+  protected readonly programCheckIns = signal<ClientCheckIn[]>([]);
   protected readonly selectedEventId = signal<string | null>(null);
   protected readonly selectedServiceId = signal<string | null>(null);
   protected readonly engagement = signal<ProviderEventEngagement | null>(null);
@@ -133,12 +138,14 @@ export class ProviderDashboardPageComponent {
     { id: 'overview', label: 'Overview', icon: 'dashboard' },
     { id: 'events', label: 'Events', icon: 'event' },
     { id: 'services', label: 'Services', icon: 'spa' },
+    { id: 'programs', label: 'Client Programs', icon: 'assignment' },
     { id: 'profile', label: 'Profile', icon: 'storefront' },
   ];
   protected readonly sectionMeta: Record<ProviderSection, { title: string; sub: string }> = {
     overview: { title: 'Dashboard', sub: 'Your provider workspace at a glance' },
     events: { title: 'Events', sub: 'Create, publish and monitor your events' },
     services: { title: 'Services', sub: 'Manage your service catalogue' },
+    programs: { title: 'Client Programs', sub: 'Create templates, assign plans and review progress' },
     profile: { title: 'Profile', sub: 'How members discover your practice' },
   };
   protected readonly greeting = computed(() => {
@@ -207,6 +214,27 @@ export class ProviderDashboardPageComponent {
   protected readonly servicePriceType = signal<ProviderPriceType>('ContactProvider');
   protected readonly serviceDeliveryMode = signal<ProviderServiceDeliveryMode>('InPerson');
   protected readonly serviceLocation = signal('');
+  protected readonly programTitle = signal('');
+  protected readonly programDescription = signal('');
+  protected readonly programCategory = signal<ProgramCategory>('GeneralWellbeing');
+  protected readonly programGoal = signal('');
+  protected readonly programDurationWeeks = signal(4);
+  protected readonly programDifficulty = signal('Beginner friendly');
+  protected readonly programWeekTitle = signal('Week 1');
+  protected readonly programDayTitle = signal('Day 1');
+  protected readonly programTaskType = signal<ProgramTaskType>('Custom');
+  protected readonly programTaskTitle = signal('');
+  protected readonly programTaskInstructions = signal('');
+  protected readonly programTaskDuration = signal<number | null>(20);
+  protected readonly assignTemplateId = signal('');
+  protected readonly assignClientUserId = signal('');
+  protected readonly assignStartDate = signal(new Date().toISOString().slice(0, 10));
+  protected readonly assignTitle = signal('');
+  protected readonly assignNotes = signal('');
+  protected readonly taskFeedback = signal('');
+  protected readonly checkInFeedback = signal('');
+  protected readonly programCategoryOptions: ProgramCategory[] = ['Fitness', 'Nutrition', 'Yoga', 'Meditation', 'Mindfulness', 'SpiritualGrowth', 'GeneralWellbeing'];
+  protected readonly programTaskTypeOptions: ProgramTaskType[] = ['Exercise', 'Meal', 'YogaPose', 'Meditation', 'Reflection', 'Reading', 'Habit', 'Custom'];
 
   protected readonly selectedEvent = computed(() =>
     this.events().find(item => item.id === this.selectedEventId()) ?? null
@@ -226,6 +254,12 @@ export class ProviderDashboardPageComponent {
   protected readonly activeServices = computed(() =>
     this.services().filter(item => item.isActive)
   );
+  protected readonly activeAssignedPrograms = computed(() =>
+    this.assignedPrograms().filter(item => item.status === 'Active')
+  );
+  protected readonly selectedProgram = computed(() =>
+    this.assignedPrograms().find(item => item.id === this.selectedProgramId()) ?? null
+  );
 
   constructor() {
     if (!this.authed()) {
@@ -240,13 +274,16 @@ export class ProviderDashboardPageComponent {
     this.loading.set(true);
     this.message.set('');
     try {
-      const [provider, events, services] = await Promise.all([
+      const [provider, events, services, templates, assignedPrograms, programClients] = await Promise.all([
         this.providerPortal.getProvider(),
         this.providerPortal.getEvents(),
         this.providerPortal.getServices(),
+        this.providerPortal.getProgramTemplates(),
+        this.providerPortal.getAssignedPrograms(),
+        this.providerPortal.getProgramClients(),
       ]);
 
-      if (!provider || !events || !services) {
+      if (!provider || !events || !services || !templates || !assignedPrograms || !programClients) {
         this.message.set('Provider session expired. Sign in again.');
         await this.router.navigateByUrl('/providers/login');
         return;
@@ -255,12 +292,16 @@ export class ProviderDashboardPageComponent {
       this.provider.set(provider);
       this.events.set(events);
       this.services.set(services);
+      this.programTemplates.set(templates);
+      this.assignedPrograms.set(assignedPrograms);
+      this.programClients.set(programClients);
       this.populateProfile(provider);
       if (this.selectedEventId() && !events.some(event => event.id === this.selectedEventId())) {
         this.selectedEventId.set(null);
         this.engagement.set(null);
       }
       if (!this.lens()) this.lens.set(provider.lens);
+      if (!this.assignTemplateId() && templates[0]) this.assignTemplateId.set(templates[0].id);
     } catch (error) {
       this.message.set(error instanceof Error ? error.message : 'Could not load provider dashboard.');
     } finally {
@@ -294,6 +335,10 @@ export class ProviderDashboardPageComponent {
   protected goAddService(): void {
     this.newService();
     this.setSection('services');
+  }
+
+  protected goPrograms(): void {
+    this.setSection('programs');
   }
 
   protected async editEvent(event: EventItem): Promise<void> {
@@ -490,6 +535,116 @@ export class ProviderDashboardPageComponent {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  protected async saveProgramTemplate(): Promise<void> {
+    if (!this.programTitle().trim() || !this.programDescription().trim() || !this.programTaskTitle().trim()) {
+      this.message.set('Add a program title, description, and first task.');
+      return;
+    }
+    const payload: ProgramTemplatePayload = {
+      title: this.programTitle().trim(),
+      description: this.programDescription().trim(),
+      category: this.programCategory(),
+      durationWeeks: Number(this.programDurationWeeks()),
+      difficultyLevel: this.programDifficulty().trim(),
+      goal: this.programGoal().trim(),
+      isPublicTemplate: false,
+      weeks: [{
+        id: '',
+        weekNumber: 1,
+        title: this.programWeekTitle().trim() || 'Week 1',
+        description: null,
+        days: [{
+          id: '',
+          dayNumber: 1,
+          title: this.programDayTitle().trim() || 'Day 1',
+          description: null,
+          tasks: [{
+            id: '',
+            taskType: this.programTaskType(),
+            title: this.programTaskTitle().trim(),
+            description: null,
+            instructions: this.programTaskInstructions().trim() || null,
+            durationMinutes: this.programTaskDuration() ? Number(this.programTaskDuration()) : null,
+            sets: null,
+            reps: null,
+            weight: null,
+            distance: null,
+            calories: null,
+            protein: null,
+            carbs: null,
+            fat: null,
+            attachmentUrl: null,
+            sortOrder: 1,
+          }],
+        }],
+      }],
+    };
+    this.saving.set(true);
+    try {
+      const saved = await this.providerPortal.createProgramTemplate(payload);
+      if (!saved) return;
+      await this.load();
+      this.assignTemplateId.set(saved.id);
+      this.message.set('Program template created.');
+    } catch (error) {
+      this.message.set(error instanceof Error ? error.message : 'Could not save program template.');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  protected async assignProgram(): Promise<void> {
+    if (!this.assignTemplateId() || !this.assignClientUserId().trim()) {
+      this.message.set('Select a template and enter a client user id.');
+      return;
+    }
+    this.saving.set(true);
+    try {
+      const assigned = await this.providerPortal.assignProgram({
+        programTemplateId: this.assignTemplateId(),
+        clientUserId: this.assignClientUserId().trim(),
+        startDate: this.assignStartDate(),
+        title: this.assignTitle().trim() || null,
+        providerNotes: this.assignNotes().trim() || null,
+      });
+      if (!assigned) return;
+      await this.load();
+      this.selectedProgramId.set(assigned.id);
+      this.message.set('Program assigned to client.');
+    } catch (error) {
+      this.message.set(error instanceof Error ? error.message : 'Could not assign program.');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  protected async loadProgramCheckIns(program: AssignedProgram): Promise<void> {
+    this.selectedProgramId.set(program.id);
+    try {
+      this.programCheckIns.set(await this.providerPortal.getProgramCheckIns(program.id) ?? []);
+    } catch (error) {
+      this.message.set(error instanceof Error ? error.message : 'Could not load check-ins.');
+    }
+  }
+
+  protected async saveTaskFeedback(taskId: string): Promise<void> {
+    const program = this.selectedProgram();
+    if (!program || !this.taskFeedback().trim()) return;
+    await this.providerPortal.addTaskFeedback(program.id, taskId, this.taskFeedback().trim());
+    this.taskFeedback.set('');
+    await this.load();
+    this.message.set('Task feedback sent.');
+  }
+
+  protected async saveCheckInFeedback(checkInId: string): Promise<void> {
+    const program = this.selectedProgram();
+    if (!program || !this.checkInFeedback().trim()) return;
+    await this.providerPortal.addCheckInFeedback(program.id, checkInId, this.checkInFeedback().trim());
+    this.checkInFeedback.set('');
+    await this.loadProgramCheckIns(program);
+    this.message.set('Check-in feedback sent.');
   }
 
   protected async saveProfile(): Promise<void> {

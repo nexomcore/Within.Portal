@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { API_BASE, PROVIDER_REFRESH_TOKEN_KEY, PROVIDER_TOKEN_KEY } from './api.config';
-import { AuthResponse, EventItem, Provider, ProviderEventEngagement, ProviderService, UpsertEventPayload, UpsertProviderPayload, UpsertProviderServicePayload } from './within.models';
+import { AssignedProgram, AssignProgramPayload, AuthResponse, ClientCheckIn, EventItem, ProgramTemplate, ProgramTemplatePayload, Provider, ProviderEventEngagement, ProviderProgramClient, ProviderService, UpsertEventPayload, UpsertProviderPayload, UpsertProviderServicePayload } from './within.models';
 
 @Injectable({ providedIn: 'root' })
 export class ProviderPortalService {
@@ -71,6 +71,46 @@ export class ProviderPortalService {
 
   deleteService(serviceId: string): Promise<void | null> {
     return this.providerFetch<void>(`/provider-services/${serviceId}`, 'DELETE');
+  }
+
+  getProgramClients(): Promise<ProviderProgramClient[] | null> {
+    return this.providerFetch<ProviderProgramClient[]>('/providers/me/programs/clients');
+  }
+
+  getProgramTemplates(): Promise<ProgramTemplate[] | null> {
+    return this.providerFetch<ProgramTemplate[]>('/providers/me/programs/templates');
+  }
+
+  createProgramTemplate(payload: ProgramTemplatePayload): Promise<ProgramTemplate | null> {
+    return this.providerFetch<ProgramTemplate>('/providers/me/programs/templates', 'POST', payload);
+  }
+
+  updateProgramTemplate(id: string, payload: ProgramTemplatePayload): Promise<ProgramTemplate | null> {
+    return this.providerFetch<ProgramTemplate>(`/providers/me/programs/templates/${id}`, 'PUT', payload);
+  }
+
+  assignProgram(payload: AssignProgramPayload): Promise<AssignedProgram | null> {
+    return this.providerFetch<AssignedProgram>('/providers/me/programs/assign', 'POST', payload);
+  }
+
+  getAssignedPrograms(): Promise<AssignedProgram[] | null> {
+    return this.providerFetch<AssignedProgram[]>('/providers/me/programs/assigned');
+  }
+
+  updateAssignedProgram(id: string, payload: Partial<AssignedProgram>): Promise<AssignedProgram | null> {
+    return this.providerFetch<AssignedProgram>(`/providers/me/programs/assigned/${id}`, 'PUT', payload);
+  }
+
+  getProgramCheckIns(id: string): Promise<ClientCheckIn[] | null> {
+    return this.providerFetch<ClientCheckIn[]>(`/providers/me/programs/assigned/${id}/check-ins`);
+  }
+
+  addTaskFeedback(programId: string, taskId: string, providerFeedback: string): Promise<unknown> {
+    return this.providerFetch<unknown>(`/providers/me/programs/assigned/${programId}/tasks/${taskId}/feedback`, 'PUT', { providerFeedback });
+  }
+
+  addCheckInFeedback(programId: string, checkInId: string, providerFeedback: string): Promise<ClientCheckIn | null> {
+    return this.providerFetch<ClientCheckIn>(`/providers/me/programs/assigned/${programId}/check-ins/${checkInId}/feedback`, 'PUT', { providerFeedback });
   }
 
   private async providerFetch<T>(path: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: unknown): Promise<T | null> {
