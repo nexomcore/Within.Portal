@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { API_BASE, PROVIDER_REFRESH_TOKEN_KEY, PROVIDER_TOKEN_KEY } from './api.config';
-import { AssignedProgram, AssignProgramPayload, AuthResponse, ClientCheckIn, EventItem, ProgramTemplate, ProgramTemplatePayload, Provider, ProviderEventEngagement, ProviderProgramClient, ProviderService, UpsertEventPayload, UpsertProviderPayload, UpsertProviderServicePayload } from './within.models';
+import { AchievementBadge, AssignedProgram, AssignProgramPayload, AuthResponse, ClientCheckIn, EventItem, ProgramTemplate, ProgramTemplatePayload, Provider, ProviderAnalytics, ProviderClientActivity, ProviderEventEngagement, ProviderProfileCompleteness, ProviderProgramClient, ProviderService, UpsertEventPayload, UpsertProviderPayload, UpsertProviderServicePayload } from './within.models';
 
 @Injectable({ providedIn: 'root' })
 export class ProviderPortalService {
@@ -111,6 +111,22 @@ export class ProviderPortalService {
 
   addCheckInFeedback(programId: string, checkInId: string, providerFeedback: string): Promise<ClientCheckIn | null> {
     return this.providerFetch<ClientCheckIn>(`/providers/me/programs/assigned/${programId}/check-ins/${checkInId}/feedback`, 'PUT', { providerFeedback });
+  }
+
+  getProfileCompleteness(): Promise<ProviderProfileCompleteness | null> {
+    return this.providerFetch<ProviderProfileCompleteness>('/providers/me/quick-wins/profile-completeness');
+  }
+
+  getProviderAnalytics(): Promise<ProviderAnalytics | null> {
+    return this.providerFetch<ProviderAnalytics>('/providers/me/quick-wins/analytics');
+  }
+
+  getClientActivity(): Promise<ProviderClientActivity | null> {
+    return this.providerFetch<ProviderClientActivity>('/providers/me/quick-wins/client-activity');
+  }
+
+  getProviderBadges(): Promise<AchievementBadge[] | null> {
+    return this.providerFetch<AchievementBadge[]>('/providers/me/quick-wins/badges');
   }
 
   private async providerFetch<T>(path: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: unknown): Promise<T | null> {

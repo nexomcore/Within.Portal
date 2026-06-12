@@ -58,6 +58,28 @@
           <article class="wp-stat coral"><span class="wp-stat-ico"><span class="material-symbols-rounded">spa</span></span><span>Active services</span><strong>{{ activeServices().length }}</strong></article>
         </div>
 
+        <div class="wp-grid-2">
+          <section class="wp-card" *ngIf="profileCompleteness() as score">
+            <div class="wp-card-head">
+              <div><span class="wp-eyebrow">Profile score</span><h3>Profile Completion: {{ score.score }}%</h3></div>
+            </div>
+            <div class="wp-list">
+              <p class="wp-empty" *ngIf="!score.recommendations.length">Your profile is in good shape.</p>
+              <article class="provider-person-row" *ngFor="let item of score.recommendations"><strong>{{ item }}</strong></article>
+            </div>
+          </section>
+
+          <section class="wp-card" *ngIf="providerAnalytics() as analytics">
+            <div class="wp-card-head"><div><span class="wp-eyebrow">Analytics</span><h3>Provider activity</h3></div></div>
+            <div class="provider-response-stats">
+              <article><span>Views</span><strong>{{ analytics.profileViews30d }}</strong></article>
+              <article><span>Followers</span><strong>{{ analytics.followers }}</strong></article>
+              <article><span>Registrations</span><strong>{{ analytics.eventRegistrations }}</strong></article>
+              <article><span>Program completion</span><strong>{{ analytics.programCompletionRate }}%</strong></article>
+            </div>
+          </section>
+        </div>
+
         <section class="wp-card">
           <div class="wp-card-head"><h3>Quick actions</h3></div>
           <div class="wp-quick">
@@ -471,6 +493,29 @@
             </section>
           </div>
         </section>
+
+        <div class="wp-grid-2" *ngIf="clientActivity() as activity">
+          <section class="wp-card">
+            <div class="wp-card-head"><div><span class="wp-eyebrow">Client activity</span><h3>Needs attention</h3></div><span class="wp-row-num">{{ activity.activeClients }} active</span></div>
+            <div class="wp-list">
+              <p class="wp-empty" *ngIf="!activity.clientsRequiringAttention.length">No clients currently need attention.</p>
+              <article class="provider-person-row" *ngFor="let client of activity.clientsRequiringAttention">
+                <strong>{{ client.clientName }}</strong>
+                <span>{{ client.reason }}</span>
+              </article>
+            </div>
+          </section>
+          <section class="wp-card">
+            <div class="wp-card-head"><div><span class="wp-eyebrow">Pending check-ins</span><h3>Review queue</h3></div></div>
+            <div class="wp-list">
+              <p class="wp-empty" *ngIf="!activity.pendingCheckIns.length">No pending check-ins.</p>
+              <article class="provider-person-row" *ngFor="let checkIn of activity.pendingCheckIns">
+                <strong>{{ checkIn.clientName }} · {{ checkIn.checkInDate }}</strong>
+                <span>{{ checkIn.mood || 'Check-in' }} · {{ checkIn.clientNotes || 'No notes' }}</span>
+              </article>
+            </div>
+          </section>
+        </div>
       </ng-container>
 
       <!-- ===================== PROFILE ===================== -->

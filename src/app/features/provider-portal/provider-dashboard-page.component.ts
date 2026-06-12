@@ -3,7 +3,7 @@ import { Component, WritableSignal, computed, inject, signal } from '@angular/co
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ProviderPortalService } from '../../core/provider-portal.service';
-import { AssignedProgram, ClientCheckIn, EventAgeRestriction, EventExperienceLevel, EventIntensity, EventItem, EventType, Option, ProgramCategory, ProgramTaskType, ProgramTemplate, ProgramTemplatePayload, Provider, ProviderEventEngagement, ProviderEventParticipant, ProviderPriceType, ProviderProgramClient, ProviderService, ProviderServiceDeliveryMode, RetreatDifficulty, RetreatFocus, SignupType, UpsertEventPayload, UpsertProviderPayload, UpsertProviderServicePayload, WithinLens } from '../../core/within.models';
+import { AchievementBadge, AssignedProgram, ClientCheckIn, EventAgeRestriction, EventExperienceLevel, EventIntensity, EventItem, EventType, Option, ProgramCategory, ProgramTaskType, ProgramTemplate, ProgramTemplatePayload, Provider, ProviderAnalytics, ProviderClientActivity, ProviderEventEngagement, ProviderEventParticipant, ProviderProfileCompleteness, ProviderPriceType, ProviderProgramClient, ProviderService, ProviderServiceDeliveryMode, RetreatDifficulty, RetreatFocus, SignupType, UpsertEventPayload, UpsertProviderPayload, UpsertProviderServicePayload, WithinLens } from '../../core/within.models';
 import { eventTypeOptions, lensOptions, providerPriceTypeOptions, providerServiceDeliveryModeOptions, retreatDifficultyOptions, retreatFacilityOptions, retreatFocusOptions } from '../../core/within-options';
 
 type ProviderSection = 'overview' | 'events' | 'services' | 'programs' | 'profile';
@@ -120,6 +120,10 @@ export class ProviderDashboardPageComponent {
   protected readonly programClients = signal<ProviderProgramClient[]>([]);
   protected readonly selectedProgramId = signal<string | null>(null);
   protected readonly programCheckIns = signal<ClientCheckIn[]>([]);
+  protected readonly profileCompleteness = signal<ProviderProfileCompleteness | null>(null);
+  protected readonly providerAnalytics = signal<ProviderAnalytics | null>(null);
+  protected readonly clientActivity = signal<ProviderClientActivity | null>(null);
+  protected readonly providerBadges = signal<AchievementBadge[]>([]);
   protected readonly selectedEventId = signal<string | null>(null);
   protected readonly selectedServiceId = signal<string | null>(null);
   protected readonly engagement = signal<ProviderEventEngagement | null>(null);
@@ -274,16 +278,20 @@ export class ProviderDashboardPageComponent {
     this.loading.set(true);
     this.message.set('');
     try {
-      const [provider, events, services, templates, assignedPrograms, programClients] = await Promise.all([
+      const [provider, events, services, templates, assignedPrograms, programClients, profileCompleteness, providerAnalytics, clientActivity, providerBadges] = await Promise.all([
         this.providerPortal.getProvider(),
         this.providerPortal.getEvents(),
         this.providerPortal.getServices(),
         this.providerPortal.getProgramTemplates(),
         this.providerPortal.getAssignedPrograms(),
         this.providerPortal.getProgramClients(),
+        this.providerPortal.getProfileCompleteness(),
+        this.providerPortal.getProviderAnalytics(),
+        this.providerPortal.getClientActivity(),
+        this.providerPortal.getProviderBadges(),
       ]);
 
-      if (!provider || !events || !services || !templates || !assignedPrograms || !programClients) {
+      if (!provider || !events || !services || !templates || !assignedPrograms || !programClients || !profileCompleteness || !providerAnalytics || !clientActivity || !providerBadges) {
         this.message.set('Provider session expired. Sign in again.');
         await this.router.navigateByUrl('/providers/login');
         return;
@@ -295,6 +303,10 @@ export class ProviderDashboardPageComponent {
       this.programTemplates.set(templates);
       this.assignedPrograms.set(assignedPrograms);
       this.programClients.set(programClients);
+      this.profileCompleteness.set(profileCompleteness);
+      this.providerAnalytics.set(providerAnalytics);
+      this.clientActivity.set(clientActivity);
+      this.providerBadges.set(providerBadges);
       this.populateProfile(provider);
       if (this.selectedEventId() && !events.some(event => event.id === this.selectedEventId())) {
         this.selectedEventId.set(null);

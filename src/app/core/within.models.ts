@@ -494,6 +494,65 @@ export interface ClientCheckIn {
   updatedAt: string;
 }
 
+export interface AchievementBadge {
+  key: string;
+  label: string;
+  description: string;
+  earned: boolean;
+}
+
+export interface ProviderProfileCompleteness {
+  score: number;
+  completed: string[];
+  recommendations: string[];
+}
+
+export interface ProviderAnalytics {
+  profileViews30d: number;
+  searchAppearances30d: number;
+  followers: number;
+  circleMembers: number;
+  eventsCreated: number;
+  eventRegistrations: number;
+  activeClients: number;
+  programsAssigned: number;
+  programCompletionRate: number;
+}
+
+export interface ProviderProgramActivity {
+  assignedProgramId: string;
+  clientUserId: string;
+  clientName: string;
+  title: string;
+  status: AssignedProgramStatus;
+  progressPercent: number;
+  updatedAt: string;
+}
+
+export interface ProviderCheckInActivity {
+  checkInId: string;
+  assignedProgramId: string;
+  clientUserId: string;
+  clientName: string;
+  checkInDate: string;
+  mood: string | null;
+  clientNotes: string | null;
+}
+
+export interface ProviderClientAttention {
+  clientUserId: string;
+  clientName: string;
+  reason: string;
+  assignedProgramId: string | null;
+}
+
+export interface ProviderClientActivity {
+  activeClients: number;
+  recentlyAssignedPrograms: ProviderProgramActivity[];
+  pendingCheckIns: ProviderCheckInActivity[];
+  clientsRequiringAttention: ProviderClientAttention[];
+}
+
 export interface CommunityAuthor {
   id: string;
   displayName: string;
